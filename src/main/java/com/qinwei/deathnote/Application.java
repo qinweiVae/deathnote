@@ -1,5 +1,6 @@
 package com.qinwei.deathnote;
 
+import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -26,5 +27,7 @@ public class Application {
         // 出口移除请求ID
         log.info("start success ...");
         MDC.remove("requestId");
+        StandardConfig config = StandardConfig.getInstance();
+        log.info(config.getProperty("author"));
     }
 }

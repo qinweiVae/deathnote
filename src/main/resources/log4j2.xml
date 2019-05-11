@@ -5,9 +5,9 @@
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
         <!-- 配置日志文件输出目录 ${sys:user.home} -->
-        <Property name="LOG_HOME">d:/logs</Property>
-        <property name="ERROR_LOG_FILE_NAME">d:/logs/error</property>
-        <property name="WARN_LOG_FILE_NAME">d:/logs/warn</property>
+        <Property name="LOG_HOME">F:/mylog</Property>
+        <property name="ERROR_LOG_FILE_NAME">F:/mylog/error</property>
+        <property name="WARN_LOG_FILE_NAME">F:/mylog/warn</property>
         <property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t-%L] %-5level [%X{requestId}] - %logger{36} - %msg%n
         </property>
     </Properties>

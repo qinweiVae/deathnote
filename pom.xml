@@ -8,11 +8,7 @@
     <artifactId>deathnote</artifactId>
     <version>1.0</version>
 
-    <modules>
-        <module>deathnote-config</module>
-    </modules>
-
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <project.encoding>UTF-8</project.encoding>
