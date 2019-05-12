@@ -12,6 +12,7 @@ import java.util.Date;
  * @date 2019-05-10
  */
 @Slf4j
+@Convert
 public class StingToDateConverter implements Converter<String, Date> {
 
     @Override

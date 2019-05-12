@@ -1,6 +1,7 @@
 package com.qinwei.deathnote;
 
 import com.qinwei.deathnote.config.conf.StandardConfig;
+import com.qinwei.deathnote.config.convert.DefaultConversion;
 import com.qinwei.deathnote.log.MDCRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -29,5 +30,7 @@ public class Application {
         MDC.remove("requestId");
         StandardConfig config = StandardConfig.getInstance();
         log.info(config.getProperty("author"));
+
+        DefaultConversion.getInstance();
     }
 }
