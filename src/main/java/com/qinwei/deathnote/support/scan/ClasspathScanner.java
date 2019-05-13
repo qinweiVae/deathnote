@@ -32,6 +32,9 @@ public class ClasspathScanner implements Scanner {
 
     private static Map<String, Set<Class>> packageCache = new ConcurrentHashMap<>();
 
+    /**
+     * 根据指定包名, 扫描classpath 下和所有jar包内的class
+     */
     @Override
     public Set<Class> scan(String basePackage) {
         if (basePackage.endsWith(".")) {
@@ -104,6 +107,7 @@ public class ClasspathScanner implements Scanner {
         if (!file.exists()) {
             return;
         }
+        //不能以"/"开始，否则会有问题
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
@@ -149,6 +153,7 @@ public class ClasspathScanner implements Scanner {
     }
 
     private Enumeration<URL> findAllClassPathResources(String path) throws IOException {
+        //不能以"/"开始，否则会有问题
         if (path.startsWith("/")) {
             path = path.substring(1);
         }

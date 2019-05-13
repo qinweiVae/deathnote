@@ -1,11 +1,15 @@
 package com.qinwei.deathnote;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.config.convert.DefaultConversion;
 import com.qinwei.deathnote.log.MDCRunnable;
+import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+import java.lang.reflect.Method;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -16,6 +20,9 @@ import java.util.UUID;
 public class Application {
 
     public static void main(String[] args) {
+        MethodAnnotationScanner scanner = new MethodAnnotationScanner();
+        Set<Method> classes = scanner.scan(VisibleForTesting.class,"com.google");
+        classes.forEach(aClass -> System.out.println(aClass));
 
         // 入口传入请求ID
         MDC.put("requestId", UUID.randomUUID().toString());
@@ -29,7 +36,7 @@ public class Application {
         log.info("start success ...");
         MDC.remove("requestId");
         StandardConfig config = StandardConfig.getInstance();
-        log.info(config.getProperty("author"));
+        log.info(config.getProperty("java.class.path"));
 
         DefaultConversion.getInstance();
     }

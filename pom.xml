@@ -154,7 +154,7 @@
                 <excludes>
                     <exclude>dev/*</exclude>
                     <exclude>test/*</exclude>
-                    <exclude>pro/*</exclude>
+                    <exclude>prod/*</exclude>
                 </excludes>
             </resource>
             <resource>
@@ -194,9 +194,9 @@
         </profile>
         <!--生产环境-->
         <profile>
-            <id>pro</id>
+            <id>prod</id>
             <properties>
-                <profiles.active>pro</profiles.active>
+                <profiles.active>prod</profiles.active>
             </properties>
         </profile>
     </profiles>

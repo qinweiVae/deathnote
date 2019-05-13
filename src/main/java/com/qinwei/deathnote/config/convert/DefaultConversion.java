@@ -1,9 +1,9 @@
 package com.qinwei.deathnote.config.convert;
 
-import com.qinwei.deathnote.support.scan.AnnotationScanner;
+import com.qinwei.deathnote.support.scan.TypeAnnotationScanner;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author qinwei
@@ -24,8 +24,8 @@ public class DefaultConversion extends AbstractConversion {
 
     private void addCustomConverter() {
         try {
-            AnnotationScanner scanner = new AnnotationScanner();
-            List<Class> classes = scanner.scan(Convert.class);
+            TypeAnnotationScanner scanner = new TypeAnnotationScanner();
+            Set<Class> classes = scanner.scan(Convert.class);
             for (Class clazz : classes) {
                 addConvert((Converter) clazz.newInstance());
             }
