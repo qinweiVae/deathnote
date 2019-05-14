@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MethodAnnotationScanner extends ClasspathScanner {
 
-    private static Map<Class<? extends Annotation>, Set<Method>> annotationCache = new ConcurrentHashMap<>();
+    private static Map<String, Set<Method>> annotationCache = new ConcurrentHashMap<>();
 
     public Set<Method> scan(Class<? extends Annotation> annotation) {
         //默认获取classpath下的所有class
@@ -37,7 +37,7 @@ public class MethodAnnotationScanner extends ClasspathScanner {
                             }
                         }
                     }
-                    annotationCache.put(annotation, result);
+                    annotationCache.put(annotation.getSimpleName() + "-" + basePackage, result);
                 }
             }
         }

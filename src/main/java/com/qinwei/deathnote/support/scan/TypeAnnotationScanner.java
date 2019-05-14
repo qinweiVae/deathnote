@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TypeAnnotationScanner extends ClasspathScanner {
 
-    private static Map<Class<? extends Annotation>, Set<Class>> annotationCache = new ConcurrentHashMap<>();
+    private static Map<String, Set<Class>> annotationCache = new ConcurrentHashMap<>();
 
     public Set<Class> scan(Class<? extends Annotation> annotation) {
         //默认获取classpath下的所有class
@@ -33,7 +33,7 @@ public class TypeAnnotationScanner extends ClasspathScanner {
                             result.add(clazz);
                         }
                     }
-                    annotationCache.put(annotation, result);
+                    annotationCache.put(annotation.getSimpleName() + "-" + basePackage, result);
                 }
             }
         }
