@@ -23,11 +23,15 @@ public abstract class AbstractConfig implements Config {
         propertySources.add(propertySource);
     }
 
+    protected void clearPropertySource() {
+        propertySources.clear();
+    }
+
     /**
      * REMOTE 拥有高优先级
      */
-    protected void sortByConfigType() {
-        propertySources.sort(Comparator.comparing(PropertySource::getConfigType));
+    protected void sortByOrder() {
+        propertySources.sort(Comparator.comparing(PropertySource::getOrder));
     }
 
     @Override

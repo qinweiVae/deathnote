@@ -2,7 +2,6 @@ package com.qinwei.deathnote.config.conf;
 
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -12,6 +11,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class StandardConfig extends AbstractConfig {
 
     private static final AtomicReference<StandardConfig> INSTANCE = new AtomicReference();
+
+    private Object lock = new Object();
 
     public static final StandardConfig getInstance() {
         for (; ; ) {
@@ -27,21 +28,25 @@ public class StandardConfig extends AbstractConfig {
     }
 
     private StandardConfig() {
-        addPropertySource(new PropertySource(ConfigType.LOCAL, getSystemProperties()));
-        addPropertySource(new PropertySource(ConfigType.LOCAL, getSystemEnvironment()));
-        //配置文件
-        Map<String, Object> resources = ResourcesScanner.getInstance().scan();
-        addPropertySources(new PropertySource(ConfigType.LOCAL, resources));
+        initConfig();
     }
 
     public void addPropertySources(PropertySource... propertySources) {
         for (PropertySource propertySource : propertySources) {
             addPropertySource(propertySource);
         }
+        sortByOrder();
     }
 
     public void initConfig() {
-        sortByConfigType();
+        synchronized (lock) {
+            clearPropertySource();
+            addPropertySource(new PropertySource(1, getSystemProperties()));
+            addPropertySource(new PropertySource(2, getSystemEnvironment()));
+            //配置文件
+            addPropertySource(new PropertySource(3, ResourcesScanner.getInstance().scan()));
+            sortByOrder();
+        }
     }
 
 }

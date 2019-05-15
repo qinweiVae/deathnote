@@ -1,16 +1,10 @@
 package com.qinwei.deathnote;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.qinwei.deathnote.config.conf.StandardConfig;
-import com.qinwei.deathnote.config.convert.DefaultConversion;
-import com.qinwei.deathnote.log.MDCRunnable;
-import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 
-import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Date;
+import java.util.Scanner;
 
 /**
  * @author qinwei
@@ -20,7 +14,7 @@ import java.util.UUID;
 public class Application {
 
     public static void main(String[] args) {
-        MethodAnnotationScanner scanner = new MethodAnnotationScanner();
+       /* MethodAnnotationScanner scanner = new MethodAnnotationScanner();
         Set<Method> classes = scanner.scan(VisibleForTesting.class,"com.google");
         classes.forEach(aClass -> System.out.println(aClass));
 
@@ -38,6 +32,15 @@ public class Application {
         StandardConfig config = StandardConfig.getInstance();
         log.info(config.getProperty("java.class.path"));
 
-        DefaultConversion.getInstance();
+        DefaultConversion.getInstance();*/
+        System.setProperty("config.path", "d:/config");
+        System.setProperty("qinwei.date", "2019-05-14 14:09:20");
+        System.out.println(StandardConfig.getInstance().getProperty("qinwei.date", Date.class, null));
+        System.out.println(StandardConfig.getInstance().getProperty("author"));
+        Scanner scanner = new Scanner(System.in);
+        while (!scanner.hasNextInt()) {
+            System.out.println(StandardConfig.getInstance().getProperty(scanner.nextLine()));
+        }
+        scanner.close();
     }
 }

@@ -22,13 +22,13 @@ import java.util.jar.JarFile;
 @Slf4j
 public class ClasspathScanner implements Scanner {
 
-    public static final String CLASS_PATTERN = ".class";
+    private static final String CLASS_PATTERN = ".class";
 
     private static final char PACKAGE_SEPARATOR = '.';
 
     private static final char PATH_SEPARATOR = '/';
 
-    public static final String JAR_SEPARATOR = "!";
+    private static final String JAR_SEPARATOR = "!";
 
     private static Map<String, Set<Class>> packageCache = new ConcurrentHashMap<>();
 
@@ -77,6 +77,9 @@ public class ClasspathScanner implements Scanner {
         }
     }
 
+    /**
+     * 解析jar包
+     */
     private void parseJarFile(URL url, Set<Class> result) {
         try {
             String[] jarInfo = url.getPath().split(JAR_SEPARATOR);
@@ -103,6 +106,9 @@ public class ClasspathScanner implements Scanner {
         }
     }
 
+    /**
+     * 解析classpath目录
+     */
     private void parseClassFile(File file, String path, Set<Class> result) {
         if (!file.exists()) {
             return;

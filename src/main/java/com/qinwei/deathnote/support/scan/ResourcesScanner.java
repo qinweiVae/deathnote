@@ -1,5 +1,8 @@
 package com.qinwei.deathnote.support.scan;
 
+import com.qinwei.deathnote.config.conf.StandardConfig;
+import com.qinwei.deathnote.support.watch.FileListener;
+import com.qinwei.deathnote.support.watch.FileWatcher;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
@@ -46,16 +50,35 @@ public class ResourcesScanner {
 
     public Map<String, Object> scan() {
         Path path = scanConfigPath();
-        if (path == null) {
-            return new HashMap<>();
-        }
+        doScan(path);
+        registerFileWatch(path);
+        return resources;
+    }
+
+    private void registerFileWatch(Path path) {
+        FileWatcher fileWatcher = new FileWatcher(path, new FileListener() {
+            @Override
+            public void changed(Path path) {
+                doScan(path);
+                StandardConfig.getInstance().initConfig();
+            }
+        }, new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(PROPERTIES_PATTERN);
+            }
+        });
+        fileWatcher.watch();
+    }
+
+    private Map<String, Object> doScan(Path path) {
         try {
             //遍历目录下的所有properties文件
             List<File> list = walkFileTree(path);
             if (CollectionUtils.isEmpty(list)) {
                 return new HashMap<>();
             }
-            //application.properties 拥有最高优先级，解析的时候排在最后面
+            //application.properties 拥有最高优先级，解析的时候排在最后面，文件排在越后面，里面的配置优先级越高
             list.stream().sorted((o1, o2) -> o1.getName().endsWith(APPLICATION_NAME) ? 1 : -1)
                     .forEach(file -> {
                         Properties properties = new Properties();
@@ -77,6 +100,9 @@ public class ResourcesScanner {
         return resources;
     }
 
+    /**
+     * 递归遍历文件
+     */
     private List<File> walkFileTree(Path path) throws IOException {
         List<File> list = new ArrayList();
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
@@ -98,6 +124,7 @@ public class ResourcesScanner {
         if (path != null) {
             return path;
         }
+        //没有设置命令行参数的话，从当前classpath下查找
         String localPath = ClassUtils.getDefaultClassLoader().getResource("").getPath();
         File file = new File(localPath);
         if (file.exists()) {

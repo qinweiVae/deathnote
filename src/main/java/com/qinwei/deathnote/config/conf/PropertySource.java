@@ -13,12 +13,16 @@ import java.util.Map;
 @Setter
 public class PropertySource {
 
-    private final ConfigType configType;
+    private int order = 1 << 10;
 
-    private final Map<String, Object> source;
+    private Map<String, Object> source;
 
-    public PropertySource(ConfigType configType, Map<String, Object> source) {
-        this.configType = configType;
+    public PropertySource(Map<String, Object> source) {
+        this.source = source;
+    }
+
+    public PropertySource(int order, Map<String, Object> source) {
+        this.order = order;
         this.source = source;
     }
 
