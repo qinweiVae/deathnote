@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,6 +35,8 @@ public class FileWatcher implements Watcher, Runnable {
     private volatile boolean started = false;
 
     private volatile boolean isRunning = true;
+
+    private Map<Path, Long> fileTimeStamps = new HashMap<>();
 
     private WatchService watchService;
 
@@ -81,11 +85,18 @@ public class FileWatcher implements Watcher, Runnable {
                     WatchEvent<Path> event = cast(watchEvent);
                     //注意event.context()得到的只有一个文件名,不是全路径
                     Path context = event.context();
-                    //文件名过滤
-                    if (filenameFilter != null && !filenameFilter.accept(path.toFile(), context.toString())) {
+                    Path watchable = ((Path) watchKey.watchable()).resolve(context);
+                    // 修改文件会触发多次,而且首次可能读取不到文件内容,所以等待一段时间再读数据
+                    //Thread.sleep(200);
+                    Long oldStamp = fileTimeStamps.remove(watchable);
+                    if (oldStamp != null && System.currentTimeMillis() - oldStamp < 1000) {
                         continue;
                     }
-                    Path watchable = ((Path) watchKey.watchable()).resolve(context);
+                    fileTimeStamps.put(watchable, System.currentTimeMillis());
+                    //如果配置了filter，并且是文件，过滤文件名
+                    if (filenameFilter != null && !watchable.toFile().isDirectory() && !filenameFilter.accept(watchable.toFile(), context.toString())) {
+                        continue;
+                    }
                     WatchEvent.Kind<?> kind = watchEvent.kind();
                     if (kind == ENTRY_CREATE) {
                         //在项目运行时又添加了一个子文件夹 path/a/b 这样如果在b中添加文件 watchService监听不到.所以在监听到文件夹创建的时候要给让这个path注册到watchService上

@@ -58,8 +58,8 @@ public class ResourcesScanner {
     private void registerFileWatch(Path path) {
         FileWatcher fileWatcher = new FileWatcher(path, new FileListener() {
             @Override
-            public void changed(Path path) {
-                doScan(path);
+            public void changed(Path dir) {
+                resources.clear();
                 StandardConfig.getInstance().initConfig();
             }
         }, new FilenameFilter() {

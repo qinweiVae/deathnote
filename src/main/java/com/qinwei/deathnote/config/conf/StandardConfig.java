@@ -12,7 +12,7 @@ public class StandardConfig extends AbstractConfig {
 
     private static final AtomicReference<StandardConfig> INSTANCE = new AtomicReference();
 
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public static final StandardConfig getInstance() {
         for (; ; ) {

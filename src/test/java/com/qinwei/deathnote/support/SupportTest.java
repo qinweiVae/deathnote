@@ -20,7 +20,10 @@ public class SupportTest {
         System.out.println(StandardConfig.getInstance().getProperty("qinwei.date", Date.class, null));
         System.out.println(StandardConfig.getInstance().getProperty("author"));
         Scanner scanner = new Scanner(System.in);
-        System.out.println(StandardConfig.getInstance().getProperty(scanner.nextLine()));
+        while (!scanner.hasNextInt()) {
+            System.out.println(StandardConfig.getInstance().getProperty(scanner.nextLine()));
+        }
+        scanner.close();
     }
 
     @Test
