@@ -85,9 +85,9 @@ public class FileWatcher implements Watcher, Runnable {
                     WatchEvent<Path> event = cast(watchEvent);
                     //注意event.context()得到的只有一个文件名,不是全路径
                     Path context = event.context();
+                    //得到全路径
                     Path watchable = ((Path) watchKey.watchable()).resolve(context);
                     // 修改文件会触发多次,而且首次可能读取不到文件内容,所以等待一段时间再读数据
-                    //Thread.sleep(200);
                     Long oldStamp = fileTimeStamps.remove(watchable);
                     if (oldStamp != null && System.currentTimeMillis() - oldStamp < 1000) {
                         continue;
@@ -104,8 +104,11 @@ public class FileWatcher implements Watcher, Runnable {
                             watchNewDir(watchable);
                         }
                     }
-                    //listener通知
-                    listener.changed(watchable);
+                    //如果从其他地方拷贝文件夹过来会触发多次，所以这里要过滤掉文件夹，只有文件更改才通知
+                    if (!Files.isDirectory(watchable)) {
+                        //listener通知
+                        listener.changed(watchable);
+                    }
                 }
             } catch (Exception e) {
                 log.error("watchService failure ", e);
