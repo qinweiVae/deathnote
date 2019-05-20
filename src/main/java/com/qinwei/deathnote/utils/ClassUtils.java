@@ -1,7 +1,6 @@
 package com.qinwei.deathnote.utils;
 
-import lombok.extern.slf4j.Slf4j;
-
+import java.lang.reflect.Constructor;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import java.util.Map;
  * @author qinwei
  * @date 2019-05-09
  */
-@Slf4j
 public class ClassUtils {
 
     private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new IdentityHashMap<>(8);
@@ -68,10 +66,11 @@ public class ClassUtils {
 
     public static <T> T createInstance(Class<T> clazz) {
         try {
-            return clazz.newInstance();
+            Constructor<T> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
         } catch (Exception e) {
-            log.error("can not instantiate class {}", clazz.getName(), e);
-            return null;
+            throw new IllegalArgumentException("Unable to instantiate class :" + clazz.getName());
         }
     }
 }
