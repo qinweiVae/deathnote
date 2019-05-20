@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.config.conf;
 
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author qinwei
  * @date 2019-05-09
  */
+@Slf4j
 public class StandardConfig extends AbstractConfig {
 
     private static final AtomicReference<StandardConfig> INSTANCE = new AtomicReference();
@@ -40,6 +42,7 @@ public class StandardConfig extends AbstractConfig {
 
     public void initConfig() {
         synchronized (lock) {
+            log.info("正在初始化 config ...");
             clearPropertySource();
             addPropertySource(new PropertySource(1, getSystemProperties()));
             addPropertySource(new PropertySource(2, getSystemEnvironment()));

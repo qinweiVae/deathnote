@@ -95,6 +95,7 @@ public class FileWatcher implements Watcher, Runnable {
                     fileTimeStamps.put(watchable, System.currentTimeMillis());
                     //如果配置了filter，并且是文件，过滤文件名
                     if (filenameFilter != null && !watchable.toFile().isDirectory() && !filenameFilter.accept(watchable.toFile(), context.toString())) {
+                        log.info("监听到文件 {} 变化,跳过处理", watchable);
                         continue;
                     }
                     WatchEvent.Kind<?> kind = watchEvent.kind();
@@ -106,6 +107,7 @@ public class FileWatcher implements Watcher, Runnable {
                     }
                     //如果从其他地方拷贝文件夹过来会触发多次，所以这里要过滤掉文件夹，只有文件更改才通知
                     if (!Files.isDirectory(watchable)) {
+                        log.info("监听到配置文件 {} 变化,开始重新加载文件", watchable);
                         //listener通知
                         listener.changed(watchable);
                     }

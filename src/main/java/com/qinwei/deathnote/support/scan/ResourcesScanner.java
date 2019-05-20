@@ -36,7 +36,7 @@ public class ResourcesScanner {
 
     public static final String CONFIG_PATH = "config.path";
 
-    public static final String PROPERTIES_PATTERN = ".properties";
+    private static final String PROPERTIES_PATTERN = ".properties";
 
     private Map<String, Object> resources = new HashMap<>();
 
@@ -50,6 +50,10 @@ public class ResourcesScanner {
 
     public Map<String, Object> scan() {
         Path path = scanConfigPath();
+        log.info("读取的资源配置文件: {}", path);
+        if (path == null) {
+            return resources;
+        }
         doScan(path);
         registerFileWatch(path);
         return resources;
