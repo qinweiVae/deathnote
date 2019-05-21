@@ -102,7 +102,7 @@ public class ClasspathScanner implements Scanner {
 
             }
         } catch (Exception e) {
-            log.error("can not get jar file ,　url :{}", url, e);
+            log.error("Unable to get jar file ,　url :{}", url, e);
         }
     }
 
@@ -177,7 +177,7 @@ public class ClasspathScanner implements Scanner {
             try {
                 return ClassLoader.getSystemClassLoader().loadClass(className);
             } catch (Throwable e1) {
-                log.error("can not load class , class name : {} ", className, e1);
+                log.error("Unable to load class , class name : {} ", className, e1);
             }
         }
         return null;

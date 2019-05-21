@@ -65,7 +65,7 @@ public class FileWatcher implements Watcher, Runnable {
     public void watch() {
         //同一个实例只能调用一次
         if (started) {
-            throw new RuntimeException("The same instance can not invoke watch() twice ");
+            throw new UnsupportedOperationException("The same instance can not invoke watch() twice ");
         }
         WatchServiceRegister register = new WatchServiceRegister();
         watchService = register.register(path);

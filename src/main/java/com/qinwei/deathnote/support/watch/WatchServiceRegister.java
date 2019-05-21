@@ -33,7 +33,7 @@ public class WatchServiceRegister {
         try {
             watchService = FileSystems.getDefault().newWatchService();
         } catch (IOException e) {
-            throw new RuntimeException("cannot build watchService", e);
+            throw new RuntimeException("Unable to build watchService", e);
         }
         closeGracefully();
     }
@@ -43,7 +43,7 @@ public class WatchServiceRegister {
             try {
                 watchService.close();
             } catch (IOException e) {
-                log.error("can not close watch service ...", e);
+                log.error("Unable to close watch service ...", e);
             }
         }));
     }
