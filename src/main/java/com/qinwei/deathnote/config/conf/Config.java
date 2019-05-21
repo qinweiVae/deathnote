@@ -8,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 public interface Config {
 
+    void initConfig();
+
     boolean containsProperty(String key);
 
     String getProperty(String key);
@@ -19,6 +21,9 @@ public interface Config {
 
     <T> T getProperty(String key, Class<T> targetType);
 
-    <T> T getProperty(String key, Class<T> targetType, T defaultValue);
+    default <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
+        T value = getProperty(key, targetType);
+        return value == null ? defaultValue : value;
+    }
 
 }

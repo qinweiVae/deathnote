@@ -1,5 +1,6 @@
 package com.qinwei.deathnote;
 
+import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,9 +17,11 @@ public class Application {
 
     public static void main(String[] args) {
         System.setProperty(CONFIG_PATH, "d:/config");
+        Config config = StandardConfig.getInstance();
+        config.initConfig();
         Scanner scanner = new Scanner(System.in);
         while (!scanner.hasNextInt()) {
-            System.out.println(StandardConfig.getInstance().getProperty(scanner.nextLine()));
+            System.out.println(config.getProperty(scanner.nextLine()));
         }
         scanner.close();
     }

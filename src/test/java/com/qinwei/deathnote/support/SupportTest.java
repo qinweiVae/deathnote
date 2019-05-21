@@ -1,12 +1,13 @@
 package com.qinwei.deathnote.support;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
-import com.qinwei.deathnote.config.convert.Converter;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 import com.qinwei.deathnote.support.spi.ServiceLoader;
+import com.qinwei.deathnote.support.spi.Worker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -29,8 +30,10 @@ public class SupportTest {
     public void testConfig() {
         System.setProperty(CONFIG_PATH, "d:/config");
         System.setProperty("qinwei.date", "2019-05-14 14:09:20");
-        System.out.println(StandardConfig.getInstance().getProperty("qinwei.date", Date.class, null));
-        System.out.println(StandardConfig.getInstance().getProperty("author"));
+        Config config = StandardConfig.getInstance();
+        config.initConfig();
+        System.out.println(config.getProperty("qinwei.date", Date.class, new Date()));
+        System.out.println(config.getProperty("author"));
     }
 
     @Test
@@ -60,13 +63,14 @@ public class SupportTest {
 
     @Test
     public void testSpi() {
-        Converter spi = ServiceLoader.getService(Converter.class);
-        System.out.println(spi);
-        System.out.println(spi == ServiceLoader.getService(Converter.class, false));
-        Converter date = ServiceLoader.getService(Converter.class, "date");
-        System.out.println(date);
-        System.out.println(date == ServiceLoader.getService(Converter.class, "date"));
-        Converter prototype = ServiceLoader.getService(Converter.class, "date", false);
-        System.out.println(date == prototype);
+        Worker worker = ServiceLoader.getService(Worker.class);
+        worker.work();
+        System.out.println(worker == ServiceLoader.getService(Worker.class, false));
+        Worker female = ServiceLoader.getService(Worker.class, "female");
+        female.work();
+        System.out.println(female == ServiceLoader.getService(Worker.class, "female"));
+        System.out.println(female == ServiceLoader.getService(Worker.class, "female", false));
+        Worker child = ServiceLoader.getService(Worker.class, "child");
+        child.work();
     }
 }

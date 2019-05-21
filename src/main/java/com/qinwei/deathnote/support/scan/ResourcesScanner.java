@@ -1,5 +1,7 @@
 package com.qinwei.deathnote.support.scan;
 
+import com.qinwei.deathnote.config.conf.Config;
+import com.qinwei.deathnote.config.conf.ConfigFactory;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.support.watch.FileListener;
 import com.qinwei.deathnote.support.watch.FileWatcher;
@@ -30,7 +32,7 @@ import java.util.Properties;
  * @date 2019-05-13
  */
 @Slf4j
-public class ResourcesScanner {
+public class ResourcesScanner implements ConfigFactory {
 
     public static final String APPLICATION_NAME = "application.properties";
 
@@ -64,7 +66,7 @@ public class ResourcesScanner {
             @Override
             public void changed(Path dir) {
                 resources.clear();
-                StandardConfig.getInstance().initConfig();
+                getConfig().initConfig();
             }
         }, new FilenameFilter() {
             @Override
@@ -146,6 +148,11 @@ public class ResourcesScanner {
             }
         }
         return null;
+    }
+
+    @Override
+    public Config getConfig() {
+        return StandardConfig.getInstance();
     }
 
     private static class LazyResourcesScanner {

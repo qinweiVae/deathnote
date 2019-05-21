@@ -20,6 +20,9 @@ public abstract class AbstractConfig implements Config {
     private List<PropertySource> propertySources = new ArrayList<>();
 
     protected void addPropertySource(PropertySource propertySource) {
+        if (propertySource == null) {
+            return;
+        }
         propertySources.add(propertySource);
     }
 
@@ -67,12 +70,6 @@ public abstract class AbstractConfig implements Config {
                     return conversion.convert(value, targetType);
                 })
                 .orElse(null);
-    }
-
-    @Override
-    public <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
-        T value = getProperty(key, targetType);
-        return value == null ? defaultValue : value;
     }
 
     public Map<String, Object> getSystemProperties() {

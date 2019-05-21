@@ -1,4 +1,0 @@
-date=com.qinwei.deathnote.config.convert.StingToDateConverter
-boolean=com.qinwei.deathnote.config.convert.StringToBooleanConverter
-long=com.qinwei.deathnote.config.convert.StringToLongConverter
-int=com.qinwei.deathnote.config.convert.StringToIntegerConverter

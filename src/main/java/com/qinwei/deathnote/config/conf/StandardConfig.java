@@ -14,7 +14,7 @@ public class StandardConfig extends AbstractConfig {
 
     private static final AtomicReference<StandardConfig> INSTANCE = new AtomicReference();
 
-    private final Object lock = new Object();
+    private final Object monitor = new Object();
 
     public static final StandardConfig getInstance() {
         for (; ; ) {
@@ -30,7 +30,6 @@ public class StandardConfig extends AbstractConfig {
     }
 
     private StandardConfig() {
-        initConfig();
     }
 
     public void addPropertySources(PropertySource... propertySources) {
@@ -40,8 +39,9 @@ public class StandardConfig extends AbstractConfig {
         sortByOrder();
     }
 
+    @Override
     public void initConfig() {
-        synchronized (lock) {
+        synchronized (monitor) {
             log.info("正在初始化 config ...");
             clearPropertySource();
             addPropertySource(new PropertySource(1, getSystemProperties()));

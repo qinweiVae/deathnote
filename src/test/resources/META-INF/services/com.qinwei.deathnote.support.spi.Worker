@@ -1,0 +1,3 @@
+male=com.qinwei.deathnote.support.spi.MaleWorker
+female=com.qinwei.deathnote.support.spi.FemaleWorker
+child=com.qinwei.deathnote.support.spi.ChildWorker

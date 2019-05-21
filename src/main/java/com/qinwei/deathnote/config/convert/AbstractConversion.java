@@ -19,6 +19,9 @@ public class AbstractConversion implements Conversion {
     private List<TypeDescriptor> convertCache = new ArrayList<>();
 
     public void addConvert(Converter converter) {
+        if (converter == null) {
+            return;
+        }
         converters.add(converter);
     }
 
