@@ -1,17 +1,25 @@
-package com.qinwei.deathnote.beans;
+package com.qinwei.deathnote.beans.factory;
 
 import com.qinwei.deathnote.beans.extension.BeanPostProcessor;
-import com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author qinwei
- * @date 2019-05-22
+ * @date 2019-05-21
  */
-public abstract class AbstractBeanFactory implements ConfigurableBeanFactory {
+public class AbstractBeanFactory implements ConfigurableBeanFactory {
+
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
     @Override
     public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
-
+        if (beanPostProcessor == null) {
+            return;
+        }
+        this.beanPostProcessors.remove(beanPostProcessor);
+        beanPostProcessors.add(beanPostProcessor);
     }
 
     @Override
@@ -22,6 +30,10 @@ public abstract class AbstractBeanFactory implements ConfigurableBeanFactory {
     @Override
     public void destroySingletons() {
 
+    }
+
+    public List<BeanPostProcessor> getBeanPostProcessors() {
+        return this.beanPostProcessors;
     }
 
     @Override

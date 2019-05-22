@@ -70,7 +70,7 @@ public class ClassUtils {
             constructor.setAccessible(true);
             return constructor.newInstance();
         } catch (Exception e) {
-            throw new IllegalArgumentException("Unable to instantiate class :" + clazz.getName());
+            throw new IllegalArgumentException("Unable to instantiate class :" + clazz.getName(), e);
         }
     }
 }

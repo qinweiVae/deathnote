@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans;
+package com.qinwei.deathnote.beans.factory;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
