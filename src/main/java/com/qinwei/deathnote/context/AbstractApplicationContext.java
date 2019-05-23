@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.context;
 
+import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.context.event.ApplicationEvent;
 import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
@@ -54,5 +55,10 @@ public class AbstractApplicationContext implements ApplicationContext {
     @Override
     public void registerShutdownHook() {
 
+    }
+
+    @Override
+    public ConfigurableListableBeanFactory getBeanFactory() {
+        return null;
     }
 }

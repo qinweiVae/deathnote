@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.support;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.qinwei.deathnote.beans.alias.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import org.slf4j.MDC;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
@@ -72,5 +74,18 @@ public class SupportTest {
         System.out.println(female == ServiceLoader.getService(Worker.class, "female", false));
         Worker child = ServiceLoader.getService(Worker.class, "child");
         child.work();
+    }
+
+    @Test
+    public void testSimpleAliasRegistry() {
+        SimpleAliasRegistry aliasRegistry = new SimpleAliasRegistry();
+        aliasRegistry.registerAlias("B", "A");
+        aliasRegistry.registerAlias("B", "1");
+        aliasRegistry.registerAlias("A", "C");
+        //aliasRegistry.registerAlias("C", "A");
+        aliasRegistry.registerAlias("C", "D");
+        System.out.println("B的别名:" + Arrays.toString(aliasRegistry.getAliases("B")));
+        System.out.println("A的别名:" + Arrays.toString(aliasRegistry.getAliases("A")));
+        System.out.println("C的别名:" + Arrays.toString(aliasRegistry.getAliases("C")));
     }
 }

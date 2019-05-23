@@ -47,4 +47,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     public <T extends Annotation> T findAnnotationOnBean(String beanName, Class<T> annotationType) {
         return null;
     }
+
+    @Override
+    public <T> T getBean(Class<T> requiredType) {
+        return null;
+    }
 }
