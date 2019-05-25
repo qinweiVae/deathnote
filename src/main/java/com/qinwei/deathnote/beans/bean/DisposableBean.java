@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans.factory;
+package com.qinwei.deathnote.beans.bean;
 
 /**
  * @author qinwei

@@ -1,12 +1,10 @@
 package com.qinwei.deathnote.beans.extension;
 
-import com.qinwei.deathnote.beans.factory.BeanFactory;
-
 /**
  * @author qinwei
  * @date 2019-05-23
  */
-public interface DestructionAwareBeanPostProcessor extends BeanFactory {
+public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
 
     void postProcessBeforeDestruction(Object bean, String beanName);
 
