@@ -1,11 +1,15 @@
 package com.qinwei.deathnote.beans.bean;
 
-import org.apache.commons.lang3.StringUtils;
+import lombok.Getter;
+import lombok.Setter;
+import com.qinwei.deathnote.utils.StringUtils;
 
 /**
  * @author qinwei
  * @date 2019-05-24
  */
+@Getter
+@Setter
 public class BeanDefinitionHolder {
 
     private final BeanDefinition beanDefinition;

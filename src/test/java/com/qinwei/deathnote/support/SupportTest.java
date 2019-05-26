@@ -1,7 +1,7 @@
 package com.qinwei.deathnote.support;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.qinwei.deathnote.beans.alias.SimpleAliasRegistry;
+import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
@@ -82,6 +82,7 @@ public class SupportTest {
         aliasRegistry.registerAlias("B", "A");
         aliasRegistry.registerAlias("B", "1");
         aliasRegistry.registerAlias("A", "C");
+        //循环引用
         //aliasRegistry.registerAlias("C", "A");
         aliasRegistry.registerAlias("C", "D");
         System.out.println("B的别名:" + Arrays.toString(aliasRegistry.getAliases("B")));

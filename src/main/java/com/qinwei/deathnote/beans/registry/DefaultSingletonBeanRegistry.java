@@ -1,6 +1,6 @@
-package com.qinwei.deathnote.beans.alias;
+package com.qinwei.deathnote.beans.registry;
 
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 import java.util.LinkedHashSet;
 import java.util.Map;

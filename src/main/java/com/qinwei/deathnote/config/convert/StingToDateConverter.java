@@ -1,7 +1,7 @@
 package com.qinwei.deathnote.config.convert;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.config.conf;
 
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 /**
  * @author qinwei

@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.beans.factory;
 
-import com.qinwei.deathnote.beans.extension.BeanPostProcessor;
+import com.qinwei.deathnote.beans.postprocess.BeanPostProcessor;
 
 /**
  * @author qinwei

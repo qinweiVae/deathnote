@@ -4,7 +4,7 @@ import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import com.qinwei.deathnote.utils.Holder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

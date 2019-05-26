@@ -1,11 +1,11 @@
 package com.qinwei.deathnote.beans;
 
-import com.qinwei.deathnote.beans.alias.DefaultSingletonBeanRegistry;
-import com.qinwei.deathnote.beans.extension.BeanPostProcessor;
+import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
+import com.qinwei.deathnote.beans.postprocess.BeanPostProcessor;
 import com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory;
 import com.qinwei.deathnote.config.convert.Conversion;
 import com.qinwei.deathnote.config.convert.DefaultConversion;
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -55,7 +55,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return (T) bean;
     }
 
-    private Conversion getConversion() {
+    protected Conversion getConversion() {
         return DefaultConversion.getInstance();
     }
 

@@ -115,7 +115,7 @@ public class FileWatcher implements Watcher, Runnable {
             } catch (Exception e) {
                 log.error("watchService failure ", e);
             } finally {
-                //每次的到新的事件后，需要重置监听池
+                //每次得到新的事件后，需要重置监听池
                 if (watchKey != null) {
                     watchKey.reset();
                 }

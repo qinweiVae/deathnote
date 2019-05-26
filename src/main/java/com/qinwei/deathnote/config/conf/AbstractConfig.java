@@ -66,10 +66,13 @@ public abstract class AbstractConfig implements Config {
                         return (T) value;
                     }
                     //不能强转的话，创建转换器进行类型转换
-                    Conversion conversion = DefaultConversion.getInstance();
-                    return conversion.convert(value, targetType);
+                    return getConversion().convert(value, targetType);
                 })
                 .orElse(null);
+    }
+
+    protected Conversion getConversion() {
+        return DefaultConversion.getInstance();
     }
 
     public Map<String, Object> getSystemProperties() {

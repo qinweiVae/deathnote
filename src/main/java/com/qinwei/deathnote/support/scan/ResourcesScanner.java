@@ -8,7 +8,7 @@ import com.qinwei.deathnote.support.watch.FileWatcher;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,7 +52,7 @@ public class ResourcesScanner implements ConfigFactory {
 
     public Map<String, Object> scan() {
         Path path = scanConfigPath();
-        log.info("读取的资源配置文件: {}", path);
+        log.info("读取的资源配置文件路径: {}", path);
         if (path == null) {
             return resources;
         }
