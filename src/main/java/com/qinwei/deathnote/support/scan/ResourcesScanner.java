@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +83,7 @@ public class ResourcesScanner implements ConfigFactory {
             //遍历目录下的所有properties文件
             List<File> list = walkFileTree(path);
             if (CollectionUtils.isEmpty(list)) {
-                return new HashMap<>();
+                return Collections.EMPTY_MAP;
             }
             //application.properties 拥有最高优先级，解析的时候排在最后面，文件排在越后面，里面的配置优先级越高
             list.stream().sorted((o1, o2) -> o1.getName().endsWith(APPLICATION_NAME) ? 1 : -1)

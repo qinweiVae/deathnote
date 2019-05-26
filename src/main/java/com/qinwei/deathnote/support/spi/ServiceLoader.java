@@ -91,7 +91,7 @@ public class ServiceLoader {
                 if (SERVICE_CACHE.containsKey(dir)) {
                     services = SERVICE_CACHE.get(dir);
                 } else {
-                    services = new HashMap<>();
+                    services = new HashMap<>(8);
                     loadDirectory(services, dir);
                     SERVICE_CACHE.put(dir, services);
                 }
