@@ -73,4 +73,15 @@ public class ClassUtils {
             throw new IllegalArgumentException("Unable to instantiate class :" + clazz.getName(), e);
         }
     }
+
+    public static Class<?> forName(String className, ClassLoader classLoader) {
+        if (classLoader == null) {
+            classLoader = getDefaultClassLoader();
+        }
+        try {
+            return Class.forName(className, false, classLoader);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not load class , className = {" + className + "}", e);
+        }
+    }
 }

@@ -31,6 +31,23 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
         setBeanClassName(beanClassName);
     }
 
+    public RootBeanDefinition(RootBeanDefinition beanDefinition) {
+        setBeanClassName(beanDefinition.getBeanClassName());
+        setScope(beanDefinition.getScope());
+        setAbstract(beanDefinition.isAbstract());
+        if (beanDefinition.hasBeanClass()) {
+            setBeanClass(beanDefinition.getBeanClass());
+        }
+        Boolean lazyInit = beanDefinition.getLazyInit();
+        if (lazyInit != null) {
+            setLazyInit(lazyInit);
+        }
+        setDependsOn(beanDefinition.getDependsOn());
+        setPrimary(beanDefinition.isPrimary());
+        setInitMethodName(beanDefinition.getInitMethodName());
+        setDestroyMethodName(beanDefinition.getDestroyMethodName());
+    }
+
     public BeanDefinitionHolder getDecoratedDefinition() {
         return decoratedDefinition;
     }
@@ -83,5 +100,10 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
         synchronized (lock) {
             return externallyDestroyMethods != null && externallyDestroyMethods.contains(destroyMethod);
         }
+    }
+
+    @Override
+    protected RootBeanDefinition cloneBeanDefinition() {
+        return new RootBeanDefinition(this);
     }
 }

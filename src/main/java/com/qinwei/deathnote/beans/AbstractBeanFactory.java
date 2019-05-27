@@ -1,10 +1,14 @@
 package com.qinwei.deathnote.beans;
 
-import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
-import com.qinwei.deathnote.beans.postprocess.BeanPostProcessor;
+import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory;
+import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
+import com.qinwei.deathnote.beans.postprocessor.DestructionAwareBeanPostProcessor;
+import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
+import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
 import com.qinwei.deathnote.config.convert.Conversion;
 import com.qinwei.deathnote.config.convert.DefaultConversion;
+import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
 import java.util.List;
@@ -18,15 +22,33 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     private final List<BeanPostProcessor> beanPostProcessors = new CopyOnWriteArrayList<>();
 
+    private volatile boolean hasInstantiationAwareBeanPostProcessors;
+
+    private volatile boolean hasDestructionAwareBeanPostProcessors;
+
     @Override
     public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
         assert beanPostProcessor != null : "BeanPostProcessor must not be null";
+        if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+            this.hasInstantiationAwareBeanPostProcessors = true;
+        }
+        if (beanPostProcessor instanceof DestructionAwareBeanPostProcessor) {
+            this.hasDestructionAwareBeanPostProcessors = true;
+        }
         beanPostProcessors.remove(beanPostProcessor);
         beanPostProcessors.add(beanPostProcessor);
     }
 
     public List<BeanPostProcessor> getBeanPostProcessors() {
         return this.beanPostProcessors;
+    }
+
+    protected boolean hasInstantiationAwareBeanPostProcessors() {
+        return this.hasInstantiationAwareBeanPostProcessors;
+    }
+
+    protected boolean hasDestructionAwareBeanPostProcessors() {
+        return this.hasDestructionAwareBeanPostProcessors;
     }
 
     @Override
@@ -41,9 +63,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     @Override
     public <T> T getBean(String name, Class<T> requiredType) {
-        if (StringUtils.isEmpty(name)) {
-            throw new IllegalArgumentException("name must not be null");
-        }
+        assert !StringUtils.isEmpty(name) : "name must not be null";
         String beanName = transformedBeanName(name);
         Object bean = getSingleton(beanName);
         if (bean == null) {
@@ -72,6 +92,12 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     @Override
     public boolean containsBean(String name) {
         String beanName = transformedBeanName(name);
-        return containsSingleton(beanName);
+        return super.containsSingleton(beanName);
     }
+
+    public ClassLoader getBeanClassLoader() {
+        return ClassUtils.getDefaultClassLoader();
+    }
+
+    protected abstract Object createBean(String beanName, RootBeanDefinition mbd, Object[] args);
 }

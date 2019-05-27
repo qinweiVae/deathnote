@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans.postprocess;
+package com.qinwei.deathnote.beans.postprocessor;
 
 /**
  * @author qinwei

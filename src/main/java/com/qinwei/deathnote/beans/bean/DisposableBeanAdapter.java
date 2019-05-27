@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.beans.bean;
 
-import com.qinwei.deathnote.beans.postprocess.DestructionAwareBeanPostProcessor;
+import com.qinwei.deathnote.beans.postprocessor.DestructionAwareBeanPostProcessor;
 
 import java.util.List;
 

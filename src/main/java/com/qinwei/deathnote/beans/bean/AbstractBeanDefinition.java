@@ -1,5 +1,7 @@
 package com.qinwei.deathnote.beans.bean;
 
+import com.qinwei.deathnote.utils.ClassUtils;
+
 import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_SINGLETON;
 
@@ -7,7 +9,7 @@ import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_S
  * @author qinwei
  * @date 2019-05-24
  */
-public abstract class AbstractBeanDefinition implements BeanDefinition {
+public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneable {
 
     private volatile Object beanClass;
 
@@ -49,6 +51,20 @@ public abstract class AbstractBeanDefinition implements BeanDefinition {
         return (Class<?>) beanClassObject;
     }
 
+    public boolean hasBeanClass() {
+        return this.beanClass instanceof Class;
+    }
+
+    public Class<?> resolveBeanClass(ClassLoader classLoader) {
+        String className = getBeanClassName();
+        if (className == null) {
+            return null;
+        }
+        Class<?> resolvedClass = ClassUtils.forName(className, classLoader);
+        this.beanClass = resolvedClass;
+        return resolvedClass;
+    }
+
     @Override
     public void setScope(String scope) {
         this.scope = scope;
@@ -62,6 +78,10 @@ public abstract class AbstractBeanDefinition implements BeanDefinition {
     @Override
     public void setLazyInit(boolean lazyInit) {
         this.lazyInit = lazyInit;
+    }
+
+    public Boolean getLazyInit() {
+        return this.lazyInit;
     }
 
     @Override
@@ -128,4 +148,10 @@ public abstract class AbstractBeanDefinition implements BeanDefinition {
         this.abstractFlag = abstractFlag;
     }
 
+    @Override
+    protected Object clone() {
+         return cloneBeanDefinition();
+    }
+
+    protected abstract AbstractBeanDefinition cloneBeanDefinition();
 }

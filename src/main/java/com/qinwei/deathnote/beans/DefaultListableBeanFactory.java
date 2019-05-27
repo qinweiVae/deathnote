@@ -66,30 +66,30 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
         assert beanDefinition != null : "beanDefinition must not be null";
-        BeanDefinition existingDefinition = beanDefinitionMap.get(beanName);
+        BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
         if (existingDefinition != null) {
             throw new UnsupportedOperationException("Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
                     "': There is already [" + existingDefinition + "] bound.");
         }
-        beanDefinitionMap.put(beanName, beanDefinition);
-        beanDefinitionNames.add(beanName);
+        this.beanDefinitionMap.put(beanName, beanDefinition);
+        this.beanDefinitionNames.add(beanName);
 
     }
 
     @Override
     public void removeBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
-        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        BeanDefinition beanDefinition = this.beanDefinitionMap.get(beanName);
         if (beanDefinition == null) {
             throw new IllegalArgumentException("No bean named '" + beanName + "' available");
         }
-        beanDefinitionNames.remove(beanName);
+        this.beanDefinitionNames.remove(beanName);
     }
 
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
-        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        BeanDefinition beanDefinition = this.beanDefinitionMap.get(beanName);
         if (beanDefinition == null) {
             throw new IllegalArgumentException("No bean named '" + beanName + "' available");
         }
@@ -99,16 +99,17 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     @Override
     public boolean containsBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
-        return beanDefinitionMap.containsKey(beanName);
+        return this.beanDefinitionMap.containsKey(beanName);
     }
 
     @Override
     public String[] getBeanDefinitionNames() {
-        return StringUtils.toArray(beanDefinitionNames);
+        return StringUtils.toArray(this.beanDefinitionNames);
     }
 
     @Override
     public int getBeanDefinitionCount() {
-        return beanDefinitionMap.size();
+        return this.beanDefinitionMap.size();
     }
+
 }

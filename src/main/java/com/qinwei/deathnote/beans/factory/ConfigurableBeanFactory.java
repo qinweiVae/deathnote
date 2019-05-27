@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.beans.factory;
 
-import com.qinwei.deathnote.beans.postprocess.BeanPostProcessor;
+import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 
 /**
  * @author qinwei
@@ -17,4 +17,10 @@ public interface ConfigurableBeanFactory extends BeanFactory {
     void destroyBean(String beanName, Object beanInstance);
 
     void destroySingletons();
+
+    void registerDependentBean(String beanName, String dependentBeanName);
+
+    String[] getDependentBeans(String beanName);
+
+    String[] getDependenciesForBean(String beanName);
 }
