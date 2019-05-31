@@ -13,7 +13,7 @@ import java.util.Map;
 @Setter
 public class PropertySource {
 
-    private int order = 1 << 10;
+    private int order = 1 << 5;
 
     private Map<String, Object> source;
 

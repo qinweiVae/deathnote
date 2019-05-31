@@ -74,13 +74,13 @@ public class ServiceLoader {
             Holder<Object> singleton = cachedInstances.get(name);
             if (singleton == null) {
                 Holder holder = new Holder();
-                holder.set(ClassUtils.createInstance(clazz));
+                holder.set(ClassUtils.instantiateClass(clazz));
                 cachedInstances.putIfAbsent(name, holder);
                 singleton = cachedInstances.get(name);
             }
             return (T) singleton.get();
         }
-        return ClassUtils.createInstance(clazz);
+        return ClassUtils.instantiateClass(clazz);
     }
 
     public static Map<String, Class> loadServices(Class type) {

@@ -2,6 +2,11 @@ package com.qinwei.deathnote.beans.bean;
 
 import com.qinwei.deathnote.utils.ClassUtils;
 
+import java.lang.reflect.Constructor;
+
+import static com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE;
+import static com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR;
+import static com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory.AUTOWIRE_NO;
 import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_SINGLETON;
 
@@ -22,6 +27,8 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
     private String[] dependsOn;
 
     private boolean primary = false;
+
+    private int autowireMode = AUTOWIRE_NO;
 
     private String initMethodName;
 
@@ -109,6 +116,27 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
         return primary;
     }
 
+    public int getResolvedAutowireMode() {
+        if (this.autowireMode == AUTOWIRE_NO) {
+            Constructor<?>[] constructors = getBeanClass().getConstructors();
+            for (Constructor<?> constructor : constructors) {
+                if (constructor.getParameterCount() == 0) {
+                    return AUTOWIRE_BY_TYPE;
+                }
+            }
+            return AUTOWIRE_CONSTRUCTOR;
+        }
+        return this.autowireMode;
+    }
+
+    public void setAutowireMode(int autowireMode) {
+        this.autowireMode = autowireMode;
+    }
+
+    public int getAutowireMode() {
+        return this.autowireMode;
+    }
+
     @Override
     public void setInitMethodName(String initMethodName) {
         this.initMethodName = initMethodName;
@@ -150,7 +178,7 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
 
     @Override
     protected Object clone() {
-         return cloneBeanDefinition();
+        return cloneBeanDefinition();
     }
 
     protected abstract AbstractBeanDefinition cloneBeanDefinition();

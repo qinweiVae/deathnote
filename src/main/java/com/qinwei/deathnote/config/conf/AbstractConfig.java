@@ -49,7 +49,7 @@ public abstract class AbstractConfig implements Config {
                 .filter(Objects::nonNull)
                 //返回第一个匹配到的值
                 .findFirst()
-                .map(Object::toString)
+                .map(value -> convertProperty(String.class, value))
                 .orElse(null);
     }
 
@@ -60,15 +60,17 @@ public abstract class AbstractConfig implements Config {
                 .filter(Objects::nonNull)
                 //返回第一个匹配到的值
                 .findFirst()
-                .map(value -> {
-                    //如果可以强转
-                    if (ClassUtils.isAssignable(targetType, value.getClass())) {
-                        return (T) value;
-                    }
-                    //不能强转的话，创建转换器进行类型转换
-                    return getConversion().convert(value, targetType);
-                })
+                .map(value -> convertProperty(targetType, value))
                 .orElse(null);
+    }
+
+    private <T> T convertProperty(Class<T> targetType, Object value) {
+        //如果可以强转
+        if (ClassUtils.isAssignable(targetType, value.getClass())) {
+            return (T) value;
+        }
+        //不能强转的话，创建转换器进行类型转换
+        return getConversion().convert(value, targetType);
     }
 
     protected Conversion getConversion() {

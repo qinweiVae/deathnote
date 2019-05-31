@@ -1,21 +1,29 @@
 package com.qinwei.deathnote.support;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.qinwei.deathnote.beans.bean.CachedIntrospectionResults;
+import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.conf.Config;
 import com.qinwei.deathnote.config.conf.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
+import com.qinwei.deathnote.support.spi.MaleWorker;
 import com.qinwei.deathnote.support.spi.ServiceLoader;
 import com.qinwei.deathnote.support.spi.Worker;
+import com.qinwei.deathnote.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.slf4j.MDC;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +72,27 @@ public class SupportTest {
     }
 
     @Test
+    public void testInstantiateClass() throws NoSuchMethodException {
+        ClassUtils.instantiateClass(MaleWorker.class);
+        ClassUtils.instantiateClass(MaleWorker.class.getConstructor(String.class), "qw");
+        ClassUtils.instantiateClass(MaleWorker.class.getConstructor(String.class), "qw", 2);
+    }
+
+    @Test
+    public void testSortConstructors() {
+        Constructor<?>[] constructors = MaleWorker.class.getDeclaredConstructors();
+        ClassUtils.sortConstructors(constructors);
+        for (Constructor<?> constructor : constructors) {
+            System.out.println(constructor);
+        }
+        Object[] args = new Object[3];
+        args[0] = "qw";
+        args[1] = 2;
+        args[2] = true;
+        System.out.println(ClassUtils.instantiateClass(constructors[0], args));
+    }
+
+    @Test
     public void testSpi() {
         Worker worker = ServiceLoader.getService(Worker.class);
         worker.work();
@@ -88,5 +117,18 @@ public class SupportTest {
         System.out.println("B的别名:" + Arrays.toString(aliasRegistry.getAliases("B")));
         System.out.println("A的别名:" + Arrays.toString(aliasRegistry.getAliases("A")));
         System.out.println("C的别名:" + Arrays.toString(aliasRegistry.getAliases("C")));
+    }
+
+    @Test
+    public void testIntrospector() throws IntrospectionException {
+        CachedIntrospectionResults results = CachedIntrospectionResults.forClass(RootBeanDefinition.class);
+        Map<String, PropertyDescriptor> cache = results.getPropertyDescriptorCache();
+        for (Map.Entry<String, PropertyDescriptor> entry : cache.entrySet()) {
+            System.out.println(entry.getKey());
+            PropertyDescriptor pd = entry.getValue();
+            System.out.println(pd.getReadMethod());
+            System.out.println(pd.getWriteMethod());
+            System.out.println("----------------------------");
+        }
     }
 }

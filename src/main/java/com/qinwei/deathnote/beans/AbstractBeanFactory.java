@@ -95,7 +95,24 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return super.containsSingleton(beanName);
     }
 
-    public ClassLoader getBeanClassLoader() {
+    /**
+     * 解析 bean ，将 bean 类名解析为 class 引用
+     */
+    protected Class<?> resolveBeanClass(final RootBeanDefinition bd) {
+        if (bd.hasBeanClass()) {
+            return bd.getBeanClass();
+        }
+        ClassLoader beanClassLoader = getBeanClassLoader();
+        String className = bd.getBeanClassName();
+        try {
+            return beanClassLoader.loadClass(className);
+        } catch (ClassNotFoundException ignore) {
+
+        }
+        return bd.resolveBeanClass(beanClassLoader);
+    }
+
+    protected ClassLoader getBeanClassLoader() {
         return ClassUtils.getDefaultClassLoader();
     }
 

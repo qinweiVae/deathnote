@@ -23,4 +23,30 @@ public class StringUtils {
         return collection.toArray(new String[collection.size()]);
     }
 
+    public static String capitalize(String str) {
+        return changeFirstCharacterCase(str, true);
+    }
+
+    public static String decapitalize(String str) {
+        return changeFirstCharacterCase(str, false);
+    }
+
+    private static String changeFirstCharacterCase(String str, boolean capitalize) {
+        if (isEmpty(str)) {
+            return str;
+        }
+        char original = str.charAt(0);
+        char update;
+        if (capitalize) {
+            update = Character.toUpperCase(original);
+        } else {
+            update = Character.toLowerCase(original);
+        }
+        if (original == update) {
+            return str;
+        }
+        char[] chars = str.toCharArray();
+        chars[0] = update;
+        return new String(chars, 0, chars.length);
+    }
 }

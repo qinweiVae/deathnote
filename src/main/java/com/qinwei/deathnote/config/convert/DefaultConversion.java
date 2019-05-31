@@ -27,7 +27,7 @@ public class DefaultConversion extends AbstractConversion {
         TypeAnnotationScanner scanner = new TypeAnnotationScanner();
         Set<Class> classes = scanner.scan(Convert.class);
         for (Class clazz : classes) {
-            addConvert((Converter) ClassUtils.createInstance(clazz));
+            addConvert((Converter) ClassUtils.instantiateClass(clazz));
         }
     }
 
