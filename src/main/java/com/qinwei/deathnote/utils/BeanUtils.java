@@ -19,6 +19,9 @@ public class BeanUtils {
         copyProperties(source, target, null);
     }
 
+    /**
+     * source必须有getter方法,target必须有对应的setter方法,且属性类型相同  才能copy
+     */
     public static void copyProperties(Object source, Object target, String... ignoreProperties) {
         assert source != null : "source can not be null";
         assert target != null : "target can not be null";

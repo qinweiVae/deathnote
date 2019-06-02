@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.config.convert;
+package com.qinwei.deathnote.support.convert;
 
 import com.qinwei.deathnote.support.scan.TypeAnnotationScanner;
 import com.qinwei.deathnote.utils.ClassUtils;

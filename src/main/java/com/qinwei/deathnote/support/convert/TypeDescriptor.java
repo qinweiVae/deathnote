@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.config.convert;
+package com.qinwei.deathnote.support.convert;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

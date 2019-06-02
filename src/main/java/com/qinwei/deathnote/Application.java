@@ -1,7 +1,7 @@
 package com.qinwei.deathnote;
 
-import com.qinwei.deathnote.config.conf.Config;
-import com.qinwei.deathnote.config.conf.StandardConfig;
+import com.qinwei.deathnote.config.Config;
+import com.qinwei.deathnote.config.StandardConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Scanner;

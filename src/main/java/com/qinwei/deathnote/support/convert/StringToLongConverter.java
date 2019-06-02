@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.config.convert;
+package com.qinwei.deathnote.support.convert;
 
 import lombok.extern.slf4j.Slf4j;
 

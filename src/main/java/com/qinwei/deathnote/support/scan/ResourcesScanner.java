@@ -1,8 +1,8 @@
 package com.qinwei.deathnote.support.scan;
 
-import com.qinwei.deathnote.config.conf.Config;
-import com.qinwei.deathnote.config.conf.ConfigFactory;
-import com.qinwei.deathnote.config.conf.StandardConfig;
+import com.qinwei.deathnote.config.Config;
+import com.qinwei.deathnote.config.ConfigFactory;
+import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.support.watch.FileListener;
 import com.qinwei.deathnote.support.watch.FileWatcher;
 import com.qinwei.deathnote.utils.ClassUtils;

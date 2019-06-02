@@ -1,8 +1,8 @@
-package com.qinwei.deathnote.config.conf;
+package com.qinwei.deathnote.config;
 
 
-import com.qinwei.deathnote.config.convert.Conversion;
-import com.qinwei.deathnote.config.convert.DefaultConversion;
+import com.qinwei.deathnote.support.convert.Conversion;
+import com.qinwei.deathnote.support.convert.DefaultConversion;
 import com.qinwei.deathnote.utils.ClassUtils;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public abstract class AbstractConfig implements Config {
     }
 
     /**
-     * REMOTE 拥有高优先级
+     * 按照优先级排序,sort越低优先级越高
      */
     protected void sortByOrder() {
         propertySources.sort(Comparator.comparing(PropertySource::getOrder));

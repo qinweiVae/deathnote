@@ -6,8 +6,8 @@ import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.DestructionAwareBeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
-import com.qinwei.deathnote.config.convert.Conversion;
-import com.qinwei.deathnote.config.convert.DefaultConversion;
+import com.qinwei.deathnote.support.convert.Conversion;
+import com.qinwei.deathnote.support.convert.DefaultConversion;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
@@ -67,6 +67,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         String beanName = transformedBeanName(name);
         Object bean = getSingleton(beanName);
         if (bean == null) {
+
             return null;
         }
         if (requiredType != null && !requiredType.isInstance(bean)) {
@@ -117,4 +118,6 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
 
     protected abstract Object createBean(String beanName, RootBeanDefinition mbd, Object[] args);
+
+    protected abstract boolean containsBeanDefinition(String beanName);
 }

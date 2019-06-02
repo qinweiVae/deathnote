@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.config.conf;
+package com.qinwei.deathnote.config;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -9,10 +9,20 @@ import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProces
 import com.qinwei.deathnote.beans.postprocessor.SmartInstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.beans.FeatureDescriptor;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -67,25 +77,51 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         if (!continueWithPropertyPopulation) {
             return;
         }
+        Map<String, Object> result = new HashMap<>();
         int autowireMode = bd.getResolvedAutowireMode();
         if (autowireMode == AUTOWIRE_BY_NAME) {
-            autowireByName(beanName, bd, bw);
+            result.putAll(autowireByName(beanName, bd, bw));
         }
         if (autowireMode == AUTOWIRE_BY_TYPE) {
-            autowireByType(beanName, bd, bw);
+            result.putAll(autowireByType(beanName, bd, bw));
         }
     }
 
-    protected void autowireByName(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
-
+    protected Map<String, Object> autowireByName(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
+        String[] propertyNames = findPropertiesFromBeanWrapper(bw);
+        Map<String, Object> result = new HashMap<>();
+        for (String propertyName : propertyNames) {
+            if (containsBean(propertyName)) {
+                Object bean = getBean(propertyName);
+                result.put(propertyName, bean);
+                registerDependentBean(propertyName, beanName);
+            }
+        }
+        return result;
     }
 
-    protected void autowireByType(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
 
+    protected Map<String, Object> autowireByType(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
+        Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
+        String[] propertyNames = findPropertiesFromBeanWrapper(bw);
+        for (String propertyName : propertyNames) {
+            PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
+
+        }
+        return null;
     }
 
     protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition bd) {
         return null;
+    }
+
+    private String[] findPropertiesFromBeanWrapper(BeanWrapper bw) {
+        PropertyDescriptor[] pds = bw.getPropertyDescriptors();
+        Set<String> set = Arrays.stream(pds).
+                filter(pd -> pd.getWriteMethod() != null)
+                .map(FeatureDescriptor::getName)
+                .collect(Collectors.toCollection(TreeSet::new));
+        return StringUtils.toArray(set);
     }
 
     /**

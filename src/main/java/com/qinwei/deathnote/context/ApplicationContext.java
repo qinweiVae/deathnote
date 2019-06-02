@@ -1,7 +1,7 @@
 package com.qinwei.deathnote.context;
 
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
-import com.qinwei.deathnote.config.conf.ConfigFactory;
+import com.qinwei.deathnote.config.ConfigFactory;
 import com.qinwei.deathnote.context.event.ApplicationEventPublisher;
 import com.qinwei.deathnote.context.event.ApplicationListener;
 
