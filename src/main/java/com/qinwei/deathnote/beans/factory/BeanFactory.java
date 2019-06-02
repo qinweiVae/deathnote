@@ -15,4 +15,8 @@ public interface BeanFactory {
     String[] getAliases(String name);
 
     boolean containsBean(String name);
+
+    boolean isTypeMatch(String name, Class<?> typeToMatch);
+
+    Class<?> getType(String name);
 }

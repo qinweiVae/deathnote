@@ -1,7 +1,9 @@
 package com.qinwei.deathnote.utils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
@@ -138,11 +140,46 @@ public class ClassUtils {
         }
     }
 
+    public static void makeAccessible(Method method) {
+        if ((!Modifier.isPublic(method.getModifiers()) ||
+                !Modifier.isPublic(method.getDeclaringClass().getModifiers())) && !method.isAccessible()) {
+            method.setAccessible(true);
+        }
+    }
+
     /**
      * 优先按public 排序，其次按照 构造器参数个数降序排
      */
     public static void sortConstructors(Constructor<?>[] constructors) {
         Arrays.sort(constructors, COMPARATOR);
+    }
+
+    /**
+     * 查找class 上的注解,当前class没有，则从其所有的注解中寻找，再从其所有接口中寻找，再从其所有父类中寻找
+     */
+    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType) {
+        A annotation = clazz.getDeclaredAnnotation(annotationType);
+        if (annotation != null) {
+            return annotation;
+        }
+        for (Annotation ann : clazz.getDeclaredAnnotations()) {
+            Class<? extends Annotation> type = ann.annotationType();
+            annotation = findAnnotation(type, annotationType);
+            if (annotation != null) {
+                return annotation;
+            }
+        }
+        for (Class<?> clazzInterface : clazz.getInterfaces()) {
+            A a = findAnnotation(clazzInterface, annotationType);
+            if (a != null) {
+                return a;
+            }
+        }
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass == null || superclass == Object.class) {
+            return null;
+        }
+        return findAnnotation(superclass, annotationType);
     }
 
 }

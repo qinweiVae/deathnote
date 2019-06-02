@@ -66,7 +66,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
         synchronized (aliasMap) {
             retrieveAliases(name, result);
         }
-        return result.toArray(new String[result.size()]);
+        return StringUtils.toArray(result);
     }
 
     private void retrieveAliases(String name, List<String> result) {

@@ -20,4 +20,6 @@ public interface ListableBeanFactory extends BeanFactory {
     Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType);
 
     <T extends Annotation> T findAnnotationOnBean(String beanName, Class<T> annotationType);
+
+    String[] getBeanNamesForAnnotation(Class<? extends Annotation> annotationType);
 }

@@ -52,11 +52,6 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
 
     @Override
-    public void destroyBean(String beanName, Object beanInstance) {
-
-    }
-
-    @Override
     public Object getBean(String name) {
         return getBean(name, null);
     }
@@ -115,6 +110,27 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     protected ClassLoader getBeanClassLoader() {
         return ClassUtils.getDefaultClassLoader();
+    }
+
+    @Override
+    public boolean isTypeMatch(String beanName, Class<?> typeToMatch) {
+        if (typeToMatch == null) {
+            return true;
+        }
+        Object singleton = getSingleton(beanName);
+        if (singleton != null) {
+            return typeToMatch.isInstance(singleton) || ClassUtils.isAssignable(typeToMatch, singleton.getClass());
+        }
+        return false;
+    }
+
+    @Override
+    public Class<?> getType(String name) {
+        Object singleton = getSingleton(name);
+        if (singleton != null) {
+            return singleton.getClass();
+        }
+        return null;
     }
 
     protected abstract Object createBean(String beanName, RootBeanDefinition mbd, Object[] args);
