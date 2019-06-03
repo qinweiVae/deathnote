@@ -32,23 +32,16 @@ public class StandardConfig extends AbstractConfig {
     private StandardConfig() {
     }
 
-    public void addPropertySources(PropertySource... propertySources) {
-        for (PropertySource propertySource : propertySources) {
-            addPropertySource(propertySource);
-        }
-        sortByOrder();
-    }
-
     @Override
     public void initConfig() {
         synchronized (monitor) {
             log.info("正在初始化 config ...");
-            clearPropertySource();
+            clearConfig();
             addPropertySource(new PropertySource(1, getSystemProperties()));
             addPropertySource(new PropertySource(2, getSystemEnvironment()));
             //配置文件
             addPropertySource(new PropertySource(3, ResourcesScanner.getInstance().scan()));
-            sortByOrder();
+            init();
         }
     }
 

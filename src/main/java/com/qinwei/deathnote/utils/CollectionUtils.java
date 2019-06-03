@@ -14,7 +14,7 @@ public class CollectionUtils {
     }
 
     public static boolean isNotEmpty(Collection<?> collection) {
-        return !isNotEmpty(collection);
+        return !isEmpty(collection);
     }
 
     public static boolean isEmpty(Map<?, ?> map) {

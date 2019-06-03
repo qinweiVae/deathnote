@@ -49,4 +49,21 @@ public class StringUtils {
         chars[0] = update;
         return new String(chars, 0, chars.length);
     }
+
+    /**
+     * 查找字符串中指定字符出现的次数
+     */
+    public static int countMatchString(String str, String strToMatch) {
+        int count = 0;
+        String substring = str.trim();
+        int index = 0;
+        while (index != -1) {
+            index = substring.indexOf(strToMatch);
+            if (index != -1) {
+                count++;
+                substring = substring.substring(index + strToMatch.length());
+            }
+        }
+        return count;
+    }
 }

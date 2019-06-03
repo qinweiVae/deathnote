@@ -3,13 +3,14 @@ package com.qinwei.deathnote.config;
 
 import com.qinwei.deathnote.support.convert.Conversion;
 import com.qinwei.deathnote.support.convert.DefaultConversion;
+import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
+import com.qinwei.deathnote.support.resolve.PropertyResolver;
 import com.qinwei.deathnote.utils.ClassUtils;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author qinwei
@@ -19,6 +20,10 @@ public abstract class AbstractConfig implements Config {
 
     private List<PropertySource> propertySources = new ArrayList<>();
 
+    private Map<String, Object> config = new HashMap<>();
+
+    private PropertyResolver propertyResolver = new DefaultPropertyResolver();
+
     protected void addPropertySource(PropertySource propertySource) {
         if (propertySource == null) {
             return;
@@ -26,42 +31,49 @@ public abstract class AbstractConfig implements Config {
         propertySources.add(propertySource);
     }
 
-    protected void clearPropertySource() {
+    protected void clearConfig() {
         propertySources.clear();
+        config.clear();
     }
 
     /**
      * 按照优先级排序,sort越低优先级越高
+     * 解析占位符
      */
-    protected void sortByOrder() {
-        propertySources.sort(Comparator.comparing(PropertySource::getOrder));
+    protected void init() {
+        propertySources.stream()
+                .sorted((o1, o2) -> o1.getOrder() > o2.getOrder() ? -1 : 1)
+                .forEach(propertySource -> config.putAll(propertySource.getSource()));
+
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof String) {
+                String resolvedValue = propertyResolver.resolvePlaceholders((String) value, config);
+                config.put(key, resolvedValue);
+            }
+        }
+    }
+
+    protected void setPropertyResolver(PropertyResolver propertyResolver) {
+        this.propertyResolver = propertyResolver;
     }
 
     @Override
     public boolean containsProperty(String key) {
-        return propertySources.stream().anyMatch(propertySource -> propertySource.containsProperty(key));
+        return config.containsKey(key);
     }
 
     @Override
     public String getProperty(String key) {
-        return propertySources.stream()
-                .map(propertySource -> propertySource.getProperty(key))
-                .filter(Objects::nonNull)
-                //返回第一个匹配到的值
-                .findFirst()
-                .map(value -> convertProperty(String.class, value))
-                .orElse(null);
+        Object value = config.get(key);
+        return value == null ? null : convertProperty(String.class, value);
     }
 
     @Override
     public <T> T getProperty(String key, Class<T> targetType) {
-        return propertySources.stream()
-                .map(propertySource -> propertySource.getProperty(key))
-                .filter(Objects::nonNull)
-                //返回第一个匹配到的值
-                .findFirst()
-                .map(value -> convertProperty(targetType, value))
-                .orElse(null);
+        Object value = config.get(key);
+        return value == null ? null : convertProperty(targetType, value);
     }
 
     private <T> T convertProperty(Class<T> targetType, Object value) {

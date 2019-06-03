@@ -21,7 +21,11 @@ public class Application {
         config.initConfig();
         Scanner scanner = new Scanner(System.in);
         while (!scanner.hasNextInt()) {
-            System.out.println(config.getProperty(scanner.nextLine()));
+            String line = scanner.nextLine();
+            if ("exit".equals(line)) {
+                break;
+            }
+            System.out.println(config.getProperty(line));
         }
         scanner.close();
     }

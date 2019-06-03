@@ -7,6 +7,7 @@ import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
+import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 import com.qinwei.deathnote.support.spi.MaleWorker;
@@ -23,6 +24,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -130,5 +132,20 @@ public class SupportTest {
             System.out.println(pd.getWriteMethod());
             System.out.println("----------------------------");
         }
+    }
+
+    @Test
+    public void testPropertyResolver() {
+        DefaultPropertyResolver resolver = new DefaultPropertyResolver();
+        String text = "s${a1}2n${b}m${c2a}v${a1}";
+        //String text = "${a1}2nb}m${c2a1}";
+        for (String placeholder : resolver.findPlaceholders(text)) {
+            System.out.println(placeholder);
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("a1", "Aone");
+        map.put("b", "B");
+        map.put("c2a1", "CtwoAone");
+        System.out.println(resolver.resolvePlaceholders(text, map));
     }
 }
