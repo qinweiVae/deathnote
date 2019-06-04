@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.bean;
+package com.qinwei.deathnote.beans;
 
 import com.alibaba.fastjson.JSON;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class Domain {
+public class Domain1 {
 
     private String brand;
 

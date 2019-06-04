@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.beans;
 
+import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
@@ -53,22 +54,77 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 
     @Override
     public Object getBean(String name) {
-        return getBean(name, null);
+        return doGetBean(name, null, null);
     }
 
     @Override
     public <T> T getBean(String name, Class<T> requiredType) {
-        assert !StringUtils.isEmpty(name) : "name must not be null";
-        String beanName = transformedBeanName(name);
-        Object bean = getSingleton(beanName);
-        if (bean == null) {
+        return doGetBean(name, requiredType, null);
+    }
 
-            return null;
+    /**
+     * 获取bean,有则直接返回，没有创建bean后返回
+     */
+    protected <T> T doGetBean(final String name, final Class<T> requiredType, final Object[] args) {
+        assert !StringUtils.isEmpty(name) : "name must not be null";
+        Object bean = null;
+        String beanName = transformedBeanName(name);
+        Object sharedInstance = getSingleton(beanName);
+        if (sharedInstance != null) {
+            bean = sharedInstance;
+        } else {
+            BeanDefinition bd = getBeanDefinition(beanName);
+            if (bd.isAbstract()) {
+                throw new IllegalStateException("Bean definition is abstract, beanName : " + beanName);
+            }
+            String[] dependsOn = bd.getDependsOn();
+            if (dependsOn != null) {
+                for (String depend : dependsOn) {
+                    //判断depend 是否依赖于beanName (是否循环依赖)
+                    if (isDependent(beanName, depend)) {
+                        throw new IllegalStateException("Circular depends-on relationship between '" + beanName + "' and '" + depend + "'");
+                    }
+                    //注册bean的依赖关系(beanName 依赖于 depend)
+                    registerDependentBean(depend, beanName);
+                    try {
+                        //创建bean
+                        getBean(depend);
+                    } catch (Exception e) {
+                        throw new RuntimeException("'" + beanName + "' depends on missing beans '" + depend + "'", e);
+                    }
+                }
+            }
+            //如果是单例
+            if (bd.isSingleton()) {
+                sharedInstance = getSingleton(beanName, () -> createBean(beanName, (RootBeanDefinition) bd, args));
+                bean = sharedInstance;
+            }
+            //如果是原型
+            else if (bd.isPrototype()) {
+                Object prototypeInstance;
+                try {
+                    beforePrototypeCreation(beanName);
+                    prototypeInstance = createBean(beanName, (RootBeanDefinition) bd, args);
+                } finally {
+                    afterPrototypeCreation(beanName);
+                }
+                if (prototypeInstance != null) {
+                    bean = prototypeInstance;
+                }
+            }
         }
         if (requiredType != null && !requiredType.isInstance(bean)) {
             return getConversion().convert(bean, requiredType);
         }
         return (T) bean;
+    }
+
+    protected void beforePrototypeCreation(String beanName) {
+
+    }
+
+    protected void afterPrototypeCreation(String beanName) {
+
     }
 
     protected Conversion getConversion() {
@@ -92,7 +148,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
 
     /**
-     * 解析 bean ，将 bean 类名解析为 class 引用
+     * 解析 beans ，将 beans 类名解析为 class 引用
      */
     protected Class<?> resolveBeanClass(final RootBeanDefinition bd) {
         if (bd.hasBeanClass()) {
@@ -133,7 +189,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return null;
     }
 
-    protected abstract Object createBean(String beanName, RootBeanDefinition mbd, Object[] args);
+    protected abstract Object createBean(String beanName, RootBeanDefinition bd, Object[] args);
 
-    protected abstract boolean containsBeanDefinition(String beanName);
+    protected abstract BeanDefinition getBeanDefinition(String beanName);
 }

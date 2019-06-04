@@ -1,8 +1,11 @@
 package com.qinwei.deathnote.beans.bean;
 
 import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.CollectionUtils;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE;
 import static com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR;
@@ -34,6 +37,25 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
 
     private String destroyMethodName;
 
+    private Map<String, Object> propertyValues;
+
+    @Override
+    public Map<String, Object> getPropertyValues() {
+        if (this.propertyValues == null) {
+            this.propertyValues = new HashMap<>();
+        }
+        return this.propertyValues;
+    }
+
+    public void setPropertyValues(Map<String, Object> propertyValues) {
+        this.propertyValues = propertyValues;
+    }
+
+    @Override
+    public boolean hasPropertyValues() {
+        return CollectionUtils.isNotEmpty(this.propertyValues);
+    }
+
     @Override
     public void setBeanClassName(String beanClassName) {
         this.beanClass = beanClassName;
@@ -53,7 +75,7 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
 
     public Class<?> getBeanClass() throws IllegalStateException {
         Object beanClassObject = this.beanClass;
-        assert beanClassObject != null : "No bean class specified on bean definition";
+        assert beanClassObject != null : "No beans class specified on beans definition";
         assert beanClassObject instanceof Class : "Bean class name [" + beanClassObject + "] has not been resolved into an actual Class";
         return (Class<?>) beanClassObject;
     }

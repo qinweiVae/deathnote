@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.bean;
+package com.qinwei.deathnote.beans;
 
 import com.alibaba.fastjson.JSON;
 import lombok.Getter;
@@ -21,7 +21,7 @@ import java.util.Set;
 @Setter
 public class TestBean {
 
-    private Domain domain;
+    private Domain1 domain;
 
     private String beanName;
 

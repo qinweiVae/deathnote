@@ -4,6 +4,7 @@ import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.DestructionAwareBeanPostProcessor;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -93,5 +94,35 @@ public class DisposableBeanAdapter implements DisposableBean {
                 log.error("Unable to invoke method : {}", destroyMethodName, e);
             }
         }
+    }
+
+    public static boolean hasApplicableProcessors(Object bean, List<BeanPostProcessor> postProcessors) {
+        if (CollectionUtils.isEmpty(postProcessors)) {
+            return false;
+        }
+        return postProcessors.stream()
+                .filter(processor -> processor instanceof DestructionAwareBeanPostProcessor)
+                .map(processor -> (DestructionAwareBeanPostProcessor) processor)
+                .anyMatch(dabpp -> dabpp.requiresDestruction(bean));
+    }
+
+    public static boolean hasDestroyMethod(Object bean, RootBeanDefinition bd) {
+        if (bean instanceof DisposableBean) {
+            return true;
+        }
+        String destroyMethodName = bd.getDestroyMethodName();
+        if (destroyMethodName == null) {
+            if (!(bean instanceof DisposableBean)) {
+                try {
+                    destroyMethodName = bean.getClass().getMethod(CLOSE_METHOD_NAME).getName();
+                } catch (NoSuchMethodException e) {
+                    try {
+                        destroyMethodName = bean.getClass().getMethod(SHUTDOWN_METHOD_NAME).getName();
+                    } catch (NoSuchMethodException e1) {
+                    }
+                }
+            }
+        }
+        return StringUtils.isNotEmpty(destroyMethodName);
     }
 }

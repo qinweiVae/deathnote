@@ -161,7 +161,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
                     boolean candidate = containsBeanDefinition(candidateBeanName);
                     boolean primary = containsBeanDefinition(primaryBeanName);
                     if (primary && candidate) {
-                        throw new IllegalStateException("more than one 'primary' bean found on class type : " + requiredType);
+                        throw new IllegalStateException("more than one 'primary' beans found on class type : " + requiredType);
                     } else if (candidate) {
                         primaryBeanName = candidateBeanName;
                     }
@@ -179,7 +179,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         assert beanDefinition != null : "beanDefinition must not be null";
         BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
         if (existingDefinition != null) {
-            throw new UnsupportedOperationException("Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
+            throw new UnsupportedOperationException("Cannot register beans definition [" + beanDefinition + "] for beans '" + beanName +
                     "': There is already [" + existingDefinition + "] bound.");
         }
         this.beanDefinitionMap.put(beanName, beanDefinition);
@@ -192,7 +192,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
         BeanDefinition bd = this.beanDefinitionMap.get(beanName);
         if (bd == null) {
-            throw new IllegalArgumentException("No bean named '" + beanName + "' available");
+            throw new IllegalArgumentException("No beans named '" + beanName + "' available");
         }
         this.beanDefinitionNames.remove(beanName);
     }
@@ -202,7 +202,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
         BeanDefinition bd = this.beanDefinitionMap.get(beanName);
         if (bd == null) {
-            throw new IllegalArgumentException("No bean named '" + beanName + "' available");
+            throw new IllegalArgumentException("No beans named '" + beanName + "' available");
         }
         return bd;
     }

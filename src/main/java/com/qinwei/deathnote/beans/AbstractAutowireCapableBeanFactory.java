@@ -2,6 +2,7 @@ package com.qinwei.deathnote.beans;
 
 import com.qinwei.deathnote.beans.bean.BeanWrapper;
 import com.qinwei.deathnote.beans.bean.BeanWrapperImpl;
+import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
@@ -38,6 +39,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return (T) createBean(beanClass.getName(), bd, null);
     }
 
+    /**
+     * 创建bean
+     */
     @Override
     protected Object createBean(String beanName, RootBeanDefinition bd, Object[] args) {
         Class<?> resolvedClass = resolveBeanClass(bd);
@@ -59,15 +63,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected Object doCreateBean(final String beanName, final RootBeanDefinition bd, final Object[] args) {
         //创建 BeanWrapper
         BeanWrapper instanceWrapper = createBeanInstance(beanName, bd, args);
-        //已经实例化的 bean
+        //已经实例化的 beans
         Object bean = instanceWrapper.getWrappedInstance();
-        // bean 属性注入
+        // beans 属性注入
         populateBean(beanName, bd, instanceWrapper);
+        // 初始化bean 对象
         bean = initializeBean(beanName, bean, bd);
-
+        //注册 DisposableBean  (只有单例才能注册)
+        registerDisposableBeanIfNecessary(beanName, bean, bd);
         return bean;
     }
 
+    /**
+     * beans 属性注入
+     */
     protected void populateBean(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
         boolean continueWithPropertyPopulation = true;
         //InstantiationAwareBeanPostProcessor 扩展 postProcessAfterInstantiation
@@ -77,44 +86,84 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         if (!continueWithPropertyPopulation) {
             return;
         }
+        Map<String, Object> propertyValue = bd.hasPropertyValues() ? bd.getPropertyValues() : null;
         Map<String, Object> result = new HashMap<>();
+        // 获取 RootBeanDefinition 的 注入方式
         int autowireMode = bd.getResolvedAutowireMode();
+        // 按 name 注入
         if (autowireMode == AUTOWIRE_BY_NAME) {
-            result.putAll(autowireByName(beanName, bd, bw));
+            autowireByName(beanName, bw, result);
         }
+        // 按 type 注入
         if (autowireMode == AUTOWIRE_BY_TYPE) {
-            result.putAll(autowireByType(beanName, bd, bw));
+            autowireByType(beanName, bw, result);
         }
+        propertyValue = result;
+        // todo
     }
 
-    protected Map<String, Object> autowireByName(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
+    /**
+     * 按 name 注入
+     */
+    protected void autowireByName(String beanName, BeanWrapper bw, Map<String, Object> result) {
         String[] propertyNames = findPropertiesFromBeanWrapper(bw);
-        Map<String, Object> result = new HashMap<>();
         for (String propertyName : propertyNames) {
             if (containsBean(propertyName)) {
+                //获取或者创建bean
                 Object bean = getBean(propertyName);
                 result.put(propertyName, bean);
+                //注册bean的依赖关系 beanName 依赖于 propertyName
                 registerDependentBean(propertyName, beanName);
             }
         }
-        return result;
     }
 
 
-    protected Map<String, Object> autowireByType(String beanName, RootBeanDefinition bd, BeanWrapper bw) {
+    /**
+     * 按 type 注入
+     */
+    protected Map<String, Object> autowireByType(String beanName, BeanWrapper bw, Map<String, Object> result) {
         Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
         String[] propertyNames = findPropertiesFromBeanWrapper(bw);
         for (String propertyName : propertyNames) {
             PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
-
+            // todo
+            for (String name : autowiredBeanNames) {
+                registerDependentBean(name, beanName);
+            }
+            autowiredBeanNames.clear();
         }
         return null;
     }
 
+    /**
+     * 初始化bean 对象
+     */
     protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition bd) {
         return null;
     }
 
+    /**
+     * 只有单例才能注册 DisposableBean
+     */
+    protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition bd) {
+        if (bd.isSingleton() && requiresDestruction(bean, bd)) {
+            registerDisposableBean(beanName, new DisposableBeanAdapter(bean, beanName, bd, getBeanPostProcessors()));
+        }
+    }
+
+    /**
+     * 判断bean是否需要执行 销毁  方法
+     */
+    protected boolean requiresDestruction(Object bean, RootBeanDefinition bd) {
+        return DisposableBeanAdapter.hasDestroyMethod(bean, bd) ||
+                (hasDestructionAwareBeanPostProcessors() && DisposableBeanAdapter.hasApplicableProcessors(bean, getBeanPostProcessors()));
+    }
+
+
+    /**
+     * 查出 BeanWrapper 中的所有 PropertyDescriptor (必须有setter方法的)
+     */
     private String[] findPropertiesFromBeanWrapper(BeanWrapper bw) {
         PropertyDescriptor[] pds = bw.getPropertyDescriptors();
         Set<String> set = Arrays.stream(pds).
@@ -128,7 +177,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
      * 创建 BeanWrapper 对象
      */
     protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition bd, Object[] args) {
-        //解析 bean ，将 bean 类名解析为 class 引用
+        //解析 beans ，将 beans 类名解析为 class 引用
         Class<?> beanClass = resolveBeanClass(bd);
         //SmartInstantiationAwareBeanPostProcessor 扩展
         Constructor<?>[] constructors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);

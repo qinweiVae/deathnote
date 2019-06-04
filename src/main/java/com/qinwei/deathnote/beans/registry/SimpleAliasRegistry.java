@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SimpleAliasRegistry implements AliasRegistry {
 
+    /**
+     * 别名 -->  beanName
+     */
     private final Map<String, String> aliasMap = new ConcurrentHashMap<>(32);
 
     @Override

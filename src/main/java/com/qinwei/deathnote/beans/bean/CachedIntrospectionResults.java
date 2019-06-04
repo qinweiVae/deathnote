@@ -24,7 +24,7 @@ public class CachedIntrospectionResults {
     private final Map<String, PropertyDescriptor> propertyDescriptorCache;
 
     private CachedIntrospectionResults(Class<?> beanClass) {
-        assert beanClass != null : "bean class can not be null";
+        assert beanClass != null : "beans class can not be null";
         this.propertyDescriptorCache = new LinkedHashMap<>();
         try {
             this.beanInfo = Introspector.getBeanInfo(beanClass);
@@ -41,7 +41,7 @@ public class CachedIntrospectionResults {
                 currentClass = currentClass.getSuperclass();
             }
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to get bean info");
+            throw new IllegalStateException("Unable to get beans info");
         }
     }
 
