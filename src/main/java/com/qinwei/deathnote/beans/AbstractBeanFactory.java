@@ -52,18 +52,24 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return this.hasDestructionAwareBeanPostProcessors;
     }
 
+    /**
+     * 根据name获取bean,没有的话会创建
+     */
     @Override
     public Object getBean(String name) {
         return doGetBean(name, null, null);
     }
 
+    /**
+     * 根据name获取bean,没有的话会创建，并使用强转或者类型转换器将bean转换成指定的类型
+     */
     @Override
     public <T> T getBean(String name, Class<T> requiredType) {
         return doGetBean(name, requiredType, null);
     }
 
     /**
-     * 获取bean,有则直接返回，没有创建bean后返回
+     * 获取bean,有则直接返回，没有则创建bean后返回
      */
     protected <T> T doGetBean(final String name, final Class<T> requiredType, final Object[] args) {
         assert !StringUtils.isEmpty(name) : "name must not be null";
@@ -113,34 +119,53 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                 }
             }
         }
+        //使用类型转换器进行转换
         if (requiredType != null && !requiredType.isInstance(bean)) {
             return getConversion().convert(bean, requiredType);
         }
         return (T) bean;
     }
 
+    /**
+     * 原型bean创建前
+     */
     protected void beforePrototypeCreation(String beanName) {
 
     }
 
+    /**
+     * 原型bean创建后
+     */
     protected void afterPrototypeCreation(String beanName) {
 
     }
 
+    /**
+     * 获取默认的类型转换器
+     */
     protected Conversion getConversion() {
         return DefaultConversion.getInstance();
     }
 
+    /**
+     * 获取真正的beanName,如果在AliasRegistry中没有找到，则使用传入的name
+     */
     private String transformedBeanName(String name) {
         return canonicalName(name);
     }
 
+    /**
+     * 获取所有别名
+     */
     @Override
     public String[] getAliases(String name) {
         String beanName = transformedBeanName(name);
         return super.getAliases(beanName);
     }
 
+    /**
+     * 判断是否包含单例
+     */
     @Override
     public boolean containsBean(String name) {
         String beanName = transformedBeanName(name);
@@ -164,10 +189,16 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return bd.resolveBeanClass(beanClassLoader);
     }
 
+    /**
+     * 获取默认的ClassLoader
+     */
     protected ClassLoader getBeanClassLoader() {
         return ClassUtils.getDefaultClassLoader();
     }
 
+    /**
+     * 判断单例bean的类型是否匹配
+     */
     @Override
     public boolean isTypeMatch(String beanName, Class<?> typeToMatch) {
         if (typeToMatch == null) {
@@ -180,6 +211,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return false;
     }
 
+    /**
+     * 获取单例bean的类型
+     */
     @Override
     public Class<?> getType(String name) {
         Object singleton = getSingleton(name);

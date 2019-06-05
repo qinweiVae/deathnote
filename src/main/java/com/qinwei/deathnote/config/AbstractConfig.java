@@ -31,6 +31,9 @@ public abstract class AbstractConfig implements Config {
         propertySources.add(propertySource);
     }
 
+    /**
+     * 清除缓存
+     */
     protected void clearConfig() {
         propertySources.clear();
         config.clear();

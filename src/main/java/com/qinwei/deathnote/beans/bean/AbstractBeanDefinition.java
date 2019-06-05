@@ -84,6 +84,9 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
         return this.beanClass instanceof Class;
     }
 
+    /**
+     * 解析beanClass,使用ClassLoader加载 class
+     */
     public Class<?> resolveBeanClass(ClassLoader classLoader) {
         String className = getBeanClassName();
         if (className == null) {

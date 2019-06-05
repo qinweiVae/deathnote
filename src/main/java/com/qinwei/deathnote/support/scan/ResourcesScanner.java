@@ -52,12 +52,15 @@ public class ResourcesScanner implements ConfigFactory {
     }
 
     public Map<String, Object> scan() {
+        //获取需要扫描的配置路径
         Path path = scanConfigPath();
         log.info("读取的资源配置文件路径: {}", path);
         if (path == null) {
             return resources;
         }
+        //开始扫描
         doScan(path);
+        //注册文件监控
         registerFileWatch(path);
         return resources;
     }
@@ -67,17 +70,23 @@ public class ResourcesScanner implements ConfigFactory {
             @Override
             public void changed(Path dir) {
                 resources.clear();
+                //初始化config
                 getConfig().initConfig();
             }
         }, new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
+                //只监控properties文件
                 return name.endsWith(PROPERTIES_PATTERN);
             }
         });
+        //开始监控
         fileWatcher.watch();
     }
 
+    /**
+     * 扫描指定路径下的资源
+     */
     private Map<String, Object> doScan(Path path) {
         try {
             //遍历目录下的所有properties文件
@@ -125,6 +134,9 @@ public class ResourcesScanner implements ConfigFactory {
         return list;
     }
 
+    /**
+     * 获取需要扫描的配置路径
+     */
     private Path scanConfigPath() {
         //命令行参数拥有高优先级
         Path path = scanProperty();
@@ -140,6 +152,9 @@ public class ResourcesScanner implements ConfigFactory {
         return null;
     }
 
+    /**
+     * 查找命令行参数
+     */
     private Path scanProperty() {
         String path = System.getProperty(CONFIG_PATH);
         if (StringUtils.isNotEmpty(path)) {

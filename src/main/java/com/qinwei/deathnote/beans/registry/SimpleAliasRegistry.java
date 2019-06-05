@@ -18,6 +18,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
      */
     private final Map<String, String> aliasMap = new ConcurrentHashMap<>(32);
 
+    /**
+     * 注册别名
+     */
     @Override
     public void registerAlias(String name, String alias) {
         assert !StringUtils.isEmpty(name) : "name can not be null";
@@ -34,6 +37,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
         aliasMap.put(alias, name);
     }
 
+    /**
+     * 检查是否循环引用
+     */
     private void checkForAliasCircle(String name, String alias) {
         if (hasAlias(alias, name)) {
             throw new IllegalStateException("Cannot register alias '" + alias +
@@ -53,16 +59,25 @@ public class SimpleAliasRegistry implements AliasRegistry {
         return false;
     }
 
+    /**
+     * 移除别名
+     */
     @Override
     public void removeAlias(String alias) {
         aliasMap.remove(alias);
     }
 
+    /**
+     * 是否包含别名
+     */
     @Override
     public boolean isAlias(String name) {
         return aliasMap.containsKey(name);
     }
 
+    /**
+     * 获取所有别名
+     */
     @Override
     public String[] getAliases(String name) {
         List<String> result = new ArrayList<>();
@@ -83,6 +98,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
         }
     }
 
+    /**
+     * 获取真实的beanName,如果没有注册过别名，则直接返回name
+     */
     public String canonicalName(String name) {
         String canonicalName = name;
         String resolvedName;

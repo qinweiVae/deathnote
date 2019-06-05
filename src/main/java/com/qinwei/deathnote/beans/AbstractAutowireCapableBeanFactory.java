@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
 
+    /**
+     * 根据类型创建bean
+     */
     @Override
     public <T> T createBean(Class<T> beanClass) {
         RootBeanDefinition bd = new RootBeanDefinition(beanClass);
@@ -60,6 +63,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return doCreateBean(beanName, bdToUse, args);
     }
 
+    /**
+     * 创建 Bean 对象
+     */
     protected Object doCreateBean(final String beanName, final RootBeanDefinition bd, final Object[] args) {
         //创建 BeanWrapper
         BeanWrapper instanceWrapper = createBeanInstance(beanName, bd, args);
@@ -122,7 +128,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     /**
      * 按 type 注入
      */
-    protected Map<String, Object> autowireByType(String beanName, BeanWrapper bw, Map<String, Object> result) {
+    protected void autowireByType(String beanName, BeanWrapper bw, Map<String, Object> result) {
         Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
         String[] propertyNames = findPropertiesFromBeanWrapper(bw);
         for (String propertyName : propertyNames) {
@@ -133,13 +139,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             }
             autowiredBeanNames.clear();
         }
-        return null;
     }
 
     /**
      * 初始化bean 对象
      */
     protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition bd) {
+        //todo
         return null;
     }
 
@@ -307,16 +313,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     @Override
     public void autowireBean(Object existingBean) {
-
+        //todo
     }
 
     @Override
     public Object createBean(Class<?> beanClass, int autowireMode) {
+        //todo
         return null;
     }
 
     @Override
     public Object initializeBean(Object existingBean, String beanName) {
+        //todo
         return null;
     }
 

@@ -83,6 +83,9 @@ public class ServiceLoader {
         return ClassUtils.instantiateClass(clazz);
     }
 
+    /**
+     * 加载资源文件，获取所有的指定类型的class，key ---> class
+     */
     public static Map<String, Class> loadServices(Class type) {
         String dir = SERVICES_DIRECTORY + type.getName();
         Map<String, Class> services = SERVICE_CACHE.get(dir);
@@ -100,6 +103,9 @@ public class ServiceLoader {
         return services;
     }
 
+    /**
+     * 加载指定目录下资源
+     */
     private static void loadDirectory(Map<String, Class> services, String dir) {
         ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
         try {
@@ -115,6 +121,9 @@ public class ServiceLoader {
         }
     }
 
+    /**
+     * 解析资源文件
+     */
     private static void loadResource(Map<String, Class> services, ClassLoader classLoader, URL url) {
         BufferedReader reader = null;
         try {

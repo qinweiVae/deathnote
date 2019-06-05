@@ -32,6 +32,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     private final Map<Class<?>, String[]> singletonBeanNamesByType = new ConcurrentHashMap<>(64);
 
+    /**
+     * 初始化所有非lazy的单例bean
+     */
     @Override
     public void preInstantiateSingletons() {
         List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
@@ -43,20 +46,34 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         }
     }
 
+    /**
+     * 销毁bean
+     */
     @Override
     public void destroyBean(String beanName, Object beanInstance) {
         destroyBean(beanName, beanInstance, getBeanDefinition(beanName));
     }
 
+    /**
+     * 执行DestructionAwareBeanPostProcessor的postProcessBeforeDestruction()方法
+     * 执行 DisposableBean 的destroy()方法
+     * 如果bean包含无参的destroyMethod，则执行其destroyMethod
+     */
     protected void destroyBean(String beanName, Object bean, BeanDefinition bd) {
         new DisposableBeanAdapter(bean, beanName, bd, getBeanPostProcessors()).destroy();
     }
 
+    /**
+     * 获取所有指定类型的bean的beanName,包括非单例bean
+     */
     @Override
     public String[] getBeanNamesForType(Class<?> type) {
         return getBeanNamesForType(type, true);
     }
 
+    /**
+     * 获取所有指定类型的bean的beanName,并缓存起来,根据includeNonSingletons判断是否包括非单例bean
+     */
     @Override
     public String[] getBeanNamesForType(Class<?> type, boolean includeNonSingletons) {
         if (type == null) {
@@ -72,6 +89,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return result;
     }
 
+    /**
+     * 获取所有指定类型的bean的beanName,根据includeNonSingletons判断是否包括非单例bean
+     */
     private String[] doGetBeanNamesForType(Class<?> type, boolean includeNonSingletons) {
         List<String> result = new ArrayList<>();
         for (String beanName : this.beanDefinitionNames) {
@@ -86,11 +106,17 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return StringUtils.toArray(result);
     }
 
+    /**
+     * 获取所有属于指定类型的bean (包括单例和原型)， beanName ---> bean
+     */
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type) {
         return getBeansOfType(type, true);
     }
 
+    /**
+     * 获取所有属于指定类型的bean，根据includeNonSingletons 决定是否包含原型bean， beanName ---> bean
+     */
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type, boolean includeNonSingletons) {
         String[] beanNames = getBeanNamesForType(type, includeNonSingletons);
@@ -98,6 +124,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
                 .collect(Collectors.toMap(beanName -> beanName, beanName -> (T) getBean(beanName), (a, b) -> b, () -> new LinkedHashMap<>(beanNames.length)));
     }
 
+    /**
+     * 获取所有包含注解的bean， beanName ---> bean
+     */
     @Override
     public Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType) {
         String[] beanNames = getBeanNamesForAnnotation(annotationType);
@@ -105,6 +134,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
                 .collect(Collectors.toMap(beanName -> beanName, beanName -> getBean(beanName), (a, b) -> b, () -> new LinkedHashMap<>(beanNames.length)));
     }
 
+    /**
+     * 寻找bean上的指定注解，当前bean没有，则从其所有的注解中寻找，再从其所有接口中寻找，再从其所有父类中寻找
+     */
     @Override
     public <T extends Annotation> T findAnnotationOnBean(String beanName, Class<T> annotationType) {
         T annotation = null;
@@ -124,6 +156,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return annotation;
     }
 
+    /**
+     * 获取包含指定注解的bean
+     */
     @Override
     public String[] getBeanNamesForAnnotation(Class<? extends Annotation> annotationType) {
         List<String> result = new ArrayList<>();
@@ -136,6 +171,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return StringUtils.toArray(result);
     }
 
+    /**
+     * 根据 类型 获取 bean，如果只有一个则直接返回，有多个的话返回 primary的bean
+     */
     @Override
     public <T> T getBean(Class<T> requiredType) {
         String[] beanNames = getBeanNamesForType(requiredType);
@@ -152,6 +190,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return null;
     }
 
+    /**
+     * 选择 primary 的bean,只能有一个primary
+     */
     private <T> String determinePrimaryBean(String[] beanNames, Class<T> requiredType) {
         String primaryBeanName = null;
         for (String candidateBeanName : beanNames) {
@@ -173,6 +214,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return primaryBeanName;
     }
 
+    /**
+     * 注册 BeanDefinition
+     */
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
@@ -187,6 +231,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     }
 
+    /**
+     * 根据 beanName 移除 BeanDefinition
+     */
     @Override
     public void removeBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
@@ -197,6 +244,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         this.beanDefinitionNames.remove(beanName);
     }
 
+    /**
+     * 根据 beanName 获取 BeanDefinition
+     */
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
@@ -207,17 +257,26 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return bd;
     }
 
+    /**
+     * 根据 beanName 判断是否包含 BeanDefinition
+     */
     @Override
     public boolean containsBeanDefinition(String beanName) {
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
         return this.beanDefinitionMap.containsKey(beanName);
     }
 
+    /**
+     * 获取所有的 beanName
+     */
     @Override
     public String[] getBeanDefinitionNames() {
         return StringUtils.toArray(this.beanDefinitionNames);
     }
 
+    /**
+     * 获取 BeanDefinition 的数量
+     */
     @Override
     public int getBeanDefinitionCount() {
         return this.beanDefinitionMap.size();

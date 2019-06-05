@@ -146,6 +146,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
         }
     }
 
+    /**
+     * 根据 beanName 获取单例
+     */
     @Override
     public Object getSingleton(String beanName) {
         return this.singletonInstances.get(beanName);

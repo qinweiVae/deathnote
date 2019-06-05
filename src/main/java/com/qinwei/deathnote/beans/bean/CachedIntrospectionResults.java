@@ -45,6 +45,9 @@ public class CachedIntrospectionResults {
         }
     }
 
+    /**
+     * 递归查询实现的接口是否含有 setter/getter,有则缓存起来
+     */
     private void introspectInterfaces(Class<?> currentClass) throws IntrospectionException {
         for (Class<?> ifc : currentClass.getInterfaces()) {
             for (PropertyDescriptor pd : Introspector.getBeanInfo(ifc).getPropertyDescriptors()) {

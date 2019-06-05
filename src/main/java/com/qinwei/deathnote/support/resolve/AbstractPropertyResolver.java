@@ -16,6 +16,9 @@ public abstract class AbstractPropertyResolver implements PropertyResolver {
 
     private String placeholderSuffix;
 
+    /**
+     * 查找占位符
+     */
     @Override
     public Set<String> findPlaceholders(String text) {
         int prefixCount = StringUtils.countMatchString(text, placeholderPrefix);
@@ -29,6 +32,9 @@ public abstract class AbstractPropertyResolver implements PropertyResolver {
         return result;
     }
 
+    /**
+     * 递归查找占位符
+     */
     private void recursiveFindPlaceholder(String text, Set<String> result) {
         int startIndex = text.indexOf(placeholderPrefix);
         if (startIndex != -1) {
@@ -45,6 +51,9 @@ public abstract class AbstractPropertyResolver implements PropertyResolver {
         }
     }
 
+    /**
+     * 解析占位符
+     */
     @Override
     public String resolvePlaceholders(String text, Map<String, Object> config) {
         String resolvedString = text;

@@ -44,6 +44,9 @@ public class DisposableBeanAdapter implements DisposableBean {
         }
     }
 
+    /**
+     * 推断是否有destroyMethod,如果不是DisposableBean,判断是否包含close或者shutdown方法
+     */
     private String inferDestroyMethodIfNecessary(Object bean, RootBeanDefinition bd) {
         String destroyMethodName = bd.getDestroyMethodName();
         if (destroyMethodName == null) {
@@ -61,6 +64,9 @@ public class DisposableBeanAdapter implements DisposableBean {
         return destroyMethodName;
     }
 
+    /**
+     * 过滤出DestructionAwareBeanPostProcessor 且 调用requiresDestruction()为true
+     */
     private List<DestructionAwareBeanPostProcessor> filterPostProcessor(List<BeanPostProcessor> postProcessors, Object bean) {
         return postProcessors.stream()
                 .filter(postProcessor -> postProcessor instanceof DestructionAwareBeanPostProcessor)
@@ -70,6 +76,11 @@ public class DisposableBeanAdapter implements DisposableBean {
     }
 
 
+    /**
+     * 执行DestructionAwareBeanPostProcessor的postProcessBeforeDestruction()方法
+     * 执行 DisposableBean 的destroy()方法
+     * 如果bean包含无参的destroyMethod，则执行其destroyMethod
+     */
     @Override
     public void destroy() {
         if (CollectionUtils.isNotEmpty(this.beanPostProcessors)) {
@@ -96,6 +107,9 @@ public class DisposableBeanAdapter implements DisposableBean {
         }
     }
 
+    /**
+     * 是否含有需要执行的beanPostProcessor
+     */
     public static boolean hasApplicableProcessors(Object bean, List<BeanPostProcessor> postProcessors) {
         if (CollectionUtils.isEmpty(postProcessors)) {
             return false;
@@ -106,6 +120,9 @@ public class DisposableBeanAdapter implements DisposableBean {
                 .anyMatch(dabpp -> dabpp.requiresDestruction(bean));
     }
 
+    /**
+     * 判断是否含有需要销毁的方法
+     */
     public static boolean hasDestroyMethod(Object bean, RootBeanDefinition bd) {
         if (bean instanceof DisposableBean) {
             return true;

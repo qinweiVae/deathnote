@@ -50,6 +50,9 @@ public class ClassUtils {
         DEFAULT_TYPE_VALUES = Collections.unmodifiableMap(values);
     }
 
+    /**
+     * 获取默认的ClassLoader
+     */
     public static ClassLoader getDefaultClassLoader() {
         ClassLoader cl = null;
         try {
@@ -68,6 +71,9 @@ public class ClassUtils {
         return cl;
     }
 
+    /**
+     * 判断rType是否可以转换为lType
+     */
     public static boolean isAssignable(Class<?> lType, Class<?> rType) {
         if (lType.isAssignableFrom(rType)) {
             return true;
@@ -86,6 +92,9 @@ public class ClassUtils {
         return false;
     }
 
+    /**
+     * 使用默认无参构造器实例化class
+     */
     public static <T> T instantiateClass(Class<T> clazz) {
         assert clazz != null : "class can not be null";
         if (clazz.isInterface()) {
@@ -100,6 +109,9 @@ public class ClassUtils {
         }
     }
 
+    /**
+     * 根据构造器和参数 实例化class
+     */
     public static <T> T instantiateClass(Constructor<T> constructor, Object... args) {
         assert constructor != null : "constructor can not be null";
         try {
@@ -123,6 +135,9 @@ public class ClassUtils {
         }
     }
 
+    /**
+     * 加载class
+     */
     public static Class<?> forName(String className, ClassLoader classLoader) {
         if (classLoader == null) {
             classLoader = getDefaultClassLoader();

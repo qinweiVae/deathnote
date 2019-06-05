@@ -23,10 +23,16 @@ public class StringUtils {
         return collection.toArray(new String[collection.size()]);
     }
 
+    /**
+     * 首字母大写
+     */
     public static String capitalize(String str) {
         return changeFirstCharacterCase(str, true);
     }
 
+    /**
+     * 首字母小写
+     */
     public static String decapitalize(String str) {
         return changeFirstCharacterCase(str, false);
     }
