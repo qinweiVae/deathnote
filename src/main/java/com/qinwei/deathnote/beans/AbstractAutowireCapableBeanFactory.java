@@ -3,6 +3,7 @@ package com.qinwei.deathnote.beans;
 import com.qinwei.deathnote.beans.bean.BeanWrapper;
 import com.qinwei.deathnote.beans.bean.BeanWrapperImpl;
 import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
+import com.qinwei.deathnote.beans.bean.InitializingBean;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -73,7 +75,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object bean = instanceWrapper.getWrappedInstance();
         // beans 属性注入
         populateBean(beanName, bd, instanceWrapper);
-        // 初始化bean 对象
+        // 初始化bean
         bean = initializeBean(beanName, bean, bd);
         //注册 DisposableBean  (只有单例才能注册)
         registerDisposableBeanIfNecessary(beanName, bean, bd);
@@ -93,7 +95,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             return;
         }
         Map<String, Object> propertyValue = bd.hasPropertyValues() ? bd.getPropertyValues() : null;
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>(8);
         // 获取 RootBeanDefinition 的 注入方式
         int autowireMode = bd.getResolvedAutowireMode();
         // 按 name 注入
@@ -133,8 +135,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         String[] propertyNames = findPropertiesFromBeanWrapper(bw);
         for (String propertyName : propertyNames) {
             PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
-            // todo
+            // 对 bean 的属性进行解析,可能包括：数组、Collection 、Map 类型
+            Object autowiredArgument = resolveDependency(beanName, pd, autowiredBeanNames);
+            if (autowiredArgument != null) {
+                result.put(propertyName, autowiredArgument);
+            }
             for (String name : autowiredBeanNames) {
+                //注册bean的依赖关系 beanName 依赖于 name
                 registerDependentBean(name, beanName);
             }
             autowiredBeanNames.clear();
@@ -142,11 +149,52 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
     /**
-     * 初始化bean 对象
+     * 初始化bean
      */
     protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition bd) {
-        //todo
-        return null;
+        Object wrappedBean = bean;
+        if (bd == null) {
+            // 执行 BeanPostProcessor 的 postProcessBeforeInitialization
+            wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+        }
+        try {
+            //执行 init 方法
+            invokeInitMethods(beanName, wrappedBean, bd);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to invoke init method , beanName : " + beanName, e);
+        }
+        if (bd == null) {
+            // 执行 BeanPostProcessor 的 postProcessAfterInitialization
+            wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+        }
+        return wrappedBean;
+    }
+
+    /**
+     * 执行 init 方法
+     */
+    protected void invokeInitMethods(String beanName, Object bean, RootBeanDefinition bd) {
+        boolean isInitializingBean = bean instanceof InitializingBean;
+        //如果是 InitializingBean 执行其 afterPropertiesSet()方法
+        if (isInitializingBean && (bd == null || !bd.isExternallyInitMethod("afterPropertiesSet"))) {
+            ((InitializingBean) bean).afterPropertiesSet();
+        }
+        if (bd != null) {
+            String initMethodName = bd.getInitMethodName();
+            if (StringUtils.isNotEmpty(initMethodName) &&
+                    !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
+                    !bd.isExternallyInitMethod(initMethodName)) {
+                Method method = ClassUtils.findMethod(bd.getBeanClass(), initMethodName);
+                if (method != null) {
+                    try {
+                        ClassUtils.makeAccessible(method);
+                        method.invoke(bean);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Unable to invoke init method , method name : " + initMethodName, e);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -168,11 +216,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
     /**
-     * 查出 BeanWrapper 中的所有 PropertyDescriptor (必须有setter方法的)
+     * 查出 BeanWrapper 中的所有 PropertyDescriptor (必须有setter方法的,且type不是简单类型的)
      */
     private String[] findPropertiesFromBeanWrapper(BeanWrapper bw) {
         PropertyDescriptor[] pds = bw.getPropertyDescriptors();
         Set<String> set = Arrays.stream(pds).
+                filter(pd -> !ClassUtils.isSimpleProperty(pd.getPropertyType())).
                 filter(pd -> pd.getWriteMethod() != null)
                 .map(FeatureDescriptor::getName)
                 .collect(Collectors.toCollection(TreeSet::new));
@@ -359,4 +408,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
         return result;
     }
+
+    protected abstract Object resolveDependency(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames);
 }

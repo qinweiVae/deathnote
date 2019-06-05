@@ -5,11 +5,16 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.net.URL;
+import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -24,6 +29,9 @@ public class ClassUtils {
 
     private static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
 
+    /**
+     * 优先按public 排序，其次按照 构造器参数个数降序排
+     */
     private static final Comparator<Executable> COMPARATOR = (e1, e2) -> {
         int result = Boolean.compare(Modifier.isPublic(e2.getModifiers()), Modifier.isPublic(e1.getModifiers()));
         return result != 0 ? result : Integer.compare(e2.getParameterCount(), e1.getParameterCount());
@@ -48,6 +56,41 @@ public class ClassUtils {
         values.put(int.class, 0);
         values.put(long.class, (long) 0);
         DEFAULT_TYPE_VALUES = Collections.unmodifiableMap(values);
+    }
+
+    /**
+     * 判断class 是否属于简单类型
+     * 1. CharSequence 接口的实现类，比如 String
+     * 2. Enum
+     * 3. Date
+     * 4. URI/URL
+     * 5. Number 的继承类，比如 Integer/Long
+     * 6. byte/short/int... 等基本类型
+     * 7. Locale
+     * 8. 以上所有类型的数组形式，比如 String[]、Date[]、int[] 等等
+     */
+    public static boolean isSimpleProperty(Class<?> clazz) {
+        assert clazz != null : "Class must not be null";
+        return isSimpleValueType(clazz) || (clazz.isArray() && isSimpleValueType(clazz.getComponentType()));
+    }
+
+    public static boolean isSimpleValueType(Class<?> clazz) {
+        return (clazz.isPrimitive() ||
+                primitiveTypeToWrapperMap.containsKey(clazz) ||
+                Enum.class.isAssignableFrom(clazz) ||
+                CharSequence.class.isAssignableFrom(clazz) ||
+                Number.class.isAssignableFrom(clazz) ||
+                Date.class.isAssignableFrom(clazz) ||
+                Temporal.class.isAssignableFrom(clazz) ||
+                URI.class == clazz || URL.class == clazz ||
+                Locale.class == clazz || Class.class == clazz);
+    }
+
+    /**
+     * 判断class 是否是 内部类
+     */
+    public static boolean isInnerClass(Class<?> clazz) {
+        return clazz.isMemberClass() && !Modifier.isStatic(clazz.getModifiers());
     }
 
     /**
@@ -163,7 +206,7 @@ public class ClassUtils {
     }
 
     /**
-     * 优先按public 排序，其次按照 构造器参数个数降序排
+     * 对constructor进行排序,优先按public 排序，其次按照 构造器参数个数降序排
      */
     public static void sortConstructors(Constructor<?>[] constructors) {
         Arrays.sort(constructors, COMPARATOR);
@@ -195,6 +238,28 @@ public class ClassUtils {
             return null;
         }
         return findAnnotation(superclass, annotationType);
+    }
+
+    /**
+     * 根据方法名和方法参数查找class对应的method,如果当前class没有找到,则找寻其父类
+     */
+    public static Method findMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
+        try {
+            return clazz.getMethod(methodName, paramTypes);
+        } catch (NoSuchMethodException e) {
+            return findDeclaredMethod(clazz, methodName, paramTypes);
+        }
+    }
+
+    public static Method findDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
+        try {
+            return clazz.getDeclaredMethod(methodName, paramTypes);
+        } catch (NoSuchMethodException e) {
+            if (clazz.getSuperclass() != null) {
+                return findDeclaredMethod(clazz.getSuperclass(), methodName, paramTypes);
+            }
+        }
+        return null;
     }
 
 }

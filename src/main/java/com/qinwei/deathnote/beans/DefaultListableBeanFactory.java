@@ -8,12 +8,15 @@ import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -282,4 +285,48 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return this.beanDefinitionMap.size();
     }
 
+    @Override
+    protected Object resolveDependency(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
+        Object multipleBeans = resolveMultipleBeans(beanName, pd, autowiredBeanNames);
+        return null;
+    }
+
+    private Object resolveMultipleBeans(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
+        Class<?> type = pd.getPropertyType();
+        if (type.isArray()) {
+            //获取数组中元素的类型
+            Class<?> componentType = type.getComponentType();
+            if (componentType == null) {
+                return null;
+            }
+            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, componentType, pd);
+            if (matchingBeans.isEmpty()) {
+                return null;
+            }
+            if (autowiredBeanNames != null) {
+                autowiredBeanNames.addAll(matchingBeans.keySet());
+            }
+            //使用类型转换器进行转换
+            Collection<Object> values = matchingBeans.values();
+            if (!type.isInstance(values)) {
+                return getConversion().convert(values, type);
+            }
+            return values;
+        }
+        return null;
+    }
+
+    private Map<String, Object> findAutowireCandidates(String beanName, Class<?> type, PropertyDescriptor pd) {
+        //获取所有指定类型的bean的beanName,包括非单例bean
+        String[] candidateNames = getBeanNamesForType(type);
+        Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
+        for (String name : candidateNames) {
+            // beanName 不能与 name 相同,不然就是循环引用了
+            if (!name.equals(beanName)) {
+                Object bean = getBean(name);
+                result.put(name, bean);
+            }
+        }
+        return result;
+    }
 }
