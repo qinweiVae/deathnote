@@ -10,6 +10,8 @@ import com.qinwei.deathnote.utils.StringUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -288,6 +290,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     @Override
     protected Object resolveDependency(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
         Object multipleBeans = resolveMultipleBeans(beanName, pd, autowiredBeanNames);
+        //todo
         return null;
     }
 
@@ -299,24 +302,72 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             if (componentType == null) {
                 return null;
             }
-            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, componentType, pd);
+            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, componentType);
             if (matchingBeans.isEmpty()) {
                 return null;
             }
             if (autowiredBeanNames != null) {
                 autowiredBeanNames.addAll(matchingBeans.keySet());
             }
-            //使用类型转换器进行转换
             Collection<Object> values = matchingBeans.values();
-            if (!type.isInstance(values)) {
-                return getConversion().convert(values, type);
+            return type.cast(values.toArray());
+        } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
+            Class elementType = null;
+            Type[] types = type.getClass().getGenericInterfaces();
+            for (Type t : types) {
+                if (t instanceof ParameterizedType) {
+                    ParameterizedType pt = (ParameterizedType) t;
+                    elementType = (Class) pt.getActualTypeArguments()[0];
+                    if (elementType != null) {
+                        break;
+                    }
+                }
             }
+            if (elementType == null) {
+                return null;
+            }
+            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, elementType);
+            if (matchingBeans.isEmpty()) {
+                return null;
+            }
+            if (autowiredBeanNames != null) {
+                autowiredBeanNames.addAll(matchingBeans.keySet());
+            }
+            Collection<Object> values = matchingBeans.values();
             return values;
+        } else if (Map.class == type) {
+            Class keyType = null;
+            Class valueType = null;
+            Type[] types = type.getGenericInterfaces();
+            for (Type t : types) {
+                if (t instanceof ParameterizedType) {
+                    ParameterizedType pt = (ParameterizedType) t;
+                    keyType = (Class) pt.getActualTypeArguments()[0];
+                    valueType = (Class) pt.getActualTypeArguments()[1];
+                    if (keyType != null && valueType != null) {
+                        break;
+                    }
+                }
+            }
+            if (keyType == null || String.class == keyType) {
+                return null;
+            }
+            if (valueType == null) {
+                return null;
+            }
+            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, valueType);
+            if (matchingBeans.isEmpty()) {
+                return null;
+            }
+            if (autowiredBeanNames != null) {
+                autowiredBeanNames.addAll(matchingBeans.keySet());
+            }
+            return matchingBeans;
         }
         return null;
     }
 
-    private Map<String, Object> findAutowireCandidates(String beanName, Class<?> type, PropertyDescriptor pd) {
+    private Map<String, Object> findAutowireCandidates(String beanName, Class<?> type) {
         //获取所有指定类型的bean的beanName,包括非单例bean
         String[] candidateNames = getBeanNamesForType(type);
         Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
