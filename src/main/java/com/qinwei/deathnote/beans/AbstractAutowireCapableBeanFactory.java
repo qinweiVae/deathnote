@@ -10,6 +10,7 @@ import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.SmartInstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.CollectionUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +108,23 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             autowireByType(beanName, bw, result);
         }
         propertyValue = result;
-        // todo
+        if (CollectionUtils.isNotEmpty(propertyValue)) {
+            applyPropertyValues(beanName, bw, propertyValue);
+        }
+    }
+
+    /**
+     * 通过调用对象的 setter 方法进行属性设置
+     */
+    protected void applyPropertyValues(String beanName, BeanWrapper bw, Map<String, Object> propertyValue) {
+        if (propertyValue.isEmpty()) {
+            return;
+        }
+        try {
+            bw.setPropertyValues(propertyValue);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to populate bean , bean name : " + beanName);
+        }
     }
 
     /**
@@ -274,23 +291,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             argsToUse = new Object[parameterTypes.length];
 
             for (int i = 0; i < parameterTypes.length; i++) {
-                //如果传入了参数
-                if (args != null) {
-                    //如果可以强转
-                    if (ClassUtils.isAssignable(parameterTypes[i], args[i].getClass())) {
-                        argsToUse[i] = parameterTypes[i].cast(args[i]);
-                    } else {
-                        //如果不能强转，创建转换器进行类型转换
-                        argsToUse[i] = getConversion().convert(args[i], parameterTypes[i]);
-                    }
-                } else {
-                    //如果没有传入参数
-                    argsToUse[i] = null;
-                }
-                //实例化
-                beanWrapper.setBeanInstance(ClassUtils.instantiateClass(candidate, argsToUse));
-                return beanWrapper;
+                //进行类型转换
+                argsToUse[i] = getConversion().convertIfNecessary(args[i], parameterTypes[i]);
             }
+            //实例化
+            beanWrapper.setBeanInstance(ClassUtils.instantiateClass(candidate, argsToUse));
+            return beanWrapper;
         }
         return beanWrapper;
     }
@@ -362,19 +368,23 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     @Override
     public void autowireBean(Object existingBean) {
-        //todo
+        RootBeanDefinition bd = new RootBeanDefinition(existingBean.getClass());
+        bd.setScope(SCOPE_PROTOTYPE);
+        BeanWrapper bw = new BeanWrapperImpl(existingBean);
+        populateBean(bd.getBeanClassName(), bd, bw);
     }
 
     @Override
     public Object createBean(Class<?> beanClass, int autowireMode) {
-        //todo
-        return null;
+        RootBeanDefinition bd = new RootBeanDefinition(beanClass);
+        bd.setAutowireMode(autowireMode);
+        bd.setScope(SCOPE_PROTOTYPE);
+        return createBean(beanClass.getName(), bd, null);
     }
 
     @Override
     public Object initializeBean(Object existingBean, String beanName) {
-        //todo
-        return null;
+        return initializeBean(beanName, existingBean, null);
     }
 
     /**

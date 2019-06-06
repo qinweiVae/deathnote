@@ -58,4 +58,15 @@ public class AbstractConversion implements Conversion {
                 .orElse(null);
     }
 
+    @Override
+    public <T> T convertIfNecessary(Object source, Class<T> targetType) {
+        if (source == null) {
+            return null;
+        }
+        if (ClassUtils.isAssignable(targetType, source.getClass()) || targetType.isInstance(source)) {
+            return (T) source;
+        }
+        return convert(source, targetType);
+    }
+
 }

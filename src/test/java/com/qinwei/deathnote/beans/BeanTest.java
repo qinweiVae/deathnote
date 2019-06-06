@@ -1,6 +1,9 @@
 package com.qinwei.deathnote.beans;
 
 import com.google.common.collect.Lists;
+import com.qinwei.deathnote.beans.bean.Domain;
+import com.qinwei.deathnote.beans.bean.Domain1;
+import com.qinwei.deathnote.beans.bean.Domain2;
 import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
 import com.qinwei.deathnote.utils.BeanUtils;
 import org.junit.Test;
@@ -18,7 +21,7 @@ public class BeanTest {
 
     @Test
     public void testCopyProperties() {
-        TestBean source = new TestBean();
+        Domain source = new Domain();
         source.setAge(32);
         source.setBeanName("qw");
         source.setDate(new Date());
@@ -39,7 +42,7 @@ public class BeanTest {
 
         source.setDomain(domain);
 
-        TestBean target = new TestBean();
+        Domain target = new Domain();
         BeanUtils.copyProperties(source, target);
         System.out.println(source);
         System.out.println(target);

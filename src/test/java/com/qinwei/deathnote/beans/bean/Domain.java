@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans;
+package com.qinwei.deathnote.beans.bean;
 
 import com.alibaba.fastjson.JSON;
 import lombok.Getter;
@@ -19,7 +19,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-public class TestBean {
+public class Domain {
 
     private Domain1 domain;
 
@@ -59,7 +59,7 @@ public class TestBean {
 
     private Boolean someBoolean;
 
-    public TestBean() {
+    public Domain() {
     }
 
     @Override

@@ -6,19 +6,16 @@ import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.CollectionUtils;
+import com.qinwei.deathnote.utils.ObjectUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -287,13 +284,73 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return this.beanDefinitionMap.size();
     }
 
+    /**
+     * 根据类型解析beanName的依赖
+     */
     @Override
     protected Object resolveDependency(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
+        // 解析数组、list、map 等类型的依赖
         Object multipleBeans = resolveMultipleBeans(beanName, pd, autowiredBeanNames);
-        //todo
+        if (multipleBeans != null) {
+            return multipleBeans;
+        }
+        //解析普通类型（非集合类型）的依赖
+        Map<String, Object> matchingBeans = findAutowireCandidates(beanName, pd.getPropertyType());
+        if (CollectionUtils.isEmpty(matchingBeans)) {
+            return null;
+        }
+        String autowiredBeanName;
+        Object instance;
+        //刚好只找到一个bean
+        if (matchingBeans.size() == 1) {
+            Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
+            autowiredBeanName = entry.getKey();
+            instance = entry.getValue();
+        }
+        //如果找到多个bean
+        else {
+            autowiredBeanName = determineAutowireCandidate(matchingBeans, pd);
+            if (autowiredBeanName == null) {
+                return null;
+            }
+            instance = matchingBeans.get(autowiredBeanName);
+        }
+        if (autowiredBeanNames != null) {
+            autowiredBeanNames.add(autowiredBeanName);
+        }
+        return instance;
+    }
+
+    /**
+     * 找到合适的beanName
+     */
+    protected String determineAutowireCandidate(Map<String, Object> beans, PropertyDescriptor pd) {
+        //选择 primary 的bean
+        String primaryBean = determinePrimaryBean(StringUtils.toArray(beans.keySet()), pd.getPropertyType());
+        if (primaryBean != null) {
+            return primaryBean;
+        }
+        //如果没有找到 primary 的 beanName，则寻找和 属性名称匹配的 beanName
+        for (Map.Entry<String, Object> entry : beans.entrySet()) {
+            String candidateName = entry.getKey();
+            Object beanInstance = entry.getValue();
+            if (beanInstance != null && matchesBeanName(candidateName, pd.getName())) {
+                return candidateName;
+            }
+        }
         return null;
     }
 
+    /**
+     * 判断beanName和candidateName是否匹配(2个名称相同或者 candidateName是beanName的别名)
+     */
+    protected boolean matchesBeanName(String beanName, String candidateName) {
+        return beanName.equals(candidateName) || ObjectUtils.containsElement(getAliases(beanName), candidateName);
+    }
+
+    /**
+     * todo 这里代码后面需要优化，写的太难看了,spring 使用了 ResolvableType 封装
+     */
     private Object resolveMultipleBeans(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
         Class<?> type = pd.getPropertyType();
         if (type.isArray()) {
@@ -310,8 +367,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
                 autowiredBeanNames.addAll(matchingBeans.keySet());
             }
             Collection<Object> values = matchingBeans.values();
-            return type.cast(values.toArray());
+            //如果集合内的元素无法转换直接抛异常
+            if (!getConversion().canConvert(values.iterator().next().getClass(), componentType)) {
+                throw new IllegalStateException("Unable to convert " + values.iterator().next().getClass().getName() + " to " + componentType.getName() + " , beanName : " + beanName);
+            }
+            return convertToArray(componentType, values);
         } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
+            //集合中元素的类型
             Class elementType = null;
             Type[] types = type.getClass().getGenericInterfaces();
             for (Type t : types) {
@@ -334,9 +396,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
                 autowiredBeanNames.addAll(matchingBeans.keySet());
             }
             Collection<Object> values = matchingBeans.values();
-            return values;
+            //如果集合内的元素无法转换直接抛异常
+            if (!getConversion().canConvert(values.iterator().next().getClass(), elementType)) {
+                throw new IllegalStateException("Unable to convert " + values.iterator().next().getClass().getName() + " to " + elementType.getName() + " , beanName : " + beanName);
+            }
+            return convertToCollection(type, elementType, values);
         } else if (Map.class == type) {
+            //map 中 key 的类型
             Class keyType = null;
+            //map 中 value 的类型
             Class valueType = null;
             Type[] types = type.getGenericInterfaces();
             for (Type t : types) {
@@ -367,6 +435,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         return null;
     }
 
+    /**
+     * 找到符合条件的bean
+     */
     private Map<String, Object> findAutowireCandidates(String beanName, Class<?> type) {
         //获取所有指定类型的bean的beanName,包括非单例bean
         String[] candidateNames = getBeanNamesForType(type);
@@ -379,5 +450,37 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             }
         }
         return result;
+    }
+
+    /**
+     * Collection 转成 Arrary
+     */
+    private Object convertToArray(Class<?> componentType, Collection<Object> values) {
+        Object array = Array.newInstance(componentType, values.size());
+        int i = 0;
+        for (Object value : values) {
+            Array.set(array, i++, getConversion().convertIfNecessary(value, componentType));
+        }
+        return array;
+    }
+
+    /**
+     * 转成对应的collection
+     */
+    private <T> Collection convertToCollection(Class<?> type, Class<T> elementType, Collection<Object> values) {
+        Collection<T> collection;
+        if (List.class == type) {
+            collection = new ArrayList();
+        } else if (Set.class == type || Collection.class == type) {
+            collection = new LinkedHashSet();
+        } else if (SortedSet.class == type || NavigableSet.class == type) {
+            collection = new TreeSet();
+        } else {
+            return null;
+        }
+        for (Object value : values) {
+            collection.add(getConversion().convertIfNecessary(value, elementType));
+        }
+        return collection;
     }
 }

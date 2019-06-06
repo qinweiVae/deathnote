@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans;
+package com.qinwei.deathnote.beans.bean;
 
 import com.alibaba.fastjson.JSON;
 import lombok.Getter;

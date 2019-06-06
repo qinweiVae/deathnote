@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.beans.bean;
 
 import java.beans.PropertyDescriptor;
+import java.util.Map;
 
 /**
  * @author qinwei
@@ -15,4 +16,6 @@ public interface BeanWrapper {
     PropertyDescriptor[] getPropertyDescriptors();
 
     PropertyDescriptor getPropertyDescriptor(String propertyName);
+
+    void setPropertyValues(Map<String, Object> propertyValue);
 }

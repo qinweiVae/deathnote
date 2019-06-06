@@ -5,7 +5,6 @@ import com.qinwei.deathnote.support.convert.Conversion;
 import com.qinwei.deathnote.support.convert.DefaultConversion;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.resolve.PropertyResolver;
-import com.qinwei.deathnote.utils.ClassUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,22 +69,13 @@ public abstract class AbstractConfig implements Config {
     @Override
     public String getProperty(String key) {
         Object value = config.get(key);
-        return value == null ? null : convertProperty(String.class, value);
+        return value == null ? null : getConversion().convertIfNecessary(value, String.class);
     }
 
     @Override
     public <T> T getProperty(String key, Class<T> targetType) {
         Object value = config.get(key);
-        return value == null ? null : convertProperty(targetType, value);
-    }
-
-    private <T> T convertProperty(Class<T> targetType, Object value) {
-        //如果可以强转
-        if (ClassUtils.isAssignable(targetType, value.getClass())) {
-            return (T) value;
-        }
-        //不能强转的话，创建转换器进行类型转换
-        return getConversion().convert(value, targetType);
+        return value == null ? null : getConversion().convertIfNecessary(value, targetType);
     }
 
     protected Conversion getConversion() {

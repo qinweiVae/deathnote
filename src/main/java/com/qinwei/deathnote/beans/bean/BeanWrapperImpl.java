@@ -3,6 +3,8 @@ package com.qinwei.deathnote.beans.bean;
 import com.qinwei.deathnote.utils.ClassUtils;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * @author qinwei
@@ -47,6 +49,21 @@ public class BeanWrapperImpl implements BeanWrapper {
     @Override
     public PropertyDescriptor getPropertyDescriptor(String propertyName) {
         return getCachedIntrospectionResults().getPropertyDescriptor(propertyName);
+    }
+
+    @Override
+    public void setPropertyValues(Map<String, Object> propertyValue) {
+        for (Map.Entry<String, Object> entry : propertyValue.entrySet()) {
+            String propertyName = entry.getKey();
+            PropertyDescriptor pd = getPropertyDescriptor(propertyName);
+            Method writeMethod = pd.getWriteMethod();
+            ClassUtils.makeAccessible(writeMethod);
+            try {
+                writeMethod.invoke(getWrappedInstance(), entry.getValue());
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to invoke setter , method name : " + pd.getWriteMethod().getName());
+            }
+        }
     }
 
     private CachedIntrospectionResults getCachedIntrospectionResults() {

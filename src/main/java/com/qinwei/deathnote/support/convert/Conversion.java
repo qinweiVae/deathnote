@@ -9,4 +9,6 @@ public interface Conversion {
     boolean canConvert(Class<?> sourceType, Class<?> targetType);
 
     <T> T convert(Object source, Class<T> targetType);
+
+    <T> T convertIfNecessary(Object source, Class<T> targetType);
 }
