@@ -115,6 +115,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     /**
      * 通过调用对象的 setter 方法进行属性设置
+     * todo spring 这里做了很多处理，支持各种嵌套属性，这里简化处理仅实现了其最后一步
      */
     protected void applyPropertyValues(String beanName, BeanWrapper bw, Map<String, Object> propertyValue) {
         if (propertyValue.isEmpty()) {
@@ -145,7 +146,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
     /**
-     * 按 type 注入
+     * todo spring 按 type 注入这块的处理十分复杂，这里简化了很多
      */
     protected void autowireByType(String beanName, BeanWrapper bw, Map<String, Object> result) {
         Set<String> autowiredBeanNames = new LinkedHashSet<>(4);

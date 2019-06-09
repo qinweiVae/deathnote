@@ -16,9 +16,11 @@ public class Domain1 {
 
     private String brand;
 
-    private int speed;
+    private String speed;
 
     private List<String> list;
+
+    private String date;
 
     @Override
     public String toString() {

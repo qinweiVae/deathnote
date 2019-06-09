@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * @author qinwei
@@ -19,6 +20,8 @@ public class Domain2 {
     private Integer Speed;
 
     private Collection<String> List;
+
+    private Date date;
 
     @Override
     public String toString() {

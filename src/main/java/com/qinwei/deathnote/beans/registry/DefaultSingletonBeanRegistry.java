@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author qinwei
  * @date 2019-05-23
+ * todo 单例的循环依赖 spring 是通过ObjectFactory提取将bean暴露出去，如果出现循环依赖会在3个map里面依次查找，这里暂时没有实现
  */
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 

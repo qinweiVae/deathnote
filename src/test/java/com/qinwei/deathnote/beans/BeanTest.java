@@ -37,7 +37,8 @@ public class BeanTest {
 
         Domain1 domain = new Domain1();
         domain.setBrand("abc");
-        domain.setSpeed(123);
+        domain.setSpeed("123");
+        domain.setDate("2019-06-07 18:53:00");
         domain.setList(Lists.newArrayList("z", "x", "v"));
 
         source.setDomain(domain);
@@ -71,7 +72,7 @@ public class BeanTest {
         String[] dependenciesForBean = registry.getDependenciesForBean(beanName);
         System.out.println("获取 " + beanName + " 的所有依赖bean : " + Arrays.toString(dependenciesForBean));
 
-        System.out.println(registry.isDependent("b","a"));
+        System.out.println(registry.isDependent("b", "a"));
     }
 
 }

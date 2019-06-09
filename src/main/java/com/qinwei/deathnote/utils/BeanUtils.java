@@ -1,6 +1,8 @@
 package com.qinwei.deathnote.utils;
 
 import com.qinwei.deathnote.beans.bean.CachedIntrospectionResults;
+import com.qinwei.deathnote.support.convert.Conversion;
+import com.qinwei.deathnote.support.convert.DefaultConversion;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -21,12 +23,15 @@ public class BeanUtils {
 
     /**
      * source必须有getter方法,target必须有对应的setter方法,且属性类型相同  才能copy
+     * 如果有对应的类型转换器，类型不同也能copy
      */
     public static void copyProperties(Object source, Object target, String... ignoreProperties) {
         assert source != null : "source can not be null";
         assert target != null : "target can not be null";
         //需要忽略的属性
         List<String> ignoreList = Optional.ofNullable(ignoreProperties).map(Arrays::asList).orElse(null);
+
+        Conversion conversion = DefaultConversion.getInstance();
 
         PropertyDescriptor[] targetPds = getPropertyDescriptors(target.getClass());
         for (PropertyDescriptor targetPd : targetPds) {
@@ -35,7 +40,8 @@ public class BeanUtils {
                 PropertyDescriptor sourcePd = getPropertyDescriptor(source.getClass(), targetPd.getName());
                 if (sourcePd != null) {
                     Method getter = sourcePd.getReadMethod();
-                    if (getter != null && ClassUtils.isAssignable(setter.getParameterTypes()[0], getter.getReturnType())) {
+                    if (getter != null &&
+                            (ClassUtils.isAssignable(setter.getParameterTypes()[0], getter.getReturnType()) || conversion.canConvert(getter.getReturnType(), setter.getParameterTypes()[0]))) {
                         try {
                             if (!Modifier.isPublic(getter.getDeclaringClass().getModifiers())) {
                                 getter.setAccessible(true);
@@ -46,7 +52,7 @@ public class BeanUtils {
                                 setter.setAccessible(true);
                             }
                             //调用target 的 setter方法
-                            setter.invoke(target, value);
+                            setter.invoke(target, conversion.convertIfNecessary(value, setter.getParameterTypes()[0]));
                         } catch (Exception e) {
                             throw new IllegalStateException("Could not copy property '" + targetPd.getName() + "' from source to target", e);
                         }

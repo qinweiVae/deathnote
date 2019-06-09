@@ -120,8 +120,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
             }
         }
         //使用类型转换器进行转换
-        if (requiredType != null && !requiredType.isInstance(bean)) {
-            return getConversion().convert(bean, requiredType);
+        if (requiredType != null) {
+            return getConversion().convertIfNecessary(bean, requiredType);
         }
         return (T) bean;
     }
