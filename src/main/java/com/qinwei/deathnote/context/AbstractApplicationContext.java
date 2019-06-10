@@ -2,12 +2,17 @@ package com.qinwei.deathnote.context;
 
 import com.qinwei.deathnote.beans.DefaultListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
+import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
+import com.qinwei.deathnote.context.event.ApplicationEvent;
 import com.qinwei.deathnote.context.event.ApplicationListener;
+import com.qinwei.deathnote.context.event.ContextStartedEvent;
+import com.qinwei.deathnote.context.event.ContextStoppedEvent;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +40,10 @@ public class AbstractApplicationContext implements ApplicationContext {
 
     private final ConfigurableListableBeanFactory beanFactory;
 
+    private long startup;
+
+    private Set<ApplicationEvent> earlyApplicationEvents;
+
     public AbstractApplicationContext() {
         this.resourcesScanner = ResourcesScanner.getInstance();
         this.config = getConfig();
@@ -45,6 +54,8 @@ public class AbstractApplicationContext implements ApplicationContext {
     public Config getConfig() {
         if (this.config == null) {
             this.config = createConfig();
+            //初始化config
+            this.config.initConfig();
         }
         return this.config;
     }
@@ -55,12 +66,12 @@ public class AbstractApplicationContext implements ApplicationContext {
 
     @Override
     public void start() {
-
+        publishEvent(new ContextStartedEvent(this));
     }
 
     @Override
     public void stop() {
-
+        publishEvent(new ContextStoppedEvent(this));
     }
 
     @Override
@@ -80,8 +91,91 @@ public class AbstractApplicationContext implements ApplicationContext {
 
     @Override
     public void refresh() {
+        synchronized (monitor) {
+            prepareRefresh();
+
+            prepareBeanFactory(beanFactory);
+
+            try {
+                postProcessBeanFactory(beanFactory);
+
+                registerBeanPostProcessors(beanFactory);
+
+                initApplicationEventMulticaster();
+
+                onRefresh();
+
+                registerListeners();
+
+                finishBeanFactoryInitialization(beanFactory);
+
+                finishRefresh();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+            }
+        }
+    }
+
+    protected void finishRefresh() {
 
     }
+
+    protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+
+    }
+
+    protected void registerListeners() {
+
+    }
+
+    protected void onRefresh() {
+        //留给子类实现,springboot 就是在这一步创建 tomcat、jetty、netty等web容器
+    }
+
+    protected void initApplicationEventMulticaster() {
+
+    }
+
+    /**
+     * 初始化并注册所有的 BeanPostProcessor
+     */
+    protected void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+        String[] beanNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class);
+        for (String beanName : beanNames) {
+            BeanPostProcessor postProcessor = beanFactory.getBean(beanName, BeanPostProcessor.class);
+            beanFactory.addBeanPostProcessor(postProcessor);
+        }
+        beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
+    }
+
+    protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+        //留给子类实现
+    }
+
+    protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+        // bean 初始化前执行 Aware 接口的方法
+        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+        //自动检测ApplicationListener , 如果是单例则添加
+        beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
+        //默认注册config
+        if (beanFactory.containsBean(CONFIG)) {
+            beanFactory.registerSingleton(CONFIG, getConfig());
+        }
+    }
+
+    /**
+     * 开始初始化
+     */
+    protected void prepareRefresh() {
+        this.startup = System.currentTimeMillis();
+        this.closed.set(false);
+        this.active.set(true);
+
+        this.earlyApplicationEvents = new LinkedHashSet<>();
+    }
+
 
     protected void doClose() {
 
@@ -97,6 +191,10 @@ public class AbstractApplicationContext implements ApplicationContext {
             });
         }
         Runtime.getRuntime().addShutdownHook(shutdownHook);
+    }
+
+    public Collection<ApplicationListener<?>> getApplicationListeners() {
+        return this.applicationListeners;
     }
 
     @Override

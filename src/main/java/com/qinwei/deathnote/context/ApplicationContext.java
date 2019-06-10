@@ -12,6 +12,8 @@ import com.qinwei.deathnote.context.event.ApplicationListener;
  */
 public interface ApplicationContext extends ListableBeanFactory, ConfigFactory, Lifecycle, ApplicationEventPublisher {
 
+    String CONFIG = "config";
+
     void addApplicationListener(ApplicationListener<?> listener);
 
     void refresh();

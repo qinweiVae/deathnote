@@ -107,7 +107,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         if (autowireMode == AUTOWIRE_BY_TYPE) {
             autowireByType(beanName, bw, result);
         }
-        propertyValue = result;
+        if (CollectionUtils.isNotEmpty(result)) {
+            propertyValue = result;
+        }
         if (CollectionUtils.isNotEmpty(propertyValue)) {
             applyPropertyValues(beanName, bw, propertyValue);
         }

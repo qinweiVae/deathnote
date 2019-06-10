@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.support.resolve;
 
 import com.qinwei.deathnote.utils.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Set;
  * @author qinwei
  * @date 2019-06-03
  */
+@Slf4j
 public abstract class AbstractPropertyResolver implements PropertyResolver {
 
     private String placeholderPrefix;
@@ -61,6 +63,9 @@ public abstract class AbstractPropertyResolver implements PropertyResolver {
         for (String placeholder : placeholders) {
             String key = placeholderPrefix + placeholder + placeholderSuffix;
             String value = (String) config.get(placeholder);
+            if (value == null) {
+                log.warn("Unable to find placeholder {}  in config , please check it carefully", key);
+            }
             resolvedString = resolvedString.replace(key, value == null ? key : value);
         }
         return resolvedString;

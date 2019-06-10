@@ -30,13 +30,13 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     @Override
     public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
         assert beanPostProcessor != null : "BeanPostProcessor must not be null";
+        beanPostProcessors.remove(beanPostProcessor);
         if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
             this.hasInstantiationAwareBeanPostProcessors = true;
         }
         if (beanPostProcessor instanceof DestructionAwareBeanPostProcessor) {
             this.hasDestructionAwareBeanPostProcessors = true;
         }
-        beanPostProcessors.remove(beanPostProcessor);
         beanPostProcessors.add(beanPostProcessor);
     }
 
