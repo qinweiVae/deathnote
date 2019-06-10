@@ -40,8 +40,9 @@ public class BeanUtils {
                 PropertyDescriptor sourcePd = getPropertyDescriptor(source.getClass(), targetPd.getName());
                 if (sourcePd != null) {
                     Method getter = sourcePd.getReadMethod();
+                    Class<?> parameterType = setter.getParameterTypes()[0];
                     if (getter != null &&
-                            (ClassUtils.isAssignable(setter.getParameterTypes()[0], getter.getReturnType()) || conversion.canConvert(getter.getReturnType(), setter.getParameterTypes()[0]))) {
+                            (ClassUtils.isAssignable(parameterType, getter.getReturnType()) || conversion.canConvert(getter.getReturnType(), parameterType))) {
                         try {
                             if (!Modifier.isPublic(getter.getDeclaringClass().getModifiers())) {
                                 getter.setAccessible(true);
@@ -52,7 +53,7 @@ public class BeanUtils {
                                 setter.setAccessible(true);
                             }
                             //调用target 的 setter方法
-                            setter.invoke(target, conversion.convertIfNecessary(value, setter.getParameterTypes()[0]));
+                            setter.invoke(target, conversion.convertIfNecessary(value, parameterType));
                         } catch (Exception e) {
                             throw new IllegalStateException("Could not copy property '" + targetPd.getName() + "' from source to target", e);
                         }

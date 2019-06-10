@@ -6,7 +6,9 @@ package com.qinwei.deathnote.context.event;
  */
 public interface ApplicationEventPublisher {
 
-    void publishEvent(ApplicationEvent event);
+    default void publishEvent(ApplicationEvent event) {
+        publishEvent((Object) event);
+    }
 
     void publishEvent(Object event);
 }

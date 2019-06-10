@@ -1,6 +1,10 @@
 package com.qinwei.deathnote.utils;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -8,14 +12,7 @@ import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author qinwei
@@ -26,6 +23,8 @@ public class ClassUtils {
     private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new IdentityHashMap<>(8);
 
     private static final Map<Class<?>, Class<?>> primitiveTypeToWrapperMap = new IdentityHashMap<>(8);
+
+    private static final Set<Class<? extends Annotation>> primitiveAnnotations = new HashSet<>();
 
     private static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
 
@@ -38,6 +37,12 @@ public class ClassUtils {
     };
 
     static {
+        //元注解
+        primitiveAnnotations.add(Documented.class);
+        primitiveAnnotations.add(Retention.class);
+        primitiveAnnotations.add(Target.class);
+        primitiveAnnotations.add(Inherited.class);
+
         primitiveWrapperTypeMap.put(Boolean.class, boolean.class);
         primitiveWrapperTypeMap.put(Byte.class, byte.class);
         primitiveWrapperTypeMap.put(Character.class, char.class);
@@ -212,23 +217,34 @@ public class ClassUtils {
         Arrays.sort(constructors, COMPARATOR);
     }
 
+    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType) {
+        return findAnnotation(clazz, annotationType, true);
+    }
+
     /**
      * 查找class 上的注解,当前class没有，则从其所有的注解中寻找，再从其所有接口中寻找，再从其所有父类中寻找
+     * 如果 onlySelf 为true，则只在当前class及其所有注解中寻找
      */
-    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType) {
+    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType, boolean onlySelf) {
         A annotation = clazz.getDeclaredAnnotation(annotationType);
         if (annotation != null) {
             return annotation;
         }
         for (Annotation ann : clazz.getDeclaredAnnotations()) {
             Class<? extends Annotation> type = ann.annotationType();
-            annotation = findAnnotation(type, annotationType);
+            if (primitiveAnnotations.contains(type)) {
+                return null;
+            }
+            annotation = findAnnotation(type, annotationType, true);
             if (annotation != null) {
                 return annotation;
             }
         }
+        if (onlySelf) {
+            return null;
+        }
         for (Class<?> clazzInterface : clazz.getInterfaces()) {
-            A a = findAnnotation(clazzInterface, annotationType);
+            A a = findAnnotation(clazzInterface, annotationType, false);
             if (a != null) {
                 return a;
             }
@@ -237,7 +253,7 @@ public class ClassUtils {
         if (superclass == null || superclass == Object.class) {
             return null;
         }
-        return findAnnotation(superclass, annotationType);
+        return findAnnotation(superclass, annotationType, false);
     }
 
     /**

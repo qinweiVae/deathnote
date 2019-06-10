@@ -6,7 +6,7 @@ import java.util.EventObject;
  * @author qinwei
  * @date 2019-05-22
  */
-public class ApplicationEvent extends EventObject {
+public abstract class ApplicationEvent extends EventObject {
 
     private final long timestamp;
 

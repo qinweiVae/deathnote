@@ -4,7 +4,6 @@ import com.qinwei.deathnote.beans.DefaultListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
-import com.qinwei.deathnote.context.event.ApplicationEvent;
 import com.qinwei.deathnote.context.event.ApplicationListener;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 
@@ -70,18 +69,13 @@ public class AbstractApplicationContext implements ApplicationContext {
     }
 
     @Override
-    public void publishEvent(ApplicationEvent event) {
-
-    }
-
-    @Override
     public void publishEvent(Object event) {
 
     }
 
     @Override
     public void addApplicationListener(ApplicationListener<?> listener) {
-
+        this.applicationListeners.add(listener);
     }
 
     @Override
@@ -119,6 +113,8 @@ public class AbstractApplicationContext implements ApplicationContext {
             }
         }
     }
+
+    //---------------------------------------------------------------------------------------------------------------------------
 
     @Override
     public String[] getBeanNamesForType(Class<?> type) {
@@ -200,5 +196,17 @@ public class AbstractApplicationContext implements ApplicationContext {
     public Class<?> getType(String name) {
         assertBeanFactoryActive();
         return beanFactory.getType(name);
+    }
+
+    @Override
+    public boolean isSingleton(String name) {
+        assertBeanFactoryActive();
+        return beanFactory.isSingleton(name);
+    }
+
+    @Override
+    public boolean isPrototype(String name) {
+        assertBeanFactoryActive();
+        return beanFactory.isPrototype(name);
     }
 }

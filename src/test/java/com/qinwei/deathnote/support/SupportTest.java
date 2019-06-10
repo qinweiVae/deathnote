@@ -2,11 +2,14 @@ package com.qinwei.deathnote.support;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.qinwei.deathnote.beans.bean.CachedIntrospectionResults;
+import com.qinwei.deathnote.beans.bean.Domain;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
+import com.qinwei.deathnote.support.annotation.AnnotationA;
+import com.qinwei.deathnote.support.annotation.AnnotationB;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
@@ -110,14 +113,14 @@ public class SupportTest {
     @Test
     public void testSimpleAliasRegistry() {
         SimpleAliasRegistry aliasRegistry = new SimpleAliasRegistry();
-        aliasRegistry.registerAlias("B", "A");
-        aliasRegistry.registerAlias("B", "1");
-        aliasRegistry.registerAlias("A", "C");
+        aliasRegistry.registerAlias("AnnotationB", "AnnotationA");
+        aliasRegistry.registerAlias("AnnotationB", "1");
+        aliasRegistry.registerAlias("AnnotationA", "C");
         //循环引用
-        //aliasRegistry.registerAlias("C", "A");
+        //aliasRegistry.registerAlias("C", "AnnotationA");
         aliasRegistry.registerAlias("C", "D");
-        System.out.println("B的别名:" + Arrays.toString(aliasRegistry.getAliases("B")));
-        System.out.println("A的别名:" + Arrays.toString(aliasRegistry.getAliases("A")));
+        System.out.println("B的别名:" + Arrays.toString(aliasRegistry.getAliases("AnnotationB")));
+        System.out.println("A的别名:" + Arrays.toString(aliasRegistry.getAliases("AnnotationA")));
         System.out.println("C的别名:" + Arrays.toString(aliasRegistry.getAliases("C")));
     }
 
@@ -144,8 +147,16 @@ public class SupportTest {
         }
         Map<String, Object> map = new HashMap<>();
         map.put("a1", "Aone");
-        map.put("b", "B");
+        map.put("b", "AnnotationB");
         map.put("c2a1", "CtwoAone");
         System.out.println(resolver.resolvePlaceholders(text, map));
+    }
+
+    @Test
+    public void testFindAnnotation() {
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class));
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class,false));
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class));
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class,false));
     }
 }

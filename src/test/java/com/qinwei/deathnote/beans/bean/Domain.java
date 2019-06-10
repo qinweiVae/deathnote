@@ -19,7 +19,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-public class Domain {
+public class Domain extends BaseDomain{
 
     private Domain1 domain;
 

@@ -223,6 +223,34 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return null;
     }
 
+    @Override
+    public boolean isSingleton(String name) {
+        String beanName = transformedBeanName(name);
+        Object singleton = getSingleton(beanName);
+        if (singleton != null) {
+            return true;
+        }
+        BeanDefinition bd = getBeanDefinition(beanName);
+        if (bd.isSingleton()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isPrototype(String name) {
+        String beanName = transformedBeanName(name);
+        Object singleton = getSingleton(beanName);
+        if (singleton != null) {
+            return false;
+        }
+        BeanDefinition bd = getBeanDefinition(beanName);
+        if (bd.isPrototype()) {
+            return true;
+        }
+        return false;
+    }
+
     protected abstract Object createBean(String beanName, RootBeanDefinition bd, Object[] args);
 
     protected abstract BeanDefinition getBeanDefinition(String beanName);

@@ -94,10 +94,11 @@ public class ResourcesScanner implements ConfigFactory {
             if (CollectionUtils.isEmpty(list)) {
                 return Collections.EMPTY_MAP;
             }
+            Properties properties = new Properties();
             //application.properties 拥有最高优先级，解析的时候排在最后面，文件排在越后面，里面的配置优先级越高
             list.stream().sorted((o1, o2) -> o1.getName().endsWith(APPLICATION_NAME) ? 1 : -1)
                     .forEach(file -> {
-                        Properties properties = new Properties();
+                        log.info("读取配置文件: {}", file.getName());
                         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), "UTF-8")) {
                             properties.load(reader);
                             Enumeration<?> enumeration = properties.propertyNames();
@@ -108,8 +109,8 @@ public class ResourcesScanner implements ConfigFactory {
                         } catch (IOException e) {
                             log.error("load file failure ,file = {}", file.getPath(), e);
                         }
+                        properties.clear();
                     });
-
         } catch (IOException e) {
             log.error("scan local config failure ..", e);
         }
