@@ -1,6 +1,6 @@
-package com.qinwei.deathnote.context;
+package com.qinwei.deathnote.beans.postprocessor;
 
-import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
+import com.qinwei.deathnote.context.ApplicationContext;
 import com.qinwei.deathnote.context.aware.ApplicationContextAware;
 import com.qinwei.deathnote.context.aware.ApplicationEventPublisherAware;
 import com.qinwei.deathnote.context.aware.Aware;

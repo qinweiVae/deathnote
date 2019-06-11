@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.beans.bean;
 
 import com.alibaba.fastjson.JSON;
+import com.qinwei.deathnote.support.annotation.AnnotationA;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,8 +22,10 @@ import java.util.Set;
 @Setter
 public class Domain extends BaseDomain{
 
+    @AnnotationA
     private Domain1 domain;
 
+    @AnnotationA
     private String beanName;
 
     private boolean postProcessed;
@@ -63,6 +66,7 @@ public class Domain extends BaseDomain{
     }
 
     @Override
+    @AnnotationA
     public String toString() {
         return JSON.toJSONString(this);
     }

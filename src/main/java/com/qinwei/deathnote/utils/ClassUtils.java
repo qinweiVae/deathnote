@@ -5,6 +5,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -226,19 +227,9 @@ public class ClassUtils {
      * 如果 onlySelf 为true，则只在当前class及其所有注解中寻找
      */
     public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType, boolean onlySelf) {
-        A annotation = clazz.getDeclaredAnnotation(annotationType);
+        A annotation = findAnnotation((AnnotatedElement) clazz, annotationType);
         if (annotation != null) {
             return annotation;
-        }
-        for (Annotation ann : clazz.getDeclaredAnnotations()) {
-            Class<? extends Annotation> type = ann.annotationType();
-            if (primitiveAnnotations.contains(type)) {
-                return null;
-            }
-            annotation = findAnnotation(type, annotationType, true);
-            if (annotation != null) {
-                return annotation;
-            }
         }
         if (onlySelf) {
             return null;
@@ -254,6 +245,52 @@ public class ClassUtils {
             return null;
         }
         return findAnnotation(superclass, annotationType, false);
+    }
+
+    /**
+     * 查找method 上的所有注解，当前method没有，则从其所有注解中查找，再从其父类的方法查找
+     */
+    public static <A extends Annotation> A findAnnotation(Method method, Class<A> annotationType) {
+        A annotation = findAnnotation((AnnotatedElement) method, annotationType);
+        if (annotation != null) {
+            return annotation;
+        }
+        Class<?> clazz = method.getDeclaringClass();
+        while (annotation == null) {
+            clazz = clazz.getSuperclass();
+            if (clazz == null || clazz == Object.class) {
+                return null;
+            }
+            try {
+                Method m = clazz.getDeclaredMethod(method.getName(), method.getParameterTypes());
+                annotation = findAnnotation((AnnotatedElement) m, annotationType);
+            } catch (NoSuchMethodException e) {
+                //ignore
+            }
+        }
+        return annotation;
+    }
+
+    /**
+     * Class、Method、Field、Constructor 均是 AnnotatedElement 的实现类
+     */
+    public static <A extends Annotation> A findAnnotation(AnnotatedElement annotatedElement, Class<A> annotationType) {
+        A annotation = annotatedElement.getDeclaredAnnotation(annotationType);
+        if (annotation != null) {
+            return annotation;
+        }
+        Annotation[] annotations = annotatedElement.getDeclaredAnnotations();
+        for (Annotation anno : annotations) {
+            Class<? extends Annotation> type = anno.annotationType();
+            if (primitiveAnnotations.contains(type)) {
+                return null;
+            }
+            annotation = findAnnotation((AnnotatedElement) type, annotationType);
+            if (annotation != null) {
+                return annotation;
+            }
+        }
+        return null;
     }
 
     /**

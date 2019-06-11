@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.beans.factory;
 
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
+import com.qinwei.deathnote.support.convert.Conversion;
 
 /**
  * @author qinwei
@@ -23,4 +24,6 @@ public interface ConfigurableBeanFactory extends BeanFactory {
     String[] getDependentBeans(String beanName);
 
     String[] getDependenciesForBean(String beanName);
+
+    Conversion getConversion();
 }

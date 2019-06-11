@@ -9,6 +9,9 @@ import com.qinwei.deathnote.beans.factory.AutowireCapableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.SmartInstantiationAwareBeanPostProcessor;
+import com.qinwei.deathnote.context.aware.Aware;
+import com.qinwei.deathnote.context.aware.BeanFactoryAware;
+import com.qinwei.deathnote.context.aware.BeanNameAware;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
@@ -172,6 +175,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
      * 初始化bean
      */
     protected Object initializeBean(final String beanName, final Object bean, RootBeanDefinition bd) {
+        //执行Aware方法
+        invokeAwareMethods(beanName, bean);
+
         Object wrappedBean = bean;
         if (bd == null) {
             // 执行 BeanPostProcessor 的 postProcessBeforeInitialization
@@ -188,6 +194,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         }
         return wrappedBean;
+    }
+
+    /**
+     * 执行Aware方法
+     */
+    private void invokeAwareMethods(String beanName, Object bean) {
+        if (bean instanceof Aware) {
+            if (bean instanceof BeanFactoryAware) {
+                ((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
+            }
+            if (bean instanceof BeanNameAware) {
+                ((BeanNameAware) bean).setBeanName(beanName);
+            }
+        }
     }
 
     /**

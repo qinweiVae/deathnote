@@ -2,17 +2,20 @@ package com.qinwei.deathnote.context;
 
 import com.qinwei.deathnote.beans.DefaultListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
+import com.qinwei.deathnote.beans.postprocessor.ApplicationContextAwareProcessor;
+import com.qinwei.deathnote.beans.postprocessor.ApplicationListenerDetector;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
-import com.qinwei.deathnote.context.event.ApplicationEvent;
-import com.qinwei.deathnote.context.event.ApplicationListener;
-import com.qinwei.deathnote.context.event.ContextStartedEvent;
-import com.qinwei.deathnote.context.event.ContextStoppedEvent;
+import com.qinwei.deathnote.context.event.*;
+import com.qinwei.deathnote.context.lifecycle.DefaultLifecycleProcessor;
+import com.qinwei.deathnote.context.lifecycle.LifecycleProcessor;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author qinwei
  * @date 2019-05-22
  */
-public class AbstractApplicationContext implements ApplicationContext {
+@Slf4j
+public abstract class AbstractApplicationContext implements ApplicationContext {
+
+    private static final String APPLICATION_EVENT_MULTICASTER = "applicationEventMulticaster";
+
+    private static final String LIFECYCLE_PROCESSOR = "lifecycleProcessor";
 
     private final AtomicBoolean active = new AtomicBoolean();
 
@@ -36,18 +44,25 @@ public class AbstractApplicationContext implements ApplicationContext {
 
     private Config config;
 
-    private final ResourcesScanner resourcesScanner;
+    private ResourcesScanner resourcesScanner;
 
-    private final ConfigurableListableBeanFactory beanFactory;
+    private ConfigurableListableBeanFactory beanFactory;
 
     private long startup;
 
-    private Set<ApplicationEvent> earlyApplicationEvents;
+    private ApplicationEventMulticaster applicationEventMulticaster;
+
+    private LifecycleProcessor lifecycleProcessor;
 
     public AbstractApplicationContext() {
-        this.resourcesScanner = ResourcesScanner.getInstance();
-        this.config = getConfig();
-        this.beanFactory = getBeanFactory();
+
+    }
+
+    protected ResourcesScanner getResourcesScanner() {
+        if (this.resourcesScanner == null) {
+            this.resourcesScanner = ResourcesScanner.getInstance();
+        }
+        return this.resourcesScanner;
     }
 
     @Override
@@ -64,35 +79,66 @@ public class AbstractApplicationContext implements ApplicationContext {
         return StandardConfig.getInstance();
     }
 
+    public ApplicationEventMulticaster getApplicationEventMulticaster() throws IllegalStateException {
+        assert this.applicationEventMulticaster != null : "ApplicationEventMulticaster not initialized - call 'refresh' before multicasting events via the context: " + this;
+        return this.applicationEventMulticaster;
+    }
+
+    public LifecycleProcessor getLifecycleProcessor() throws IllegalStateException {
+        assert this.lifecycleProcessor != null : "LifecycleProcessor not initialized - call 'refresh' before invoking lifecycle methods via the context: " + this;
+        return this.lifecycleProcessor;
+    }
+
+    //--------------------------------------------------------------------------------------------------------
+
     @Override
     public void start() {
+        getLifecycleProcessor().start();
         publishEvent(new ContextStartedEvent(this));
     }
 
     @Override
     public void stop() {
+        getLifecycleProcessor().stop();
         publishEvent(new ContextStoppedEvent(this));
     }
 
     @Override
     public boolean isRunning() {
-        return false;
+        return this.lifecycleProcessor != null && this.lifecycleProcessor.isRunning();
     }
+
+    //--------------------------------------------------------------------------------------------------------
 
     @Override
     public void publishEvent(Object event) {
+        assert event != null : "Event must not be null";
 
+        ApplicationEvent applicationEvent;
+        if (event instanceof ApplicationContextEvent) {
+            applicationEvent = (ApplicationEvent) event;
+        } else {
+            applicationEvent = new PayloadApplicationEvent<>(this, event);
+        }
+        getApplicationEventMulticaster().multicastEvent(applicationEvent);
     }
 
     @Override
     public void addApplicationListener(ApplicationListener<?> listener) {
+        assert listener != null : "ApplicationListener must not be null";
+        if (this.applicationEventMulticaster != null) {
+            this.applicationEventMulticaster.addApplicationListener(listener);
+        }
         this.applicationListeners.add(listener);
     }
 
     @Override
     public void refresh() {
+
         synchronized (monitor) {
             prepareRefresh();
+
+            ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
             prepareBeanFactory(beanFactory);
 
@@ -112,30 +158,106 @@ public class AbstractApplicationContext implements ApplicationContext {
                 finishRefresh();
 
             } catch (Exception e) {
-                e.printStackTrace();
+
+                destroyBeans();
+
+                cancelRefresh(e);
+
+                throw e;
+
             } finally {
+
+                resetCommonCaches();
             }
         }
     }
 
-    protected void finishRefresh() {
+    protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+        refreshBeanFactory();
+        return getBeanFactory();
+    }
 
+    protected void refreshBeanFactory() {
+        if (this.beanFactory != null) {
+            destroyBeans();
+            this.beanFactory = null;
+        }
+        try {
+            DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+            //加载BeanDefinition
+            loadBeanDefinitions(beanFactory);
+
+            this.beanFactory = beanFactory;
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to parsing bean definition source");
+        }
+    }
+
+    protected void resetCommonCaches() {
+
+    }
+
+    protected void cancelRefresh(Exception e) {
+        this.active.set(false);
+    }
+
+    protected void destroyBeans() {
+        getBeanFactory().destroySingletons();
+    }
+
+    protected void finishRefresh() {
+        initLifecycleProcessor();
+
+        getLifecycleProcessor().onRefresh();
+
+        publishEvent(new ContextRefreshedEvent(this));
+    }
+
+    protected void initLifecycleProcessor() {
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        if (beanFactory.containsBean(LIFECYCLE_PROCESSOR)) {
+            this.lifecycleProcessor = beanFactory.getBean(LIFECYCLE_PROCESSOR, LifecycleProcessor.class);
+        } else {
+            this.lifecycleProcessor = new DefaultLifecycleProcessor();
+            beanFactory.registerSingleton(LIFECYCLE_PROCESSOR, this.lifecycleProcessor);
+        }
     }
 
     protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
-
+        //初始化所有非lazy的单例bean
+        beanFactory.preInstantiateSingletons();
     }
 
+    /**
+     * 注册ApplicationListener，非单例也可以注册
+     */
     protected void registerListeners() {
-
+        //通过ApplicationListenerDetector 将所有的单例bean 添加到 applicationListeners
+        for (ApplicationListener<?> applicationListener : getApplicationListeners()) {
+            getApplicationEventMulticaster().addApplicationListener(applicationListener);
+        }
+        //找到所有ApplicationListener的bean name，包括非单例bean，添加到 applicationListenerBeans
+        String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class);
+        for (String beanName : listenerBeanNames) {
+            getApplicationEventMulticaster().addApplicationListenerBean(beanName);
+        }
     }
 
     protected void onRefresh() {
         //留给子类实现,springboot 就是在这一步创建 tomcat、jetty、netty等web容器
     }
 
+    /**
+     * 初始化ApplicationEventMulticaster
+     */
     protected void initApplicationEventMulticaster() {
-
+        ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+        if (beanFactory.containsBean(APPLICATION_EVENT_MULTICASTER)) {
+            this.applicationEventMulticaster = beanFactory.getBean(APPLICATION_EVENT_MULTICASTER, ApplicationEventMulticaster.class);
+        } else {
+            this.applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+            beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER, this.applicationEventMulticaster);
+        }
     }
 
     /**
@@ -172,13 +294,35 @@ public class AbstractApplicationContext implements ApplicationContext {
         this.startup = System.currentTimeMillis();
         this.closed.set(false);
         this.active.set(true);
-
-        this.earlyApplicationEvents = new LinkedHashSet<>();
     }
 
 
     protected void doClose() {
+        if (active.get() && closed.compareAndSet(false, true)) {
+            try {
+                publishEvent(new ContextClosedEvent(this));
+            } catch (Exception e) {
+                log.warn("Exception thrown from ApplicationListener handling ContextClosedEvent", e);
+            }
 
+            if (this.lifecycleProcessor != null) {
+                try {
+                    this.lifecycleProcessor.onClose();
+                } catch (Throwable ex) {
+                    log.warn("Exception thrown from LifecycleProcessor on context close", ex);
+                }
+            }
+
+            destroyBeans();
+
+            onClose();
+
+            active.set(false);
+        }
+    }
+
+    protected void onClose() {
+        //留给子类实现
     }
 
     @Override
@@ -193,13 +337,31 @@ public class AbstractApplicationContext implements ApplicationContext {
         Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
+    @Override
+    public void close() {
+        synchronized (monitor) {
+            doClose();
+            if (shutdownHook != null) {
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                } catch (Exception ignore) {
+
+                }
+            }
+        }
+    }
+
     public Collection<ApplicationListener<?>> getApplicationListeners() {
         return this.applicationListeners;
     }
 
     @Override
     public ConfigurableListableBeanFactory getBeanFactory() {
-        return new DefaultListableBeanFactory();
+        if (this.beanFactory == null) {
+            throw new IllegalStateException("BeanFactory not initialized or already closed - " +
+                    "call 'refresh' before accessing beans via the ApplicationContext");
+        }
+        return this.beanFactory;
     }
 
     protected void assertBeanFactoryActive() {
@@ -217,94 +379,108 @@ public class AbstractApplicationContext implements ApplicationContext {
     @Override
     public String[] getBeanNamesForType(Class<?> type) {
         assertBeanFactoryActive();
-        return beanFactory.getBeanNamesForType(type);
+        return getBeanFactory().getBeanNamesForType(type);
     }
 
     @Override
     public String[] getBeanNamesForType(Class<?> type, boolean includeNonSingletons) {
         assertBeanFactoryActive();
-        return beanFactory.getBeanNamesForType(type, includeNonSingletons);
+        return getBeanFactory().getBeanNamesForType(type, includeNonSingletons);
     }
 
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type) {
         assertBeanFactoryActive();
-        return beanFactory.getBeansOfType(type);
+        return getBeanFactory().getBeansOfType(type);
     }
 
     @Override
     public <T> Map<String, T> getBeansOfType(Class<T> type, boolean includeNonSingletons) {
         assertBeanFactoryActive();
-        return beanFactory.getBeansOfType(type, includeNonSingletons);
+        return getBeanFactory().getBeansOfType(type, includeNonSingletons);
     }
 
     @Override
     public Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType) {
         assertBeanFactoryActive();
-        return beanFactory.getBeansWithAnnotation(annotationType);
+        return getBeanFactory().getBeansWithAnnotation(annotationType);
     }
 
     @Override
     public <T extends Annotation> T findAnnotationOnBean(String beanName, Class<T> annotationType) {
         assertBeanFactoryActive();
-        return beanFactory.findAnnotationOnBean(beanName, annotationType);
+        return getBeanFactory().findAnnotationOnBean(beanName, annotationType);
     }
 
     @Override
     public String[] getBeanNamesForAnnotation(Class<? extends Annotation> annotationType) {
         assertBeanFactoryActive();
-        return beanFactory.getBeanNamesForAnnotation(annotationType);
+        return getBeanFactory().getBeanNamesForAnnotation(annotationType);
     }
 
     @Override
     public Object getBean(String name) {
         assertBeanFactoryActive();
-        return beanFactory.getBean(name);
+        return getBeanFactory().getBean(name);
     }
 
     @Override
     public <T> T getBean(String name, Class<T> requiredType) {
         assertBeanFactoryActive();
-        return beanFactory.getBean(name, requiredType);
+        return getBeanFactory().getBean(name, requiredType);
     }
 
     @Override
     public <T> T getBean(Class<T> requiredType) {
         assertBeanFactoryActive();
-        return beanFactory.getBean(requiredType);
+        return getBeanFactory().getBean(requiredType);
     }
 
     @Override
     public String[] getAliases(String name) {
-        return beanFactory.getAliases(name);
+        return getBeanFactory().getAliases(name);
     }
 
     @Override
     public boolean containsBean(String name) {
-        return beanFactory.containsBean(name);
+        return getBeanFactory().containsBean(name);
     }
 
     @Override
     public boolean isTypeMatch(String name, Class<?> typeToMatch) {
         assertBeanFactoryActive();
-        return beanFactory.isTypeMatch(name, typeToMatch);
+        return getBeanFactory().isTypeMatch(name, typeToMatch);
     }
 
     @Override
     public Class<?> getType(String name) {
         assertBeanFactoryActive();
-        return beanFactory.getType(name);
+        return getBeanFactory().getType(name);
     }
 
     @Override
     public boolean isSingleton(String name) {
         assertBeanFactoryActive();
-        return beanFactory.isSingleton(name);
+        return getBeanFactory().isSingleton(name);
     }
 
     @Override
     public boolean isPrototype(String name) {
         assertBeanFactoryActive();
-        return beanFactory.isPrototype(name);
+        return getBeanFactory().isPrototype(name);
+    }
+
+    //---------------------------------------------------------------------------------------------------------------------------
+
+    protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFactory);
+
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("ApplicationContext");
+        sb.append(": startup date [")
+                .append(new Date(this.startup))
+                .append("]; ");
+        return sb.toString();
     }
 }

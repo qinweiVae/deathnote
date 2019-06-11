@@ -143,7 +143,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     /**
      * 获取默认的类型转换器
      */
-    protected Conversion getConversion() {
+    @Override
+    public Conversion getConversion() {
         return DefaultConversion.getInstance();
     }
 

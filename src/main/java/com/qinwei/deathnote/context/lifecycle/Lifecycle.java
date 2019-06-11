@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.context;
+package com.qinwei.deathnote.context.lifecycle;
 
 /**
  * @author qinwei

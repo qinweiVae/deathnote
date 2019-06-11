@@ -153,10 +153,15 @@ public class SupportTest {
     }
 
     @Test
-    public void testFindAnnotation() {
+    public void testFindAnnotation() throws Exception {
         System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class));
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class,false));
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class, false));
         System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class));
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class,false));
+        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class, false));
+
+        System.out.println("-----------------------------------------");
+
+        System.out.println(ClassUtils.findAnnotation(Domain.class.getMethod("toString"), AnnotationA.class));
+        System.out.println(ClassUtils.findAnnotation(Domain.class.getDeclaredField("beanName"), AnnotationA.class));
     }
 }
