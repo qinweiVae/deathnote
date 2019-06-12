@@ -10,12 +10,15 @@ import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
 import com.qinwei.deathnote.support.annotation.AnnotationB;
+import com.qinwei.deathnote.support.convert.StringToListConverter;
+import com.qinwei.deathnote.support.convert.StringToLongConverter;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 import com.qinwei.deathnote.support.spi.MaleWorker;
 import com.qinwei.deathnote.support.spi.ServiceLoader;
 import com.qinwei.deathnote.support.spi.Worker;
+import com.qinwei.deathnote.utils.BeanUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -163,5 +166,23 @@ public class SupportTest {
 
         System.out.println(ClassUtils.findAnnotation(Domain.class.getMethod("toString"), AnnotationA.class));
         System.out.println(ClassUtils.findAnnotation(Domain.class.getDeclaredField("beanName"), AnnotationA.class));
+    }
+
+    @Test
+    public void testFindGenericType() {
+
+        System.out.println(ClassUtils.findGenericType(StringToListConverter.class, 0));
+        System.out.println(ClassUtils.findGenericType(StringToListConverter.class, 1));
+        System.out.println("-------------------------");
+
+        System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 0));
+        System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 1));
+        //System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 2));
+        System.out.println("-------------------------");
+
+        PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(Domain.class, "someMap");
+        System.out.println(ClassUtils.findGenericType(pd, true, 0));
+        System.out.println(ClassUtils.findGenericType(pd, true, 1));
+        System.out.println(ClassUtils.findGenericType(pd, false, 0));
     }
 }

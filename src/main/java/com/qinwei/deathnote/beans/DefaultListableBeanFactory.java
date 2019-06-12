@@ -13,8 +13,6 @@ import com.qinwei.deathnote.utils.StringUtils;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -349,7 +347,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     }
 
     /**
-     * todo 这里代码后面需要优化，写的太难看了,spring 使用了 ResolvableType 封装
+     * 解析Array、Collection、Map 等类型
      */
     private Object resolveMultipleBeans(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames) {
         Class<?> type = pd.getPropertyType();
@@ -373,18 +371,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             }
             return convertToArray(componentType, values);
         } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
-            //集合中元素的类型
-            Class elementType = null;
-            Type[] types = type.getClass().getGenericInterfaces();
-            for (Type t : types) {
-                if (t instanceof ParameterizedType) {
-                    ParameterizedType pt = (ParameterizedType) t;
-                    elementType = (Class) pt.getActualTypeArguments()[0];
-                    if (elementType != null) {
-                        break;
-                    }
-                }
-            }
+            //集合中元素的类型,这里不支持集合的嵌套
+            Class elementType = ClassUtils.findGenericType(pd, true, 0);
             if (elementType == null) {
                 return null;
             }
@@ -403,20 +391,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return convertToCollection(type, elementType, values);
         } else if (Map.class == type) {
             //map 中 key 的类型
-            Class keyType = null;
-            //map 中 value 的类型
-            Class valueType = null;
-            Type[] types = type.getGenericInterfaces();
-            for (Type t : types) {
-                if (t instanceof ParameterizedType) {
-                    ParameterizedType pt = (ParameterizedType) t;
-                    keyType = (Class) pt.getActualTypeArguments()[0];
-                    valueType = (Class) pt.getActualTypeArguments()[1];
-                    if (keyType != null && valueType != null) {
-                        break;
-                    }
-                }
-            }
+            Class keyType = ClassUtils.findGenericType(pd, true, 0);
+            //map 中 value 的类型，不支持嵌套
+            Class valueType = ClassUtils.findGenericType(pd, true, 1);
+            //key必须是string 类型
             if (keyType == null || String.class == keyType) {
                 return null;
             }

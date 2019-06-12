@@ -42,7 +42,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 
     @Override
     public void multicastEvent(ApplicationEvent event) {
-        for (ApplicationListener<?> listener : getApplicationListeners()) {
+        for (ApplicationListener<?> listener : getApplicationListeners(event)) {
             Executor executor = getTaskExecutor();
             if (executor != null) {
                 executor.execute(() -> invokeListener(listener, event));

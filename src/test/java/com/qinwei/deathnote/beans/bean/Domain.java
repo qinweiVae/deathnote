@@ -20,7 +20,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-public class Domain extends BaseDomain{
+public class Domain extends BaseDomain {
 
     @AnnotationA
     private Domain1 domain;
@@ -48,13 +48,13 @@ public class Domain extends BaseDomain{
 
     private Float myFloat;
 
-    private Collection<? super Object> friends;
+    private Collection<String> friends;
 
-    private Set<?> someSet = new HashSet<>();
+    private Set<Domain> someSet = new HashSet<>();
 
-    private Map<?, ?> someMap = new HashMap<>();
+    private Map<String, List<Domain>> someMap = new HashMap<>();
 
-    private List<?> someList = new ArrayList<>();
+    private List<Map<String, List<Domain>>> someList = new ArrayList<>();
 
     private boolean destroyed;
 

@@ -110,6 +110,9 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
 
     //--------------------------------------------------------------------------------------------------------
 
+    /**
+     * 发送事件消息
+     */
     @Override
     public void publishEvent(Object event) {
         assert event != null : "Event must not be null";
