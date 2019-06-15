@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.support.scan;
 
-import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.AnnotationUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
@@ -31,7 +31,7 @@ public class TypeAnnotationScanner extends ClasspathScanner {
                     Set<Class> classes = super.scan(basePackage);
                     result = new LinkedHashSet<>();
                     for (Class clazz : classes) {
-                        if (ClassUtils.findAnnotation(clazz, annotation) != null) {
+                        if (AnnotationUtils.findAnnotation(clazz, annotation) != null) {
                             result.add(clazz);
                         }
                     }

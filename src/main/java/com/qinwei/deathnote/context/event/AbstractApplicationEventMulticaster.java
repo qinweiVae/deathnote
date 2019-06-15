@@ -5,6 +5,7 @@ import com.qinwei.deathnote.context.annotation.AnnotationOrderComparator;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
+import com.qinwei.deathnote.utils.GenericTypeUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,13 +71,12 @@ public abstract class AbstractApplicationEventMulticaster implements Application
             allListeners.addAll(this.applicationListeners);
             if (CollectionUtils.isNotEmpty(this.applicationListenerBeans)) {
                 BeanFactory beanFactory = getBeanFactory();
-                for (String beanName : this.applicationListenerBeans) {
-                    ApplicationListener listener = beanFactory.getBean(beanName, ApplicationListener.class);
-                    if (!allListeners.contains(listener)) {
-                        allListeners.add(listener);
-                    }
-                }
+                this.applicationListenerBeans.stream()
+                        .map(beanName -> beanFactory.getBean(beanName, ApplicationListener.class))
+                        .filter(listener -> !allListeners.contains(listener))
+                        .forEach(allListeners::add);
             }
+            //按照 @Order 注解排序
             AnnotationOrderComparator.sort(allListeners);
             return allListeners;
         }
@@ -95,7 +95,7 @@ public abstract class AbstractApplicationEventMulticaster implements Application
     }
 
     private boolean supportEvent(ApplicationListener<?> listener, ApplicationEvent event) {
-        Class genericType = ClassUtils.findGenericType(listener.getClass(), 0);
+        Class genericType = GenericTypeUtils.findGenericType(listener.getClass(), 0);
         if (genericType == null) {
             return false;
         }

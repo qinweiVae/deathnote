@@ -5,8 +5,9 @@ import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
-import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.AnnotationUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
+import com.qinwei.deathnote.utils.GenericTypeUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
@@ -142,14 +143,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         T annotation = null;
         Class<?> type = getType(beanName);
         if (type != null) {
-            annotation = ClassUtils.findAnnotation(type, annotationType);
+            annotation = AnnotationUtils.findAnnotation(type, annotationType);
         }
         if (type == null && containsBeanDefinition(beanName)) {
             BeanDefinition bd = getBeanDefinition(beanName);
             if (bd instanceof AbstractBeanDefinition) {
                 AbstractBeanDefinition abd = (AbstractBeanDefinition) bd;
                 if (abd.hasBeanClass()) {
-                    annotation = ClassUtils.findAnnotation(abd.getBeanClass(), annotationType);
+                    annotation = AnnotationUtils.findAnnotation(abd.getBeanClass(), annotationType);
                 }
             }
         }
@@ -372,7 +373,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return convertToArray(componentType, values);
         } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
             //集合中元素的类型,这里不支持集合的嵌套
-            Class elementType = ClassUtils.findGenericType(pd, true, 0);
+            Class elementType = GenericTypeUtils.findGenericType(pd, true, 0);
             if (elementType == null) {
                 return null;
             }
@@ -391,9 +392,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return convertToCollection(type, elementType, values);
         } else if (Map.class == type) {
             //map 中 key 的类型
-            Class keyType = ClassUtils.findGenericType(pd, true, 0);
+            Class keyType = GenericTypeUtils.findGenericType(pd, true, 0);
             //map 中 value 的类型，不支持嵌套
-            Class valueType = ClassUtils.findGenericType(pd, true, 1);
+            Class valueType = GenericTypeUtils.findGenericType(pd, true, 1);
             //key必须是string 类型
             if (keyType == null || String.class == keyType) {
                 return null;

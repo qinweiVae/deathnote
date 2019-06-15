@@ -72,4 +72,24 @@ public class StringUtils {
         }
         return count;
     }
+
+    /**
+     * 把数组转成字符串，用指定的限定符分割
+     */
+    public static String arrayToDelimitedString(Object[] array, String delimited) {
+        if (ObjectUtils.isEmpty(array)) {
+            return "";
+        }
+        if (array.length == 1) {
+            return String.valueOf(array[0]);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            if (i > 0) {
+                sb.append(delimited);
+            }
+            sb.append(array[i]);
+        }
+        return sb.toString();
+    }
 }

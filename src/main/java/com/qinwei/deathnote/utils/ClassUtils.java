@@ -1,22 +1,20 @@
 package com.qinwei.deathnote.utils;
 
-import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URL;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author qinwei
@@ -27,8 +25,6 @@ public class ClassUtils {
     private static final Map<Class<?>, Class<?>> primitiveWrapperTypeMap = new IdentityHashMap<>(8);
 
     private static final Map<Class<?>, Class<?>> primitiveTypeToWrapperMap = new IdentityHashMap<>(8);
-
-    private static final Set<Class<? extends Annotation>> primitiveAnnotations = new HashSet<>();
 
     private static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
 
@@ -41,12 +37,6 @@ public class ClassUtils {
     };
 
     static {
-        //元注解
-        primitiveAnnotations.add(Documented.class);
-        primitiveAnnotations.add(Retention.class);
-        primitiveAnnotations.add(Target.class);
-        primitiveAnnotations.add(Inherited.class);
-
         primitiveWrapperTypeMap.put(Boolean.class, boolean.class);
         primitiveWrapperTypeMap.put(Byte.class, byte.class);
         primitiveWrapperTypeMap.put(Character.class, char.class);
@@ -224,81 +214,6 @@ public class ClassUtils {
         Arrays.sort(constructors, COMPARATOR);
     }
 
-    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType) {
-        return findAnnotation(clazz, annotationType, true);
-    }
-
-    /**
-     * 查找class 上的注解,当前class没有，则从其所有的注解中寻找，再从其所有接口中寻找，再从其所有父类中寻找
-     * 如果 onlySelf 为true，则只在当前class及其所有注解中寻找
-     */
-    public static <A extends Annotation> A findAnnotation(Class<?> clazz, Class<A> annotationType, boolean onlySelf) {
-        A annotation = findAnnotation((AnnotatedElement) clazz, annotationType);
-        if (annotation != null) {
-            return annotation;
-        }
-        if (onlySelf) {
-            return null;
-        }
-        for (Class<?> clazzInterface : clazz.getInterfaces()) {
-            A a = findAnnotation(clazzInterface, annotationType, false);
-            if (a != null) {
-                return a;
-            }
-        }
-        Class<?> superclass = clazz.getSuperclass();
-        if (superclass == null || superclass == Object.class) {
-            return null;
-        }
-        return findAnnotation(superclass, annotationType, false);
-    }
-
-    /**
-     * 查找method 上的所有注解，当前method没有，则从其所有注解中查找，再从其父类的方法查找
-     */
-    public static <A extends Annotation> A findAnnotation(Method method, Class<A> annotationType) {
-        A annotation = findAnnotation((AnnotatedElement) method, annotationType);
-        if (annotation != null) {
-            return annotation;
-        }
-        Class<?> clazz = method.getDeclaringClass();
-        while (annotation == null) {
-            clazz = clazz.getSuperclass();
-            if (clazz == null || clazz == Object.class) {
-                return null;
-            }
-            try {
-                Method m = clazz.getDeclaredMethod(method.getName(), method.getParameterTypes());
-                annotation = findAnnotation((AnnotatedElement) m, annotationType);
-            } catch (NoSuchMethodException e) {
-                //ignore
-            }
-        }
-        return annotation;
-    }
-
-    /**
-     * Class、Method、Field、Constructor 均是 AnnotatedElement 的实现类
-     */
-    public static <A extends Annotation> A findAnnotation(AnnotatedElement annotatedElement, Class<A> annotationType) {
-        A annotation = annotatedElement.getDeclaredAnnotation(annotationType);
-        if (annotation != null) {
-            return annotation;
-        }
-        Annotation[] annotations = annotatedElement.getDeclaredAnnotations();
-        for (Annotation anno : annotations) {
-            Class<? extends Annotation> type = anno.annotationType();
-            if (primitiveAnnotations.contains(type)) {
-                return null;
-            }
-            annotation = findAnnotation((AnnotatedElement) type, annotationType);
-            if (annotation != null) {
-                return annotation;
-            }
-        }
-        return null;
-    }
-
     /**
      * 根据方法名和方法参数查找class对应的method,如果当前class没有找到,则找寻其父类
      */
@@ -321,99 +236,4 @@ public class ClassUtils {
         return null;
     }
 
-    /**
-     * 获取 Class 上的泛型,只能用于普通类的 泛型
-     * <p>
-     * 对于collection、map之类的集合不要使用，否则得到是 E,K,V 这样的东西，很蛋疼
-     */
-    public static Class findGenericType(Class<?> clazz, int index) {
-        Type[] genericType = findGenericType(clazz);
-        if (genericType == null) {
-            return null;
-        }
-        if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
-        }
-        Type type = genericType[index];
-        // 对于 嵌套情况下需要特殊处理下
-        if (type instanceof ParameterizedType) {
-            type = ((ParameterizedType) type).getRawType();
-        }
-        return (Class) type;
-    }
-
-    /**
-     * 获取 Class 上的泛型,只能用于普通类的 泛型
-     * <p>
-     * 对于collection、map之类的集合不要使用，否则得到是 E,K,V 这样的东西，很蛋疼
-     */
-    public static Type[] findGenericType(Class<?> clazz) {
-        Type[] genericType = null;
-        //先从父类查找
-        Type type = clazz.getGenericSuperclass();
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-            genericType = pt.getActualTypeArguments();
-        }
-        if (genericType != null) {
-            return genericType;
-        }
-        //再从接口查找
-        Type[] types = clazz.getGenericInterfaces();
-        for (Type t : types) {
-            if (t instanceof ParameterizedType) {
-                ParameterizedType pt = (ParameterizedType) t;
-                genericType = pt.getActualTypeArguments();
-                if (genericType != null) {
-                    break;
-                }
-            }
-        }
-        return genericType;
-    }
-
-    /**
-     * 用于获取collection、map等集合的泛型（对于这些集合只能通过Method、Field 的方式才能得到正确的泛型)）
-     * <p>
-     * readWriter 为true 获取setter方法返回参数的泛型，readWriter 为false 获取getter方法传入参数的泛型
-     */
-    public static Class findGenericType(PropertyDescriptor pd, boolean readWriter, int index) {
-        Type[] genericType = findGenericType(pd, readWriter);
-        if (genericType == null) {
-            return null;
-        }
-        if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
-        }
-        Type type = genericType[index];
-        // 对于 Map<String, List<Domain>> 这种嵌套情况下获取value的泛型时得到是ParameterizedType java.util.List<com.qinwei.deathnote.beans.bean.Domain> 需要特殊处理下
-        if (type instanceof ParameterizedType) {
-            type = ((ParameterizedType) type).getRawType();
-        }
-        return (Class) type;
-    }
-
-    /**
-     * readWriter 为true 获取setter方法返回参数的泛型，readWriter 为false 获取getter方法传入参数的泛型
-     */
-    public static Type[] findGenericType(PropertyDescriptor pd, boolean readWriter) {
-        if (readWriter) {
-            Type returnType = pd.getReadMethod().getGenericReturnType();
-            if (returnType instanceof ParameterizedType) {
-                Type[] genericType = ((ParameterizedType) returnType).getActualTypeArguments();
-                if (genericType != null) {
-                    return genericType;
-                }
-            }
-        } else {
-            Type[] parameterTypes = pd.getWriteMethod().getGenericParameterTypes();
-            return Arrays.stream(parameterTypes)
-                    .filter(type -> type instanceof ParameterizedType)
-                    .map(type -> ((ParameterizedType) type).getActualTypeArguments())
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-        }
-        return null;
-    }
 }

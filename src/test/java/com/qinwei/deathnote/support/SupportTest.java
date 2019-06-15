@@ -1,6 +1,5 @@
 package com.qinwei.deathnote.support;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.qinwei.deathnote.beans.bean.CachedIntrospectionResults;
 import com.qinwei.deathnote.beans.bean.Domain;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
@@ -10,16 +9,18 @@ import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
 import com.qinwei.deathnote.support.annotation.AnnotationB;
+import com.qinwei.deathnote.support.convert.Converter;
 import com.qinwei.deathnote.support.convert.StringToListConverter;
 import com.qinwei.deathnote.support.convert.StringToLongConverter;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
-import com.qinwei.deathnote.support.scan.MethodAnnotationScanner;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 import com.qinwei.deathnote.support.spi.MaleWorker;
 import com.qinwei.deathnote.support.spi.ServiceLoader;
 import com.qinwei.deathnote.support.spi.Worker;
+import com.qinwei.deathnote.utils.AnnotationUtils;
 import com.qinwei.deathnote.utils.BeanUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.GenericTypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -27,12 +28,12 @@ import org.slf4j.MDC;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.qinwei.deathnote.support.scan.ResourcesScanner.CONFIG_PATH;
@@ -56,12 +57,9 @@ public class SupportTest {
 
     @Test
     public void testScan() {
-        System.setProperty(CONFIG_PATH, "d:/config/config-test.properties");
+        System.setProperty(CONFIG_PATH, "d:/config/test/config-test.properties");
         ResourcesScanner scanner = ResourcesScanner.getInstance();
         scanner.scan().forEach((s, s2) -> System.out.println(s + ":" + s2));
-        MethodAnnotationScanner methodAnnotationScanner = new MethodAnnotationScanner();
-        Set<Method> classes = methodAnnotationScanner.scan(VisibleForTesting.class, "com.google");
-        classes.forEach(aClass -> System.out.println(aClass));
     }
 
     @Test
@@ -156,33 +154,45 @@ public class SupportTest {
     }
 
     @Test
-    public void testFindAnnotation() throws Exception {
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class));
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationA.class, false));
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class));
-        System.out.println(ClassUtils.findAnnotation(Domain.class, AnnotationB.class, false));
+    public void testAnnotation() throws Exception {
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class, AnnotationA.class));
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class, AnnotationA.class, false));
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class, AnnotationB.class));
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class, AnnotationB.class, false));
 
         System.out.println("-----------------------------------------");
 
-        System.out.println(ClassUtils.findAnnotation(Domain.class.getMethod("toString"), AnnotationA.class));
-        System.out.println(ClassUtils.findAnnotation(Domain.class.getDeclaredField("beanName"), AnnotationA.class));
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class.getMethod("toString"), AnnotationA.class));
+        System.out.println(AnnotationUtils.findAnnotation(Domain.class.getDeclaredField("beanName"), AnnotationA.class));
+
+        System.out.println("-----------------------------------------");
+        System.out.println(AnnotationUtils.hasAnnotation(Domain.class.getMethod("toString"), AnnotationA.class.getName()));
+
+        System.out.println("-----------------------------------------");
+        AnnotationUtils.getAnnotationAttributes(Domain.class.getMethod("toString"), AnnotationA.class.getName(), true)
+                .forEach((s, o) -> System.out.println(s + ":" + o));
+
     }
 
     @Test
     public void testFindGenericType() {
 
-        System.out.println(ClassUtils.findGenericType(StringToListConverter.class, 0));
-        System.out.println(ClassUtils.findGenericType(StringToListConverter.class, 1));
+        Converter<String, List<String>> converter = new StringToListConverter();
+        System.out.println(GenericTypeUtils.findGenericType(converter.getClass(), 0));
+        System.out.println(GenericTypeUtils.findGenericType(converter.getClass(), 1));
         System.out.println("-------------------------");
 
-        System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 0));
-        System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 1));
+        List<Domain> list = new ArrayList<>();
+        System.out.println(GenericTypeUtils.findGenericType(list.iterator().getClass(), 0));
+
+        System.out.println(GenericTypeUtils.findGenericType(StringToLongConverter.class, 0));
+        System.out.println(GenericTypeUtils.findGenericType(StringToLongConverter.class, 1));
         //System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 2));
         System.out.println("-------------------------");
 
         PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(Domain.class, "someMap");
-        System.out.println(ClassUtils.findGenericType(pd, true, 0));
-        System.out.println(ClassUtils.findGenericType(pd, true, 1));
-        System.out.println(ClassUtils.findGenericType(pd, false, 0));
+        System.out.println(GenericTypeUtils.findGenericType(pd, true, 0));
+        System.out.println(GenericTypeUtils.findGenericType(pd, true, 1));
+        System.out.println(GenericTypeUtils.findGenericType(pd, false, 0));
     }
 }

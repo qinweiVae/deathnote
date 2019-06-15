@@ -1,6 +1,5 @@
 package com.qinwei.deathnote.beans;
 
-import com.google.common.collect.Lists;
 import com.qinwei.deathnote.beans.bean.Domain;
 import com.qinwei.deathnote.beans.bean.Domain1;
 import com.qinwei.deathnote.beans.bean.Domain2;
@@ -26,7 +25,7 @@ public class BeanTest {
         source.setBeanName("qw");
         source.setDate(new Date());
         source.setDestroyed(true);
-        source.setFriends(Lists.newArrayList("1", "2", "3"));
+        source.setFriends(Arrays.asList("1", "2", "3"));
         source.setMyFloat(4f);
         source.setSomeBoolean(true);
         Map map = new HashMap();
@@ -39,7 +38,7 @@ public class BeanTest {
         domain.setBrand("abc");
         domain.setSpeed("123");
         domain.setDate("2019-06-07 18:53:00");
-        domain.setList(Lists.newArrayList("z", "x", "v"));
+        domain.setList(Arrays.asList("z", "x", "v"));
 
         source.setDomain(domain);
 

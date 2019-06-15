@@ -13,4 +13,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @AnnotationB
 public @interface AnnotationA {
+
+    String value() default "a";
+
+    AnnotationB annotation() default @AnnotationB;
+
 }

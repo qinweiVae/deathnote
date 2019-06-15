@@ -2,6 +2,7 @@ package com.qinwei.deathnote.context;
 
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ListableBeanFactory;
+import com.qinwei.deathnote.beans.postprocessor.BeanFactoryPostProcessor;
 import com.qinwei.deathnote.config.ConfigFactory;
 import com.qinwei.deathnote.context.event.ApplicationEventPublisher;
 import com.qinwei.deathnote.context.event.ApplicationListener;
@@ -24,6 +25,8 @@ public interface ApplicationContext extends ListableBeanFactory, ConfigFactory, 
     void registerShutdownHook();
 
     ConfigurableListableBeanFactory getBeanFactory();
+
+    void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor);
 
     void close();
 }

@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.context.annotation;
 
-import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.AnnotationUtils;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
@@ -36,13 +36,13 @@ public class AnnotationOrderComparator implements Comparator {
     protected Integer findOrder(Object obj) {
         Order order;
         if (obj instanceof Class) {
-            order = ClassUtils.findAnnotation((Class<?>) obj, Order.class);
+            order = AnnotationUtils.findAnnotation((Class<?>) obj, Order.class);
         } else if (obj instanceof Method) {
-            order = ClassUtils.findAnnotation((Method) obj, Order.class);
+            order = AnnotationUtils.findAnnotation((Method) obj, Order.class);
         } else if (obj instanceof AnnotatedElement) {
-            order = ClassUtils.findAnnotation((AnnotatedElement) obj, Order.class);
+            order = AnnotationUtils.findAnnotation((AnnotatedElement) obj, Order.class);
         } else {
-            order = ClassUtils.findAnnotation(obj.getClass(), Order.class);
+            order = AnnotationUtils.findAnnotation(obj.getClass(), Order.class);
             //todo 如果是代理类需要特殊处理
         }
         if (order != null) {

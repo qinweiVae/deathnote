@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.beans.factory;
 
+import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.registry.SingletonBeanRegistry;
 
 /**
@@ -8,6 +9,8 @@ import com.qinwei.deathnote.beans.registry.SingletonBeanRegistry;
  */
 public interface ConfigurableListableBeanFactory extends ListableBeanFactory, AutowireCapableBeanFactory,
         ConfigurableBeanFactory, SingletonBeanRegistry {
+
+    BeanDefinition getBeanDefinition(String beanName);
 
     void preInstantiateSingletons();
 }

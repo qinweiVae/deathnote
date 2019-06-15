@@ -4,19 +4,34 @@ import com.qinwei.deathnote.beans.DefaultListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.ApplicationContextAwareProcessor;
 import com.qinwei.deathnote.beans.postprocessor.ApplicationListenerDetector;
+import com.qinwei.deathnote.beans.postprocessor.BeanDefinitionRegistryPostProcessor;
+import com.qinwei.deathnote.beans.postprocessor.BeanFactoryPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
+import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
-import com.qinwei.deathnote.context.event.*;
+import com.qinwei.deathnote.context.annotation.AnnotationOrderComparator;
+import com.qinwei.deathnote.context.event.ApplicationEvent;
+import com.qinwei.deathnote.context.event.ApplicationEventMulticaster;
+import com.qinwei.deathnote.context.event.ApplicationListener;
+import com.qinwei.deathnote.context.event.ContextClosedEvent;
+import com.qinwei.deathnote.context.event.ContextRefreshedEvent;
+import com.qinwei.deathnote.context.event.ContextStartedEvent;
+import com.qinwei.deathnote.context.event.ContextStoppedEvent;
+import com.qinwei.deathnote.context.event.PayloadApplicationEvent;
+import com.qinwei.deathnote.context.event.SimpleApplicationEventMulticaster;
 import com.qinwei.deathnote.context.lifecycle.DefaultLifecycleProcessor;
 import com.qinwei.deathnote.context.lifecycle.LifecycleProcessor;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,6 +46,8 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
     private static final String APPLICATION_EVENT_MULTICASTER = "applicationEventMulticaster";
 
     private static final String LIFECYCLE_PROCESSOR = "lifecycleProcessor";
+
+    private final List<BeanFactoryPostProcessor> beanFactoryPostProcessors = new ArrayList<>();
 
     private final AtomicBoolean active = new AtomicBoolean();
 
@@ -79,6 +96,16 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         return StandardConfig.getInstance();
     }
 
+    @Override
+    public void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor) {
+        assert postProcessor != null : "BeanFactoryPostProcessor must not be null";
+        this.beanFactoryPostProcessors.add(postProcessor);
+    }
+
+    public List<BeanFactoryPostProcessor> getBeanFactoryPostProcessors() {
+        return this.beanFactoryPostProcessors;
+    }
+
     public ApplicationEventMulticaster getApplicationEventMulticaster() throws IllegalStateException {
         assert this.applicationEventMulticaster != null : "ApplicationEventMulticaster not initialized - call 'refresh' before multicasting events via the context: " + this;
         return this.applicationEventMulticaster;
@@ -118,7 +145,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         assert event != null : "Event must not be null";
 
         ApplicationEvent applicationEvent;
-        if (event instanceof ApplicationContextEvent) {
+        if (event instanceof ApplicationEvent) {
             applicationEvent = (ApplicationEvent) event;
         } else {
             applicationEvent = new PayloadApplicationEvent<>(this, event);
@@ -139,6 +166,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
     public void refresh() {
 
         synchronized (monitor) {
+
             prepareRefresh();
 
             ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
@@ -147,6 +175,8 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
 
             try {
                 postProcessBeanFactory(beanFactory);
+
+                invokeBeanFactoryPostProcessors(beanFactory);
 
                 registerBeanPostProcessors(beanFactory);
 
@@ -175,6 +205,73 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         }
     }
 
+    /**
+     * 执行 BeanFactoryPostProcessor
+     */
+    protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+
+        Set<String> processedBeans = new HashSet<>();
+
+        //DefaultListableBeanFactory 是 BeanDefinitionRegistry 的实现类
+        if (beanFactory instanceof BeanDefinitionRegistry) {
+            BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+            List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
+            List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
+
+            // 执行 BeanDefinitionRegistryPostProcessor 的 postProcessBeanDefinitionRegistry 方法
+            for (BeanFactoryPostProcessor postProcessor : getBeanFactoryPostProcessors()) {
+                if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
+                    BeanDefinitionRegistryPostProcessor registryPostProcessor = (BeanDefinitionRegistryPostProcessor) postProcessor;
+                    registryPostProcessor.postProcessBeanDefinitionRegistry(registry);
+                    registryProcessors.add(registryPostProcessor);
+                } else {
+                    regularPostProcessors.add(postProcessor);
+                }
+            }
+
+            List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
+            String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class);
+            for (String name : postProcessorNames) {
+                if (!processedBeans.contains(name)) {
+                    currentRegistryProcessors.add(beanFactory.getBean(name, BeanDefinitionRegistryPostProcessor.class));
+                    processedBeans.add(name);
+                }
+            }
+            //按照 @Order 注解排序
+            AnnotationOrderComparator.sort(currentRegistryProcessors);
+            registryProcessors.addAll(currentRegistryProcessors);
+            for (BeanDefinitionRegistryPostProcessor processor : currentRegistryProcessors) {
+                processor.postProcessBeanDefinitionRegistry(registry);
+            }
+
+            postProcessBeanFactory(registryProcessors, beanFactory);
+            postProcessBeanFactory(regularPostProcessors, beanFactory);
+        } else {
+            postProcessBeanFactory(getBeanFactoryPostProcessors(), beanFactory);
+        }
+
+        List<BeanFactoryPostProcessor> orderedPostProcessors = new ArrayList<>();
+        String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanFactoryPostProcessor.class);
+        for (String name : postProcessorNames) {
+            if (!processedBeans.contains(name)) {
+                orderedPostProcessors.add(beanFactory.getBean(name, BeanFactoryPostProcessor.class));
+            }
+        }
+        //按照 @Order 注解排序
+        AnnotationOrderComparator.sort(orderedPostProcessors);
+
+        postProcessBeanFactory(orderedPostProcessors, beanFactory);
+    }
+
+    /**
+     * 执行BeanFactoryPostProcessor 的 postProcessBeanFactory 方法
+     */
+    private void postProcessBeanFactory(List<? extends BeanFactoryPostProcessor> postProcessors, ConfigurableListableBeanFactory beanFactory) {
+        for (BeanFactoryPostProcessor postProcessor : postProcessors) {
+            postProcessor.postProcessBeanFactory(beanFactory);
+        }
+    }
+
     protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
         refreshBeanFactory();
         return getBeanFactory();
@@ -188,7 +285,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         try {
             DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
             //加载BeanDefinition
-            loadBeanDefinitions(beanFactory);
+            //loadBeanDefinitions(beanFactory);
 
             this.beanFactory = beanFactory;
         } catch (Exception e) {
@@ -267,12 +364,24 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
      * 初始化并注册所有的 BeanPostProcessor
      */
     protected void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+        List<BeanPostProcessor> orderedPostProcessors = new ArrayList<>();
         String[] beanNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class);
         for (String beanName : beanNames) {
             BeanPostProcessor postProcessor = beanFactory.getBean(beanName, BeanPostProcessor.class);
+            orderedPostProcessors.add(postProcessor);
+        }
+        //按照 @Order 注解排序
+        AnnotationOrderComparator.sort(orderedPostProcessors);
+        //添加 BeanPostProcessor
+        registerBeanPostProcessors(beanFactory, orderedPostProcessors);
+        //重新注册用来自动探测内部ApplicationListener的post-processor，这样可以将他们移到处理器链条的末尾
+        beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
+    }
+
+    private void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory, List<BeanPostProcessor> orderedPostProcessors) {
+        for (BeanPostProcessor postProcessor : orderedPostProcessors) {
             beanFactory.addBeanPostProcessor(postProcessor);
         }
-        beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
     }
 
     protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -475,7 +584,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
 
     //---------------------------------------------------------------------------------------------------------------------------
 
-    protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFactory);
+    //protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFactory);
 
 
     @Override
