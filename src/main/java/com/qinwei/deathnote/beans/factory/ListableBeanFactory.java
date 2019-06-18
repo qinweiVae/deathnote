@@ -22,4 +22,10 @@ public interface ListableBeanFactory extends BeanFactory {
     <T extends Annotation> T findAnnotationOnBean(String beanName, Class<T> annotationType);
 
     String[] getBeanNamesForAnnotation(Class<? extends Annotation> annotationType);
+
+    String[] getBeanDefinitionNames();
+
+    boolean containsBeanDefinition(String beanName);
+
+    int getBeanDefinitionCount();
 }

@@ -235,14 +235,13 @@ public class AnnotationUtils {
         if (annotation == null) {
             return Collections.emptySet();
         }
-        LinkedHashSet<String> strings = new LinkedHashSet<>();
+        LinkedHashSet<String> result = new LinkedHashSet<>();
         for (Annotation anno : getDeclaredAnnotations(annotation.annotationType())) {
             if (!isPrimitiveAnnotation(anno.annotationType())) {
-                String name = anno.annotationType().getName();
-                strings.add(name);
+                result.add(anno.annotationType().getName());
             }
         }
-        return strings;
+        return result;
     }
 
     /**

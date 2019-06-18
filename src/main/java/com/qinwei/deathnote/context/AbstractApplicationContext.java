@@ -1,6 +1,5 @@
 package com.qinwei.deathnote.context;
 
-import com.qinwei.deathnote.beans.DefaultListableBeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.ApplicationContextAwareProcessor;
 import com.qinwei.deathnote.beans.postprocessor.ApplicationListenerDetector;
@@ -277,22 +276,6 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         return getBeanFactory();
     }
 
-    protected void refreshBeanFactory() {
-        if (this.beanFactory != null) {
-            destroyBeans();
-            this.beanFactory = null;
-        }
-        try {
-            DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-            //加载BeanDefinition
-            //loadBeanDefinitions(beanFactory);
-
-            this.beanFactory = beanFactory;
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to parsing bean definition source");
-        }
-    }
-
     protected void resetCommonCaches() {
 
     }
@@ -467,15 +450,6 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         return this.applicationListeners;
     }
 
-    @Override
-    public ConfigurableListableBeanFactory getBeanFactory() {
-        if (this.beanFactory == null) {
-            throw new IllegalStateException("BeanFactory not initialized or already closed - " +
-                    "call 'refresh' before accessing beans via the ApplicationContext");
-        }
-        return this.beanFactory;
-    }
-
     protected void assertBeanFactoryActive() {
         if (!this.active.get()) {
             if (this.closed.get()) {
@@ -582,9 +556,27 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         return getBeanFactory().isPrototype(name);
     }
 
+    @Override
+    public String[] getBeanDefinitionNames() {
+        return getBeanFactory().getBeanDefinitionNames();
+    }
+
+    @Override
+    public boolean containsBeanDefinition(String beanName) {
+        return getBeanFactory().containsBeanDefinition(beanName);
+    }
+
+    @Override
+    public int getBeanDefinitionCount() {
+        return getBeanFactory().getBeanDefinitionCount();
+    }
+
     //---------------------------------------------------------------------------------------------------------------------------
 
-    //protected abstract void loadBeanDefinitions(DefaultListableBeanFactory beanFactory);
+    @Override
+    public abstract ConfigurableListableBeanFactory getBeanFactory();
+
+    protected abstract void refreshBeanFactory();
 
 
     @Override

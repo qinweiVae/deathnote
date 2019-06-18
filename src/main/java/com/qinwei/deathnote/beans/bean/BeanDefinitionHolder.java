@@ -25,6 +25,7 @@ public class BeanDefinitionHolder {
     public BeanDefinitionHolder(BeanDefinition beanDefinition, String beanName, String[] aliases) {
         assert beanDefinition != null : "BeanDefinition must not be null";
         assert !StringUtils.isEmpty(beanName) : "beanName must not be null";
+
         this.beanDefinition = beanDefinition;
         this.beanName = beanName;
         this.aliases = aliases;

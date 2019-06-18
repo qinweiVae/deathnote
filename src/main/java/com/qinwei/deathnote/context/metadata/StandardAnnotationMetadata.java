@@ -58,30 +58,22 @@ public class StandardAnnotationMetadata extends StandardClassMetadata implements
 
     @Override
     public boolean hasAnnotatedMethods(String annotationName) {
-        try {
-            return Arrays.stream(getIntrospectedClass().getDeclaredMethods())
-                    .anyMatch(method -> !method.isBridge()
-                            && method.getAnnotations().length > 0
-                            && AnnotationUtils.hasAnnotation(method, annotationName)
-                    );
-        } catch (Throwable ex) {
-            throw new IllegalStateException("Failed to introspect annotated methods on " + getIntrospectedClass(), ex);
-        }
+        return Arrays.stream(getIntrospectedClass().getDeclaredMethods())
+                .anyMatch(method -> !method.isBridge()
+                        && method.getAnnotations().length > 0
+                        && AnnotationUtils.hasAnnotation(method, annotationName)
+                );
     }
 
     @Override
     public Set<MethodMetadata> getAnnotatedMethods(String annotationName) {
-        try {
-            return Arrays.stream(getIntrospectedClass().getDeclaredMethods())
-                    .filter(method -> !method.isBridge()
-                            && method.getAnnotations().length > 0
-                            && AnnotationUtils.hasAnnotation(method, annotationName)
-                    )
-                    .map(method -> new StandardMethodMetadata(method, this.nestedAnnotationsAsMap))
-                    .collect(Collectors.toCollection(() -> new LinkedHashSet<>(4)));
-        } catch (Throwable ex) {
-            throw new IllegalStateException("Failed to introspect annotated methods on " + getIntrospectedClass(), ex);
-        }
+        return Arrays.stream(getIntrospectedClass().getDeclaredMethods())
+                .filter(method -> !method.isBridge()
+                        && method.getAnnotations().length > 0
+                        && AnnotationUtils.hasAnnotation(method, annotationName)
+                )
+                .map(method -> new StandardMethodMetadata(method, this.nestedAnnotationsAsMap))
+                .collect(Collectors.toCollection(() -> new LinkedHashSet<>(4)));
     }
 
     @Override
