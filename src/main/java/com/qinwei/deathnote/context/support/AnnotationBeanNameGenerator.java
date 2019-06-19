@@ -1,9 +1,10 @@
-package com.qinwei.deathnote.beans.support;
+package com.qinwei.deathnote.context.support;
 
 import com.qinwei.deathnote.beans.bean.AnnotatedBeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.annotation.AnnotationAttributes;
+import com.qinwei.deathnote.context.annotation.AnnotationConfigUtils;
 import com.qinwei.deathnote.context.metadata.AnnotationMetadata;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
@@ -36,14 +37,14 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
      * 从 bean注解中找到 @Component 或者 @Named 注解，用其 value 里面的值 作为 beanName
      */
     private String determineBeanNameFromAnnotation(AnnotatedBeanDefinition abd) {
-        AnnotationMetadata amd = abd.getMetadata();
+        AnnotationMetadata metadata = abd.getMetadata();
         // 获取 所有的 注解名称
-        Set<String> types = amd.getAnnotationTypes();
+        Set<String> types = metadata.getAnnotationTypes();
         String beanName = null;
         for (String type : types) {
-            AnnotationAttributes attributes = AnnotationAttributes.fromMap(amd.getAnnotationAttributes(type));
-
-            if (attributes != null && isStereotypeWithNameValue(type, amd.getMetaAnnotationTypes(type), attributes)) {
+            AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(metadata, type);
+            //判断是否含有 @Component 或者 @Named 注解
+            if (attributes != null && isStereotypeWithNameValue(type, metadata.getMetaAnnotationTypes(type), attributes)) {
                 Object value = attributes.get("value");
                 if (value instanceof String) {
                     String strVal = (String) value;

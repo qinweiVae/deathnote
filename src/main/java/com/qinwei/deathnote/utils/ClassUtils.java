@@ -263,4 +263,16 @@ public class ClassUtils {
         return shortName;
     }
 
+    /**
+     * 获取 class 所在的包路径
+     */
+    public static String getPackageName(Class<?> clazz) {
+        return getPackageName(clazz.getName());
+    }
+
+    public static String getPackageName(String className) {
+        int lastDotIndex = className.lastIndexOf(PACKAGE_SEPARATOR);
+        return (lastDotIndex != -1 ? className.substring(0, lastDotIndex) : "");
+    }
+
 }

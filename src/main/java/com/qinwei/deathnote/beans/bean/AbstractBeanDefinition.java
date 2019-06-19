@@ -73,6 +73,7 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
         this.beanClass = beanClass;
     }
 
+    @Override
     public Class<?> getBeanClass() throws IllegalStateException {
         Object beanClassObject = this.beanClass;
         assert beanClassObject != null : "No beans class specified on beans definition";

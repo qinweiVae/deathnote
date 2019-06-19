@@ -8,12 +8,12 @@ import java.lang.annotation.Target;
 
 /**
  * @author qinwei
- * @date 2019-06-13
+ * @date 2019-06-19
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Component
-public @interface Configuration {
+public @interface Import {
 
+    Class<?>[] value();
 }

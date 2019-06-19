@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.beans.support;
+package com.qinwei.deathnote.context.support;
 
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;

@@ -5,9 +5,9 @@ import com.qinwei.deathnote.beans.bean.AnnotatedGenericBeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinitionHolder;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
-import com.qinwei.deathnote.beans.support.AnnotationBeanNameGenerator;
-import com.qinwei.deathnote.beans.support.BeanDefinitionReaderUtils;
-import com.qinwei.deathnote.beans.support.BeanNameGenerator;
+import com.qinwei.deathnote.context.support.AnnotationBeanNameGenerator;
+import com.qinwei.deathnote.context.support.BeanDefinitionReaderUtils;
+import com.qinwei.deathnote.context.support.BeanNameGenerator;
 import com.qinwei.deathnote.context.metadata.ScopeMetadata;
 import com.qinwei.deathnote.support.scan.TypeAnnotationScanner;
 import com.qinwei.deathnote.utils.AnnotationUtils;
@@ -87,6 +87,7 @@ public class ClassPathBeanDefinitionScanner {
                 // 判断 BeanDefinition 是否已经 注册过
                 if (checkCandidate(beanName, candidate)) {
                     BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(candidate, beanName);
+                    //根据不同的 scope 模式 创建不同的 BeanDefinition
                     definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
                     beanDefinitions.add(definitionHolder);
                     BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
@@ -145,6 +146,10 @@ public class ClassPathBeanDefinitionScanner {
 
     public void addExcludeFilter(Class<? extends Annotation> annotation) {
         this.excludeFilters.add(annotation);
+    }
+
+    public void setScopedProxyMode(ScopedProxyMode scopedProxyMode) {
+        this.scopeMetadataResolver = new AnnotationScopeMetadataResolver(scopedProxyMode);
     }
 }
 

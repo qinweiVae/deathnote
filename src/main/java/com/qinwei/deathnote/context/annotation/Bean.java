@@ -8,12 +8,16 @@ import java.lang.annotation.Target;
 
 /**
  * @author qinwei
- * @date 2019-06-13
+ * @date 2019-06-19
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Component
-public @interface Configuration {
+public @interface Bean {
 
+    String[] value() default {};
+
+    String initMethod() default "";
+
+    String destroyMethod() default "";
 }

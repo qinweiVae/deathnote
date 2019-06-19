@@ -228,6 +228,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
                 }
             }
 
+            // 从所有的 bean 中找到 BeanDefinitionRegistryPostProcessor 的 bean
             List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
             String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class);
             for (String name : postProcessorNames) {
@@ -236,19 +237,22 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
                     processedBeans.add(name);
                 }
             }
-            //按照 @Order 注解排序
+            //将BeanDefinitionRegistryPostProcessor 按照 @Order 注解排序
             AnnotationOrderComparator.sort(currentRegistryProcessors);
             registryProcessors.addAll(currentRegistryProcessors);
+            // 执行 BeanDefinitionRegistryPostProcessor 的 postProcessBeanDefinitionRegistry 方法
             for (BeanDefinitionRegistryPostProcessor processor : currentRegistryProcessors) {
                 processor.postProcessBeanDefinitionRegistry(registry);
             }
-
+            //执行BeanFactoryPostProcessor 的 postProcessBeanFactory 方法
             postProcessBeanFactory(registryProcessors, beanFactory);
             postProcessBeanFactory(regularPostProcessors, beanFactory);
         } else {
+            //执行BeanFactoryPostProcessor 的 postProcessBeanFactory 方法
             postProcessBeanFactory(getBeanFactoryPostProcessors(), beanFactory);
         }
 
+        // 从所有的 bean 中找到 BeanFactoryPostProcessor 的 bean
         List<BeanFactoryPostProcessor> orderedPostProcessors = new ArrayList<>();
         String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanFactoryPostProcessor.class);
         for (String name : postProcessorNames) {
@@ -256,9 +260,9 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
                 orderedPostProcessors.add(beanFactory.getBean(name, BeanFactoryPostProcessor.class));
             }
         }
-        //按照 @Order 注解排序
+        //将BeanFactoryPostProcessor 按照 @Order 注解排序
         AnnotationOrderComparator.sort(orderedPostProcessors);
-
+        //执行BeanFactoryPostProcessor 的 postProcessBeanFactory 方法
         postProcessBeanFactory(orderedPostProcessors, beanFactory);
     }
 

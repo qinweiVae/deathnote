@@ -3,9 +3,9 @@ package com.qinwei.deathnote.context.annotation;
 import com.qinwei.deathnote.beans.bean.AnnotatedGenericBeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinitionHolder;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
-import com.qinwei.deathnote.beans.support.AnnotationBeanNameGenerator;
-import com.qinwei.deathnote.beans.support.BeanDefinitionReaderUtils;
-import com.qinwei.deathnote.beans.support.BeanNameGenerator;
+import com.qinwei.deathnote.context.support.AnnotationBeanNameGenerator;
+import com.qinwei.deathnote.context.support.BeanDefinitionReaderUtils;
+import com.qinwei.deathnote.context.support.BeanNameGenerator;
 import com.qinwei.deathnote.context.metadata.ScopeMetadata;
 
 /**
@@ -51,7 +51,7 @@ public class AnnotatedBeanDefinitionReader {
         abd.setScope(scopeMetadata.getScopeName());
         //生成 beanName
         String beanName = this.beanNameGenerator.generateBeanName(abd, this.registry);
-        //
+        //处理常用的 bean 注解( @Lazy,@Primary,@DependsOn )
         AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
 
         BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);

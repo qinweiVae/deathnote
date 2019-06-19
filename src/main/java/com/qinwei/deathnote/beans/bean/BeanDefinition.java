@@ -16,6 +16,8 @@ public interface BeanDefinition {
 
     String getBeanClassName();
 
+    Class<?> getBeanClass();
+
     void setScope(String scope);
 
     String getScope();
