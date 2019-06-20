@@ -2,6 +2,7 @@ package com.qinwei.deathnote.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
@@ -127,24 +128,34 @@ public class ClassUtils {
     }
 
     /**
-     * 判断rType是否可以转换为lType
+     * 判断subType是否可以转换为superType
      */
-    public static boolean isAssignable(Class<?> lType, Class<?> rType) {
-        if (lType.isAssignableFrom(rType)) {
+    public static boolean isAssignable(Class<?> superType, Class<?> subType) {
+        if (superType.isAssignableFrom(subType)) {
             return true;
         }
-        if (lType.isPrimitive()) {
-            Class<?> resolvedPrimitive = primitiveWrapperTypeMap.get(rType);
-            if (lType == resolvedPrimitive) {
+        if (superType.isPrimitive()) {
+            Class<?> resolvedPrimitive = primitiveWrapperTypeMap.get(subType);
+            if (superType == resolvedPrimitive) {
                 return true;
             }
         } else {
-            Class<?> resolvedWrapper = primitiveTypeToWrapperMap.get(rType);
-            if (resolvedWrapper != null && lType.isAssignableFrom(resolvedWrapper)) {
+            Class<?> resolvedWrapper = primitiveTypeToWrapperMap.get(subType);
+            if (resolvedWrapper != null && superType.isAssignableFrom(resolvedWrapper)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * 使用默认无参构造器实例化class,并转换成 期望的类型
+     */
+    public static <T> T instantiateClass(Class<?> clazz, Class<T> expectedType) {
+        if (!isAssignable(expectedType, clazz)) {
+            throw new IllegalArgumentException("Unable to cast " + clazz + " to " + expectedType);
+        }
+        return (T) instantiateClass(clazz);
     }
 
     /**
@@ -193,6 +204,13 @@ public class ClassUtils {
     /**
      * 加载class
      */
+    public static Class<?> forName(String className) {
+        return forName(className, null);
+    }
+
+    /**
+     * 加载class
+     */
     public static Class<?> forName(String className, ClassLoader classLoader) {
         if (classLoader == null) {
             classLoader = getDefaultClassLoader();
@@ -200,7 +218,7 @@ public class ClassUtils {
         try {
             return Class.forName(className, false, classLoader);
         } catch (Exception e) {
-            throw new IllegalStateException("Could not load class , className = {" + className + "}", e);
+            throw new IllegalStateException("Unable to load class , className = {" + className + "}", e);
         }
     }
 
@@ -214,6 +232,13 @@ public class ClassUtils {
         if ((!Modifier.isPublic(method.getModifiers()) ||
                 !Modifier.isPublic(method.getDeclaringClass().getModifiers())) && !method.isAccessible()) {
             method.setAccessible(true);
+        }
+    }
+
+    public static void makeAccessible(Field field) {
+        if ((!Modifier.isPublic(field.getModifiers()) || !Modifier.isPublic(field.getDeclaringClass().getModifiers())
+                || Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
+            field.setAccessible(true);
         }
     }
 

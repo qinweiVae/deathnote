@@ -3,13 +3,12 @@ package com.qinwei.deathnote.context.annotation;
 import com.qinwei.deathnote.beans.bean.AnnotatedBeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinitionHolder;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
-import com.qinwei.deathnote.context.event.DefaultEventListenerFactory;
 import com.qinwei.deathnote.beans.postprocessor.AutowiredAnnotationBeanPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.ConfigurationClassPostProcessor;
 import com.qinwei.deathnote.beans.postprocessor.EventListenerMethodProcessor;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
+import com.qinwei.deathnote.context.event.DefaultEventListenerFactory;
 import com.qinwei.deathnote.context.metadata.AnnotatedTypeMetadata;
-import com.qinwei.deathnote.context.metadata.AnnotationMetadata;
 import com.qinwei.deathnote.context.metadata.ScopeMetadata;
 
 import java.util.LinkedHashSet;
@@ -77,7 +76,7 @@ public class AnnotationConfigUtils {
     /**
      * 处理常用的 bean 注解( @Lazy,@Primary,@DependsOn )
      */
-    public static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd, AnnotationMetadata metadata) {
+    public static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd, AnnotatedTypeMetadata metadata) {
         // 解析 @Lazy 注解
         AnnotationAttributes lazy = attributesFor(metadata, Lazy.class);
         if (lazy != null) {

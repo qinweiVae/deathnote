@@ -202,7 +202,7 @@ public class AnnotationUtils {
     }
 
     /**
-     * 如果value 还是 AnnotationnestedAnnotationsAsMap 为 true
+     * 如果value 还是 Annotation, nestedAnnotationsAsMap 为 true
      */
     private static Object adaptValue(AnnotatedElement annotatedElement, Object value, boolean nestedAnnotationsAsMap) {
         if (value instanceof Annotation) {

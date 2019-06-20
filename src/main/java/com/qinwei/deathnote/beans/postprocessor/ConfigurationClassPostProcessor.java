@@ -39,7 +39,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
                     "postProcessBeanFactory already called on this post-processor against " + registry);
         }
         this.registriesPostProcessed.add(registryId);
-
+        //处理 @Configuration,@ComponentScan,@Import ,@Bean 注解
         processConfigBeanDefinitions(registry);
 
     }
@@ -59,7 +59,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
     }
 
     /**
-     * 处理 @Configuration,@ComponentScan,@Import 注解
+     * 处理 @Configuration,@ComponentScan,@Import ,@Bean 注解
      */
     public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
         List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
@@ -79,10 +79,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
         configCandidates.sort((o1, o2) -> AnnotationOrderComparator.INSTANCE.compare(((AbstractBeanDefinition) o1.getBeanDefinition()).getBeanClass(), ((AbstractBeanDefinition) o2.getBeanDefinition()).getBeanClass()));
 
         Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
-        // 创建 @Configuration,@ComponentScan,@Import 注解的 解析器
+        // 创建 @Configuration  解析器
         ConfigurationClassParser parser = new ConfigurationClassParser(registry);
+        // 处理 @ComponentScan,@Import,@Bean 注解
         parser.parse(candidates);
-        //todo
     }
 
 }

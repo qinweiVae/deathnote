@@ -13,6 +13,10 @@ public class ConfigurationClass {
 
     private String beanName;
 
+    public ConfigurationClass(Class<?> clazz) {
+        this.metadata = new StandardAnnotationMetadata(clazz, true);
+    }
+
     public ConfigurationClass(AnnotationMetadata metadata, String beanName) {
         this.metadata = metadata;
         this.beanName = beanName;
