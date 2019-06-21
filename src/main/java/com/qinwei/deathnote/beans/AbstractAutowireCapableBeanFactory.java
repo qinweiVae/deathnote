@@ -12,6 +12,7 @@ import com.qinwei.deathnote.beans.postprocessor.SmartInstantiationAwareBeanPostP
 import com.qinwei.deathnote.context.aware.Aware;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.aware.BeanNameAware;
+import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
@@ -112,8 +113,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
         if (CollectionUtils.isNotEmpty(result)) {
             propertyValue = result;
+            // 执行 InstantiationAwareBeanPostProcessor 的 postProcessProperties 方法
+            for (BeanPostProcessor postProcessor : getBeanPostProcessors()) {
+                if (postProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                    InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) postProcessor;
+                    propertyValue = ibp.postProcessProperties(propertyValue, bw.getWrappedInstance(), beanName);
+                }
+            }
         }
         if (CollectionUtils.isNotEmpty(propertyValue)) {
+            //进行属性设置
             applyPropertyValues(beanName, bw, propertyValue);
         }
     }
@@ -159,7 +168,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         for (String propertyName : propertyNames) {
             PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
             // 对 bean 的属性进行解析,可能包括：数组、Collection 、Map 类型
-            Object autowiredArgument = resolveDependency(beanName, pd, autowiredBeanNames);
+            Object autowiredArgument = resolveDependency(beanName, ResolveType.forType(pd), autowiredBeanNames);
             if (autowiredArgument != null) {
                 result.put(propertyName, autowiredArgument);
             }
@@ -442,5 +451,4 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return result;
     }
 
-    protected abstract Object resolveDependency(String beanName, PropertyDescriptor pd, Set<String> autowiredBeanNames);
 }

@@ -4,6 +4,11 @@ import com.qinwei.deathnote.beans.bean.Domain;
 import com.qinwei.deathnote.beans.bean.Domain1;
 import com.qinwei.deathnote.beans.bean.Domain2;
 import com.qinwei.deathnote.beans.registry.DefaultSingletonBeanRegistry;
+import com.qinwei.deathnote.context.annotation.AnnotationAttributes;
+import com.qinwei.deathnote.context.annotation.AnnotationConfigUtils;
+import com.qinwei.deathnote.context.annotation.Import;
+import com.qinwei.deathnote.context.metadata.AnnotationMetadata;
+import com.qinwei.deathnote.context.metadata.StandardAnnotationMetadata;
 import com.qinwei.deathnote.utils.BeanUtils;
 import org.junit.Test;
 
@@ -74,4 +79,13 @@ public class BeanTest {
         System.out.println(registry.isDependent("b", "a"));
     }
 
+    @Test
+    public void testAnnotationMetaData() {
+        AnnotationMetadata metadata = new StandardAnnotationMetadata(Domain.class);
+        AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(metadata, Import.class.getName());
+        Class<?>[] imports = attributes.getClassArray("value");
+        for (Class<?> clazz : imports) {
+            System.out.println(clazz.getName());
+        }
+    }
 }

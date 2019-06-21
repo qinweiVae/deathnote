@@ -62,19 +62,24 @@ public abstract class AbstractConfig implements Config {
     }
 
     @Override
+    public Map<String, Object> getProperties() {
+        return config;
+    }
+
+    @Override
     public boolean containsProperty(String key) {
-        return config.containsKey(key);
+        return getProperties().containsKey(key);
     }
 
     @Override
     public String getProperty(String key) {
-        Object value = config.get(key);
+        Object value = getProperties().get(key);
         return value == null ? null : getConversion().convertIfNecessary(value, String.class);
     }
 
     @Override
     public <T> T getProperty(String key, Class<T> targetType) {
-        Object value = config.get(key);
+        Object value = getProperties().get(key);
         return value == null ? null : getConversion().convertIfNecessary(value, targetType);
     }
 

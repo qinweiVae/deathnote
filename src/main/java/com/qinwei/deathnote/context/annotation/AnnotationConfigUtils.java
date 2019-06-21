@@ -34,7 +34,7 @@ public class AnnotationConfigUtils {
      */
     public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
         Set<BeanDefinitionHolder> beanHolders = new LinkedHashSet<>(8);
-        // 处理 @Configuration 的 postprocessor
+        // 处理 @Configuration,@ComponentScan,@Import ,@Bean 注解 的 postprocessor
         if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
             RootBeanDefinition bd = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
             beanHolders.add(registerPostProcessor(registry, bd, CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME));

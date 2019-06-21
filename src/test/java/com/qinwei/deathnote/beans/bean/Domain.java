@@ -68,6 +68,11 @@ public class Domain extends BaseDomain {
     public Domain() {
     }
 
+    public void writeMethod(Set<Domain> someSet, Collection<String> friends) {
+        this.someSet = someSet;
+        this.friends = friends;
+    }
+
     @Override
     @AnnotationA
     public String toString() {

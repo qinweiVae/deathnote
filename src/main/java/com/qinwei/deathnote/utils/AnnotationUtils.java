@@ -181,6 +181,29 @@ public class AnnotationUtils {
     }
 
     /**
+     * 获取注解的 AnnotationAttributes
+     */
+    public static AnnotationAttributes getAnnotationAttributes(Annotation annotation) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        AnnotationAttributes attributes = new AnnotationAttributes(annotationType);
+        for (Method method : getAttributeMethods(annotationType)) {
+            try {
+                //注解方法的值
+                Object attributeValue = method.invoke(annotation);
+                // 注解方法的默认值
+                Object defaultValue = method.getDefaultValue();
+                if (attributeValue == null) {
+                    attributeValue = defaultValue;
+                }
+                attributes.put(method.getName(), attributeValue);
+            } catch (Exception e) {
+                throw new IllegalStateException("Could not obtain annotation attribute value for " + method, e);
+            }
+        }
+        return attributes;
+    }
+
+    /**
      * 获取 注解上的所有 属性
      */
     public static List<Method> getAttributeMethods(Class<? extends Annotation> annotationType) {

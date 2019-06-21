@@ -8,7 +8,6 @@ import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.utils.AnnotationUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
-import com.qinwei.deathnote.utils.GenericTypeUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
@@ -373,7 +372,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return convertToArray(componentType, values);
         } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
             //集合中元素的类型,这里不支持集合的嵌套
-            Class elementType = GenericTypeUtils.findGenericType(resolveType, true, 0);
+            Class elementType = resolveType.resolveGenericType(0);
             if (elementType == null) {
                 return null;
             }
@@ -392,9 +391,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return convertToCollection(type, elementType, values);
         } else if (Map.class == type) {
             //map 中 key 的类型
-            Class keyType = GenericTypeUtils.findGenericType(resolveType, true, 0);
+            Class keyType = resolveType.resolveGenericType(0);
             //map 中 value 的类型，不支持嵌套
-            Class valueType = GenericTypeUtils.findGenericType(resolveType, true, 1);
+            Class valueType = resolveType.resolveGenericType(1);
             //key必须是string 类型
             if (keyType == null || String.class == keyType) {
                 return null;

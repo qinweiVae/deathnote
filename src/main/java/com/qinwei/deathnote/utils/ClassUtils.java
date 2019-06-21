@@ -37,7 +37,7 @@ public class ClassUtils {
 
     private static final Map<Class<?>, Class<?>> primitiveTypeToWrapperMap = new IdentityHashMap<>(8);
 
-    private static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
+    public static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
 
     /**
      * 优先按public 排序，其次按照 构造器参数个数降序排
@@ -65,6 +65,7 @@ public class ClassUtils {
         values.put(short.class, (short) 0);
         values.put(int.class, 0);
         values.put(long.class, (long) 0);
+        values.put(double.class, (double) 0);
         DEFAULT_TYPE_VALUES = Collections.unmodifiableMap(values);
     }
 
@@ -298,6 +299,19 @@ public class ClassUtils {
     public static String getPackageName(String className) {
         int lastDotIndex = className.lastIndexOf(PACKAGE_SEPARATOR);
         return (lastDotIndex != -1 ? className.substring(0, lastDotIndex) : "");
+    }
+
+    /**
+     * 如果 class 是 CGLib 代理类 ，返回其父类
+     */
+    public static Class<?> getUserClass(Class<?> clazz) {
+        if (clazz.getName().contains(CGLIB_CLASS_SEPARATOR)) {
+            Class<?> superclass = clazz.getSuperclass();
+            if (superclass != null && superclass != Object.class) {
+                return superclass;
+            }
+        }
+        return clazz;
     }
 
 }

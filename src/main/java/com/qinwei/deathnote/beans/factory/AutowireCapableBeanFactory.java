@@ -1,5 +1,9 @@
 package com.qinwei.deathnote.beans.factory;
 
+import com.qinwei.deathnote.context.support.ResolveType;
+
+import java.util.Set;
+
 /**
  * @author qinwei
  * @date 2019-05-22
@@ -25,4 +29,6 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
     Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName);
 
     Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName);
+
+    Object resolveDependency(String beanName, ResolveType resolveType, Set<String> autowiredBeanNames);
 }

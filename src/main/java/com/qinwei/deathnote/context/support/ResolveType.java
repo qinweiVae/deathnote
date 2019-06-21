@@ -1,36 +1,79 @@
-package com.qinwei.deathnote.utils;
+package com.qinwei.deathnote.context.support;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author qinwei
- * @date 2019-06-14
+ * @date 2019-06-20
  */
-public class GenericTypeUtils {
+@Getter
+@Setter
+public class ResolveType {
 
     private static final Map<Class<?>, Type[]> TYPE_CACHE = new ConcurrentHashMap<>(64);
+
+    private String name;
+
+    private Class type;
+
+    private Field field;
+
+    private Method method;
+
+    private ResolveType(Class type) {
+        this.type = type;
+    }
+
+    public static ResolveType forType(Class clazz) {
+        return new ResolveType(clazz);
+    }
+
+    public static ResolveType forType(PropertyDescriptor pd) {
+        ResolveType resolveType = new ResolveType(pd.getPropertyType());
+        resolveType.setName(pd.getName());
+        resolveType.setMethod(pd.getWriteMethod());
+        return resolveType;
+    }
+
+    public static ResolveType forType(Field field) {
+        ResolveType resolveType = new ResolveType(field.getType());
+        resolveType.setName(field.getName());
+        resolveType.setField(field);
+        return resolveType;
+    }
+
+    public static ResolveType forType(Method method) {
+        ResolveType resolveType = new ResolveType(method.getReturnType());
+        resolveType.setName(method.getName());
+        resolveType.setMethod(method);
+        return resolveType;
+    }
+
 
     /**
      * 获取 Class 上的泛型,只能用于普通类的 泛型
      * <p>
      * 对于collection、map之类的集合不要使用
      */
-    public static Class findGenericType(Class<?> clazz, int index) {
-        Type[] genericType = TYPE_CACHE.get(clazz);
+    public Class resolveGeneric(int index) {
+        Type[] genericType = TYPE_CACHE.get(type);
         if (genericType == null) {
             synchronized (TYPE_CACHE) {
-                if (TYPE_CACHE.containsKey(clazz)) {
-                    genericType = TYPE_CACHE.get(clazz);
+                if (TYPE_CACHE.containsKey(type)) {
+                    genericType = TYPE_CACHE.get(type);
                 } else {
-                    genericType = findGenericType(clazz);
+                    genericType = resolveGeneric();
                     if (genericType != null) {
-                        TYPE_CACHE.put(clazz, genericType);
+                        TYPE_CACHE.put(type, genericType);
                     }
                 }
             }
@@ -57,10 +100,10 @@ public class GenericTypeUtils {
      * <p>
      * 对于collection、map之类的集合不要使用，否则得到是 E,K,V 这样的东西，很蛋疼
      */
-    public static Type[] findGenericType(Class<?> clazz) {
+    public Type[] resolveGeneric() {
         Type[] genericType = null;
         //先从父类查找
-        Type type = clazz.getGenericSuperclass();
+        Type type = this.type.getGenericSuperclass();
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
             genericType = pt.getActualTypeArguments();
@@ -69,7 +112,7 @@ public class GenericTypeUtils {
             return genericType;
         }
         //再从接口查找
-        Type[] types = clazz.getGenericInterfaces();
+        Type[] types = this.type.getGenericInterfaces();
         for (Type t : types) {
             if (t instanceof ParameterizedType) {
                 ParameterizedType pt = (ParameterizedType) t;
@@ -84,11 +127,9 @@ public class GenericTypeUtils {
 
     /**
      * 用于获取collection、map等集合的泛型（对于这些集合只能通过Method、Field 的方式才能得到正确的泛型)）
-     * <p>
-     * readWriter 为true 获取setter方法返回参数的泛型，readWriter 为false 获取getter方法传入参数的泛型
      */
-    public static Class findGenericType(PropertyDescriptor pd, boolean readWriter, int index) {
-        Type[] genericType = findGenericType(pd, readWriter);
+    public Class resolveGenericType(int index) {
+        Type[] genericType = resolveGenericType();
         if (genericType == null) {
             return null;
         }
@@ -107,26 +148,33 @@ public class GenericTypeUtils {
     }
 
     /**
-     * readWriter 为true 获取setter方法返回参数的泛型，readWriter 为false 获取getter方法传入参数的泛型
+     * 获取Field的泛型
+     * <p>
+     * 获取Method 中第一个传入参数的泛型
      */
-    public static Type[] findGenericType(PropertyDescriptor pd, boolean readWriter) {
-        if (readWriter) {
-            Type returnType = pd.getReadMethod().getGenericReturnType();
-            if (returnType instanceof ParameterizedType) {
-                Type[] genericType = ((ParameterizedType) returnType).getActualTypeArguments();
-                if (genericType != null) {
-                    return genericType;
+    public Type[] resolveGenericType() {
+
+        if (getField() != null) {
+            Type filedType = getField().getGenericType();
+            if (filedType instanceof ParameterizedType) {
+                Type[] arguments = ((ParameterizedType) filedType).getActualTypeArguments();
+                if (arguments != null) {
+                    return arguments;
                 }
             }
-        } else {
-            Type[] parameterTypes = pd.getWriteMethod().getGenericParameterTypes();
-            return Arrays.stream(parameterTypes)
-                    .filter(type -> type instanceof ParameterizedType)
-                    .map(type -> ((ParameterizedType) type).getActualTypeArguments())
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
+        }
+        if (getMethod() != null) {
+            Type[] parameterTypes = getMethod().getGenericParameterTypes();
+            for (Type parameterType : parameterTypes) {
+                if (parameterType instanceof ParameterizedType) {
+                    Type[] actualTypeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
+                    if (actualTypeArguments != null) {
+                        return actualTypeArguments;
+                    }
+                }
+            }
         }
         return null;
     }
+
 }

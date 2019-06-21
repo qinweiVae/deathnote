@@ -2,6 +2,8 @@ package com.qinwei.deathnote.config;
 
 import com.qinwei.deathnote.utils.StringUtils;
 
+import java.util.Map;
+
 /**
  * @author qinwei
  * @date 2019-05-09
@@ -11,6 +13,8 @@ public interface Config {
     void initConfig();
 
     boolean containsProperty(String key);
+
+    Map<String, Object> getProperties();
 
     String getProperty(String key);
 

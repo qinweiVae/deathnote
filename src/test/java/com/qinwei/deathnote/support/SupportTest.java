@@ -6,11 +6,11 @@ import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
+import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
 import com.qinwei.deathnote.support.annotation.AnnotationB;
 import com.qinwei.deathnote.support.convert.Converter;
-import com.qinwei.deathnote.support.convert.StringToListConverter;
 import com.qinwei.deathnote.support.convert.StringToLongConverter;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.scan.ResourcesScanner;
@@ -20,7 +20,6 @@ import com.qinwei.deathnote.support.spi.Worker;
 import com.qinwei.deathnote.utils.AnnotationUtils;
 import com.qinwei.deathnote.utils.BeanUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
-import com.qinwei.deathnote.utils.GenericTypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -28,12 +27,14 @@ import org.slf4j.MDC;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.qinwei.deathnote.support.scan.ResourcesScanner.CONFIG_PATH;
@@ -141,7 +142,7 @@ public class SupportTest {
     @Test
     public void testPropertyResolver() {
         DefaultPropertyResolver resolver = new DefaultPropertyResolver();
-        String text = "s${a1}2n${b}m${c2a}v${a1}";
+        String text = "s${a1}2n${b}m${c2a1}v${a1}";
         //String text = "${a1}2nb}m${c2a1}";
         for (String placeholder : resolver.findPlaceholders(text)) {
             System.out.println(placeholder);
@@ -175,24 +176,36 @@ public class SupportTest {
     }
 
     @Test
-    public void testFindGenericType() {
+    public void testFindGenericType() throws Exception {
 
-        Converter<String, List<String>> converter = new StringToListConverter();
-        System.out.println(GenericTypeUtils.findGenericType(converter.getClass(), 0));
-        System.out.println(GenericTypeUtils.findGenericType(converter.getClass(), 1));
+        Converter<String, Long> converter = new StringToLongConverter();
+        System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(0));
+        System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(1));
         System.out.println("-------------------------");
 
-        List<Domain> list = new ArrayList<>();
-        System.out.println(GenericTypeUtils.findGenericType(list.iterator().getClass(), 0));
-
-        System.out.println(GenericTypeUtils.findGenericType(StringToLongConverter.class, 0));
-        System.out.println(GenericTypeUtils.findGenericType(StringToLongConverter.class, 1));
-        //System.out.println(ClassUtils.findGenericType(StringToLongConverter.class, 2));
+        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(0));
+        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(1));
+        //System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(2));
         System.out.println("-------------------------");
 
-        PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(Domain.class, "someMap");
-        System.out.println(GenericTypeUtils.findGenericType(pd, true, 0));
-        System.out.println(GenericTypeUtils.findGenericType(pd, true, 1));
-        System.out.println(GenericTypeUtils.findGenericType(pd, false, 0));
+        PropertyDescriptor someList = BeanUtils.getPropertyDescriptor(Domain.class, "someList");
+        System.out.println(ResolveType.forType(someList).resolveGenericType(0));
+        //System.out.println(ResolveType.forType(someList).resolveGenericType(1));
+        System.out.println("-------------------------");
+
+        PropertyDescriptor someMap = BeanUtils.getPropertyDescriptor(Domain.class, "someMap");
+        System.out.println(ResolveType.forType(someMap).resolveGenericType(0));
+        System.out.println(ResolveType.forType(someMap).resolveGenericType(1));
+        System.out.println("-------------------------");
+
+        Field filed = Domain.class.getDeclaredField("someSet");
+        System.out.println(ResolveType.forType(filed).resolveGenericType(0));
+        //System.out.println(ResolveType.forType(filed).resolveGenericType(1));
+        System.out.println("-------------------------");
+
+        Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class, Collection.class);
+        //只能拿到第一个参数的泛型
+        System.out.println(ResolveType.forType(method).resolveGenericType(0));
+
     }
 }

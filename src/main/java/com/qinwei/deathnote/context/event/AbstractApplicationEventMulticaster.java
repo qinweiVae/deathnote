@@ -3,9 +3,9 @@ package com.qinwei.deathnote.context.event;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.context.annotation.AnnotationOrderComparator;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
+import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
-import com.qinwei.deathnote.utils.GenericTypeUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -95,7 +95,7 @@ public abstract class AbstractApplicationEventMulticaster implements Application
     }
 
     private boolean supportEvent(ApplicationListener<?> listener, ApplicationEvent event) {
-        Class genericType = GenericTypeUtils.findGenericType(listener.getClass(), 0);
+        Class genericType = ResolveType.forType(listener.getClass()).resolveGeneric(0);
         if (genericType == null) {
             return false;
         }
