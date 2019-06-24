@@ -8,4 +8,6 @@ package com.qinwei.deathnote.support.spi;
 public interface Worker {
 
     void work();
+
+    String getName();
 }

@@ -28,10 +28,6 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     private volatile List<String> beanDefinitionNames = new ArrayList<>(256);
 
-    private final Map<Class<?>, String[]> allBeanNamesByType = new ConcurrentHashMap<>(64);
-
-    private final Map<Class<?>, String[]> singletonBeanNamesByType = new ConcurrentHashMap<>(64);
-
     /**
      * 初始化所有非lazy的单例bean
      */
@@ -76,23 +72,6 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
      */
     @Override
     public String[] getBeanNamesForType(Class<?> type, boolean includeNonSingletons) {
-        if (type == null) {
-            return doGetBeanNamesForType(type, includeNonSingletons);
-        }
-        Map<Class<?>, String[]> cache = includeNonSingletons ? this.allBeanNamesByType : this.singletonBeanNamesByType;
-        String[] result = cache.get(type);
-        if (result != null) {
-            return result;
-        }
-        result = doGetBeanNamesForType(type, includeNonSingletons);
-        cache.put(type, result);
-        return result;
-    }
-
-    /**
-     * 获取所有指定类型的bean的beanName,根据includeNonSingletons判断是否包括非单例bean
-     */
-    private String[] doGetBeanNamesForType(Class<?> type, boolean includeNonSingletons) {
         List<String> result = new ArrayList<>();
         for (String beanName : this.beanDefinitionNames) {
             if (!isAlias(beanName)) {

@@ -8,6 +8,7 @@ public class FemaleWorker implements Worker {
 
     private String name;
 
+    @Override
     public String getName() {
         return name;
     }

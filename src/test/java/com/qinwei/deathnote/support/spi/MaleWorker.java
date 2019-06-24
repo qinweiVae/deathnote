@@ -25,6 +25,7 @@ public class MaleWorker implements Worker {
         System.out.println(name);
     }
 
+    @Override
     public String getName() {
         return name;
     }

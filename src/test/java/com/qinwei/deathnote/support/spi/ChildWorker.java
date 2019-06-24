@@ -8,6 +8,7 @@ public class ChildWorker implements Worker {
 
     private String name;
 
+    @Override
     public String getName() {
         return name;
     }
