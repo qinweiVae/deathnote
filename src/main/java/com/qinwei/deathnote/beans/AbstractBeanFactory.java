@@ -100,9 +100,14 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                     }
                 }
             }
+            // 如果是 AnnotatedBeanDefinition，转换成 RootBeanDefinition
+            if (!(bd instanceof RootBeanDefinition)) {
+                bd = new RootBeanDefinition(bd);
+            }
+            RootBeanDefinition rbd = (RootBeanDefinition) bd;
             //如果是单例
             if (bd.isSingleton()) {
-                sharedInstance = getSingleton(beanName, () -> createBean(beanName, (RootBeanDefinition) bd, args));
+                sharedInstance = getSingleton(beanName, () -> createBean(beanName, rbd, args));
                 bean = sharedInstance;
             }
             //如果是原型
@@ -110,7 +115,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                 Object prototypeInstance;
                 try {
                     beforePrototypeCreation(beanName);
-                    prototypeInstance = createBean(beanName, (RootBeanDefinition) bd, args);
+                    prototypeInstance = createBean(beanName, rbd, args);
                 } finally {
                     afterPrototypeCreation(beanName);
                 }
@@ -209,6 +214,11 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         if (singleton != null) {
             return typeToMatch.isInstance(singleton) || ClassUtils.isAssignable(typeToMatch, singleton.getClass());
         }
+        BeanDefinition bd = getBeanDefinition(beanName);
+        Class<?> beanClass = bd.getBeanClass();
+        if (beanClass != null) {
+            return ClassUtils.isAssignable(typeToMatch, beanClass);
+        }
         return false;
     }
 
@@ -220,6 +230,11 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         Object singleton = getSingleton(name);
         if (singleton != null) {
             return singleton.getClass();
+        }
+        BeanDefinition bd = getBeanDefinition(name);
+        Class<?> beanClass = bd.getBeanClass();
+        if (beanClass != null) {
+            return beanClass;
         }
         return null;
     }
