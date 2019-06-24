@@ -381,7 +381,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         //自动检测ApplicationListener , 如果是单例则添加
         beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
         //默认注册config
-        if (beanFactory.containsBean(CONFIG)) {
+        if (!beanFactory.containsBean(CONFIG)) {
             beanFactory.registerSingleton(CONFIG, getConfig());
         }
     }

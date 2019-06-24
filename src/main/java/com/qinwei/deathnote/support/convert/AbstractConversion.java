@@ -1,11 +1,9 @@
 package com.qinwei.deathnote.support.convert;
 
+import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.utils.ClassUtils;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,17 +25,8 @@ public class AbstractConversion implements Conversion {
 
     protected void initCache() {
         for (Converter converter : converters) {
-            Type[] interfaces = converter.getClass().getGenericInterfaces();
-            Arrays.stream(interfaces).
-                    filter(type -> type instanceof ParameterizedType)
-                    .map(type -> (ParameterizedType) type)
-                    .filter(parameterizedType -> ClassUtils.isAssignable(Converter.class, (Class<?>) parameterizedType.getRawType()))
-                    .map(ParameterizedType::getActualTypeArguments)
-                    .forEach(arguments -> {
-                        Class sourceCls = (Class) arguments[0];
-                        Class targetCls = (Class) arguments[1];
-                        convertCache.add(new TypeDescriptor(targetCls, sourceCls, converter));
-                    });
+            ResolveType resolveType = ResolveType.forType(converter.getClass());
+            convertCache.add(new TypeDescriptor(resolveType.resolveGeneric(0), resolveType.resolveGeneric(1), converter));
         }
     }
 

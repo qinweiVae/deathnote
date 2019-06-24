@@ -131,6 +131,10 @@ public class ConfigurationClassParser {
     private void processBeans(ConfigurationClass configurationClass) {
         Set<MethodMetadata> beanMethods = configurationClass.getMetadata().getAnnotatedMethods(Bean.class.getName());
         for (MethodMetadata methodMetadata : beanMethods) {
+            // @Bean 注解不能放在 抽象方法、final方法、private方法、static方法 上
+            if (methodMetadata.isAbstract() || !methodMetadata.isOverridable()) {
+                throw new RuntimeException("Unable to parse @Bean on method which is static or abstract or final or unOverridable");
+            }
             // @Bean注解所在方法的方法名
             String methodName = methodMetadata.getMethodName();
             // @Bean注解 的所有属性
@@ -145,6 +149,10 @@ public class ConfigurationClassParser {
             String returnTypeName = methodMetadata.getReturnTypeName();
             AnnotatedGenericBeanDefinition bd = new AnnotatedGenericBeanDefinition(ClassUtils.forName(returnTypeName));
             bd.setAutowireMode(AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
+            //设置 添加了 @Bean 注解的 方法
+            bd.setFactoryMethodName(methodName);
+            //设置 添加了 @Bean 注解 所在类的 bean name
+            bd.setFactoryBeanName(configurationClass.getBeanName());
             //处理常用的 bean 注解( @Lazy,@Primary,@DependsOn )
             AnnotationConfigUtils.processCommonDefinitionAnnotations(bd, methodMetadata);
             //解析 initMethod 和 destroyMethod

@@ -17,7 +17,7 @@ public class StringUtils {
     }
 
     public static String[] toArray(Collection<String> collection) {
-        if (CollectionUtils.isEmpty(collection)) {
+        if (collection == null) {
             throw new IllegalArgumentException("collection must not be null ...");
         }
         return collection.toArray(new String[collection.size()]);

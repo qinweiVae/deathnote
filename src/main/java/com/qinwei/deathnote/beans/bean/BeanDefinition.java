@@ -47,4 +47,24 @@ public interface BeanDefinition {
     boolean isPrototype();
 
     boolean isAbstract();
+
+    /**
+     * 用于 @Bean 注解的处理
+     */
+    void setFactoryMethodName(String factoryMethodName);
+
+    /**
+     * 用于 @Bean 注解的处理
+     */
+    String getFactoryMethodName();
+
+    /**
+     * 添加了@Configuration 注解的bean name，用于 @Bean 注解的处理
+     */
+    void setFactoryBeanName(String factoryBeanName);
+
+    /**
+     * 添加了@Configuration 注解的bean name，用于 @Bean 注解的处理
+     */
+    String getFactoryBeanName();
 }

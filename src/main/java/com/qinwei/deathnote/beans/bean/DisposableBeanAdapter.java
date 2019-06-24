@@ -31,7 +31,7 @@ public class DisposableBeanAdapter implements DisposableBean {
     private String destroyMethodName;
 
     public DisposableBeanAdapter(Object bean, String beanName, BeanDefinition bd, List<BeanPostProcessor> postProcessors) {
-        if (bd instanceof RootBeanDefinition) {
+        if (!(bd instanceof RootBeanDefinition)) {
             throw new IllegalArgumentException("beanDefinition can not cast to RootBeanDefinition");
         }
         RootBeanDefinition beanDefinition = (RootBeanDefinition) bd;
@@ -88,10 +88,12 @@ public class DisposableBeanAdapter implements DisposableBean {
                 postProcessor.postProcessBeforeDestruction(this.bean, this.beanName);
             }
         }
-        try {
-            ((DisposableBean) this.bean).destroy();
-        } catch (Exception e) {
-            log.warn("invoke destroy() failure , DisposableBean : {}", beanName, e);
+        if (this.bean instanceof DisposableBean) {
+            try {
+                ((DisposableBean) this.bean).destroy();
+            } catch (Exception e) {
+                log.warn("invoke destroy() failure , DisposableBean : {}", beanName, e);
+            }
         }
         if (destroyMethodName != null) {
             try {
@@ -132,10 +134,10 @@ public class DisposableBeanAdapter implements DisposableBean {
             if (!(bean instanceof DisposableBean)) {
                 try {
                     destroyMethodName = bean.getClass().getMethod(CLOSE_METHOD_NAME).getName();
-                } catch (NoSuchMethodException e) {
+                } catch (Exception e) {
                     try {
                         destroyMethodName = bean.getClass().getMethod(SHUTDOWN_METHOD_NAME).getName();
-                    } catch (NoSuchMethodException e1) {
+                    } catch (Exception ex) {
                     }
                 }
             }

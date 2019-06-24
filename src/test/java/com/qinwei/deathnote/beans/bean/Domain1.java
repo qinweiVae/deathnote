@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.beans.bean;
 
 import com.alibaba.fastjson.JSON;
+import com.qinwei.deathnote.context.annotation.Component;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@Component
 public class Domain1 {
 
     private String brand;

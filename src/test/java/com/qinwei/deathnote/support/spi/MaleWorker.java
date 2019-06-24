@@ -1,11 +1,14 @@
 package com.qinwei.deathnote.support.spi;
 
+import com.qinwei.deathnote.context.annotation.Component;
+
 import java.util.List;
 
 /**
  * @author qinwei
  * @date 2019-05-21
  */
+@Component
 public class MaleWorker implements Worker {
 
     public MaleWorker(String name, int a, boolean flag) {

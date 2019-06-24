@@ -31,21 +31,23 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
         setBeanClassName(beanClassName);
     }
 
-    public RootBeanDefinition(RootBeanDefinition beanDefinition) {
+    public RootBeanDefinition(BeanDefinition beanDefinition) {
         setBeanClassName(beanDefinition.getBeanClassName());
         setScope(beanDefinition.getScope());
         setAbstract(beanDefinition.isAbstract());
-        if (beanDefinition.hasBeanClass()) {
-            setBeanClass(beanDefinition.getBeanClass());
-        }
-        Boolean lazyInit = beanDefinition.getLazyInit();
-        if (lazyInit != null) {
-            setLazyInit(lazyInit);
-        }
         setDependsOn(beanDefinition.getDependsOn());
         setPrimary(beanDefinition.isPrimary());
         setInitMethodName(beanDefinition.getInitMethodName());
         setDestroyMethodName(beanDefinition.getDestroyMethodName());
+        if (beanDefinition instanceof AbstractBeanDefinition) {
+            if (((AbstractBeanDefinition) beanDefinition).hasBeanClass()) {
+                setBeanClass(beanDefinition.getBeanClass());
+            }
+            Boolean lazyInit = ((AbstractBeanDefinition) beanDefinition).getLazyInit();
+            if (lazyInit != null) {
+                setLazyInit(lazyInit);
+            }
+        }
     }
 
     public BeanDefinitionHolder getDecoratedDefinition() {

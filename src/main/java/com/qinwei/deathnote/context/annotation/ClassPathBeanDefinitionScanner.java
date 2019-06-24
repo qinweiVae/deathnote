@@ -11,6 +11,7 @@ import com.qinwei.deathnote.context.support.BeanNameGenerator;
 import com.qinwei.deathnote.context.metadata.ScopeMetadata;
 import com.qinwei.deathnote.support.scan.TypeAnnotationScanner;
 import com.qinwei.deathnote.utils.AnnotationUtils;
+import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
 
 import java.lang.annotation.Annotation;
@@ -129,7 +130,7 @@ public class ClassPathBeanDefinitionScanner {
             }
         }
         for (Class<? extends Annotation> filter : includeFilters) {
-            if (AnnotationUtils.findAnnotation(clazz, filter) != null) {
+            if (AnnotationUtils.findAnnotation(clazz, filter) != null && !ClassUtils.isAssignable(Annotation.class, clazz)) {
                 return true;
             }
         }

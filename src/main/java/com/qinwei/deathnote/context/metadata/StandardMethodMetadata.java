@@ -28,6 +28,7 @@ public class StandardMethodMetadata implements MethodMetadata {
         this.nestedAnnotationsAsMap = nestedAnnotationsAsMap;
     }
 
+    @Override
     public final Method getIntrospectedMethod() {
         return this.introspectedMethod;
     }
@@ -64,7 +65,7 @@ public class StandardMethodMetadata implements MethodMetadata {
 
     @Override
     public boolean isOverridable() {
-        return (!isStatic() && !isFinal() && !Modifier.isPrivate(this.introspectedMethod.getModifiers()));
+        return !isStatic() && !isFinal() && !Modifier.isPrivate(this.introspectedMethod.getModifiers());
     }
 
     @Override

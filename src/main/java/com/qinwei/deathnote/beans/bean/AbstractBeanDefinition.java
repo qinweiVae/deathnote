@@ -37,6 +37,10 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
 
     private String destroyMethodName;
 
+    private String factoryMethodName;
+
+    private String factoryBeanName;
+
     private Map<String, Object> propertyValues;
 
     @Override
@@ -181,6 +185,26 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
     @Override
     public String getDestroyMethodName() {
         return destroyMethodName;
+    }
+
+    @Override
+    public String getFactoryMethodName() {
+        return factoryMethodName;
+    }
+
+    @Override
+    public void setFactoryMethodName(String factoryMethodName) {
+        this.factoryMethodName = factoryMethodName;
+    }
+
+    @Override
+    public String getFactoryBeanName() {
+        return factoryBeanName;
+    }
+
+    @Override
+    public void setFactoryBeanName(String factoryBeanName) {
+        this.factoryBeanName = factoryBeanName;
     }
 
     @Override
