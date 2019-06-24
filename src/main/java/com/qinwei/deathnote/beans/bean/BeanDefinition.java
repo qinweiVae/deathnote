@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.beans.bean;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -51,12 +52,12 @@ public interface BeanDefinition {
     /**
      * 用于 @Bean 注解的处理
      */
-    void setFactoryMethodName(String factoryMethodName);
+    void setFactoryMethod(Method factoryMethod);
 
     /**
      * 用于 @Bean 注解的处理
      */
-    String getFactoryMethodName();
+    Method getFactoryMethod();
 
     /**
      * 添加了@Configuration 注解的bean name，用于 @Bean 注解的处理

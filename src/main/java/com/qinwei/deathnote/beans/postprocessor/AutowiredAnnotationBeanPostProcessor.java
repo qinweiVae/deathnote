@@ -5,6 +5,7 @@ import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.context.annotation.AnnotationAttributes;
 import com.qinwei.deathnote.context.annotation.Autowired;
+import com.qinwei.deathnote.context.annotation.Bean;
 import com.qinwei.deathnote.context.annotation.Value;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.aware.ConfigAware;
@@ -75,8 +76,11 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
     private void injectMethod(Object bean, String beanName) throws Exception {
         Method[] methods = bean.getClass().getDeclaredMethods();
         for (Method method : methods) {
-            //处理 Method 上的  @Autowired 和 @Value 注解
-            processAutowired(bean, beanName, method);
+            //排除掉 添加了 @Bean 注解的方法，因为 getBean() 的过程中会执行一次
+            if (!AnnotationUtils.hasAnnotation(method, Bean.class.getName())) {
+                //处理 Method 上的  @Autowired 和 @Value 注解
+                processAutowired(bean, beanName, method);
+            }
         }
     }
 
@@ -92,12 +96,12 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
             Object[] arguments = new Object[parameterTypes.length];
             Set<String> autowiredBeanNames = new LinkedHashSet<>(parameterTypes.length);
 
+            //获取 所有方法参数的所有注解
+            Annotation[][] parameterAnnotations = method.getParameterAnnotations();
             for (int i = 0; i < arguments.length; i++) {
                 Class<?> parameterType = parameterTypes[i];
                 Object arg = null;
                 if (ClassUtils.isSimpleProperty(parameterType)) {
-                    //获取 所有方法参数的所有注解
-                    Annotation[][] parameterAnnotations = method.getParameterAnnotations();
                     //拿到当前方法参数的 所有注解
                     Annotation[] annotations = parameterAnnotations[i];
                     for (Annotation annotation : annotations) {
@@ -106,7 +110,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
                         }
                         AnnotationAttributes valueAttr = AnnotationUtils.getAnnotationAttributes(annotation);
                         if (valueAttr != null) {
-                            String value = attributes.getString("value");
+                            String value = valueAttr.getString("value");
                             // 解析 占位符
                             value = propertyResolver.resolvePlaceholders(value, config.getProperties());
                             // 类型转换

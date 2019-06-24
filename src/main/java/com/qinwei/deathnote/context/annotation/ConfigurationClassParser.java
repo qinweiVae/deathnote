@@ -150,7 +150,7 @@ public class ConfigurationClassParser {
             AnnotatedGenericBeanDefinition bd = new AnnotatedGenericBeanDefinition(ClassUtils.forName(returnTypeName));
             bd.setAutowireMode(AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
             //设置 添加了 @Bean 注解的 方法
-            bd.setFactoryMethodName(methodName);
+            bd.setFactoryMethod(methodMetadata.getIntrospectedMethod());
             //设置 添加了 @Bean 注解 所在类的 bean name
             bd.setFactoryBeanName(configurationClass.getBeanName());
             //处理常用的 bean 注解( @Lazy,@Primary,@DependsOn )

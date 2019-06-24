@@ -283,6 +283,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition bd, Object[] args) {
         //解析 beans ，将 beans 类名解析为 class 引用
         Class<?> beanClass = resolveBeanClass(bd);
+        // 用于 @Bean 注解的处理
+        if (bd.getFactoryMethod() != null) {
+            return instantiateUsingFactoryMethod(beanName, bd, args);
+        }
         //SmartInstantiationAwareBeanPostProcessor 扩展
         Constructor<?>[] constructors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
         //从所有的构造器中选择合适的进行实例化
@@ -291,6 +295,51 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
         //使用默认无参构造器进行实例化
         return instantiateBean(bd);
+    }
+
+    /**
+     * 用于处理 @Bean 注解的 bean
+     */
+    protected BeanWrapper instantiateUsingFactoryMethod(String beanName, RootBeanDefinition bd, Object[] args) {
+        BeanWrapperImpl beanWrapper = new BeanWrapperImpl();
+        // 添加了 @Bean 注解的 method
+        Method factoryMethod = bd.getFactoryMethod();
+        String factoryBeanName = bd.getFactoryBeanName();
+        if (beanName.equals(factoryBeanName)) {
+            throw new IllegalArgumentException("factory-bean reference points back to the same bean definition");
+        }
+        Object factoryBean = getBean(factoryBeanName);
+        Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
+        // 所有的方法参数
+        Class<?>[] parameterTypes = factoryMethod.getParameterTypes();
+        Object[] argsToUse = new Object[parameterTypes.length];
+        // 如果传入的参数不为null，且参数个数与方法的参数个数相同
+        if (args != null && args.length == parameterTypes.length) {
+            for (int i = 0; i < parameterTypes.length; i++) {
+                //进行类型转换
+                argsToUse[i] = getConversion().convertIfNecessary(args[i], parameterTypes[i]);
+            }
+        }
+        // 否则从所有的bean中寻找，赋给方法参数
+        else {
+            for (int i = 0; i < parameterTypes.length; i++) {
+                // 根据类型解析bean的依赖,从所有的bean中找到合适的bean注入到 方法参数
+                argsToUse[i] = resolveDependency(beanName, ResolveType.forType(parameterTypes[i]), autowiredBeanNames);
+            }
+        }
+        // 注册bean的依赖关系
+        for (String name : autowiredBeanNames) {
+            registerDependentBean(beanName, name);
+        }
+        Object bean;
+        try {
+            ClassUtils.makeAccessible(factoryMethod);
+            bean = factoryMethod.invoke(factoryBean, argsToUse);
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to invoke the method , method  '" + factoryMethod + "'");
+        }
+        beanWrapper.setBeanInstance(bean);
+        return beanWrapper;
     }
 
     /**

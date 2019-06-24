@@ -4,6 +4,7 @@ import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
 
     private String destroyMethodName;
 
-    private String factoryMethodName;
+    private Method factoryMethod;
 
     private String factoryBeanName;
 
@@ -188,13 +189,13 @@ public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneabl
     }
 
     @Override
-    public String getFactoryMethodName() {
-        return factoryMethodName;
+    public Method getFactoryMethod() {
+        return factoryMethod;
     }
 
     @Override
-    public void setFactoryMethodName(String factoryMethodName) {
-        this.factoryMethodName = factoryMethodName;
+    public void setFactoryMethod(Method factoryMethod) {
+        this.factoryMethod = factoryMethod;
     }
 
     @Override

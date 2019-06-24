@@ -14,9 +14,9 @@ public class ContextTest extends BaseTest {
     @Test
     public void testApplicationContext() {
         String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        for (String beanDefinitionName : beanDefinitionNames) {
-
-            log.info(beanDefinitionName);
+        for (String beanName : beanDefinitionNames) {
+            Object bean = context.getBean(beanName);
+            log.info("{} : {}", beanName, bean.getClass().getName());
         }
         log.info("-----------------------------------");
         for (String name : context.getBeanNamesForType(Worker.class)) {

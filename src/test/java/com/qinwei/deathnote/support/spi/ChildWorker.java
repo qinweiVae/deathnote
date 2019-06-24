@@ -1,16 +1,27 @@
 package com.qinwei.deathnote.support.spi;
 
-import com.qinwei.deathnote.context.annotation.Component;
-
 /**
  * @author qinwei
  * @date 2019-05-21
  */
-@Component
 public class ChildWorker implements Worker {
+
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     @Override
     public void work() {
-        System.out.println("child worker ...");
+        System.out.println("child worker ..." + name);
+    }
+
+    public void stop() {
+        System.out.println("child worker close ..." + name);
     }
 }

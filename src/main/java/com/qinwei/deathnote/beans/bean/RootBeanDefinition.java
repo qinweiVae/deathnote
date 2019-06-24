@@ -33,6 +33,8 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 
     public RootBeanDefinition(BeanDefinition beanDefinition) {
         setBeanClassName(beanDefinition.getBeanClassName());
+        setFactoryBeanName(beanDefinition.getFactoryBeanName());
+        setFactoryMethod(beanDefinition.getFactoryMethod());
         setScope(beanDefinition.getScope());
         setAbstract(beanDefinition.isAbstract());
         setDependsOn(beanDefinition.getDependsOn());
