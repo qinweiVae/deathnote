@@ -1,9 +1,12 @@
 package com.qinwei.deathnote.support.spi;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author qinwei
  * @date 2019-05-21
  */
+@Slf4j
 public class FemaleWorker implements Worker {
 
     private String name;
@@ -19,10 +22,18 @@ public class FemaleWorker implements Worker {
 
     @Override
     public void work() {
-        System.out.println("female  worker ..." + name);
+        log.info("female  worker ..." + name);
     }
 
     public void stop() {
-        System.out.println("female worker close ..." + name);
+        log.info("female worker close ..." + name + " --- stop()");
+    }
+
+    public void shutdown() {
+        log.info("female worker close ..." + name + " --- shutdown()");
+    }
+
+    public void close() {
+        log.info("female worker close ..." + name + " --- close()");
     }
 }

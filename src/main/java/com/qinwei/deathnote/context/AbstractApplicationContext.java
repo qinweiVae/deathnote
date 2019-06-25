@@ -199,7 +199,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
 
             } finally {
 
-                resetCommonCaches();
+                onFinally();
             }
         }
     }
@@ -280,7 +280,7 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
         return getBeanFactory();
     }
 
-    protected void resetCommonCaches() {
+    protected void onFinally() {
 
     }
 

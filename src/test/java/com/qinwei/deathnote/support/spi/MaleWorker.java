@@ -1,28 +1,31 @@
 package com.qinwei.deathnote.support.spi;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
 /**
  * @author qinwei
  * @date 2019-05-21
  */
+@Slf4j
 public class MaleWorker implements Worker {
 
     private String name;
 
     public MaleWorker(String name, int a, boolean flag) {
-        System.out.println(name + a + flag);
+        log.info(name + a + flag);
     }
 
     public MaleWorker() {
     }
 
     private MaleWorker(String name, int a, boolean flag, List list) {
-        System.out.println(name);
+        log.info(name);
     }
 
     MaleWorker(String name) {
-        System.out.println(name);
+        log.info(name);
     }
 
     @Override
@@ -36,10 +39,10 @@ public class MaleWorker implements Worker {
 
     @Override
     public void work() {
-        System.out.println("male worker ..." + name);
+        log.info("male worker ..." + name);
     }
 
     public void stop() {
-        System.out.println("male worker close ..." + name);
+        log.info("male worker close ..." + name);
     }
 }

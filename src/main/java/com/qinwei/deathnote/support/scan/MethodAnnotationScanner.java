@@ -1,6 +1,9 @@
 package com.qinwei.deathnote.support.scan;
 
+import com.qinwei.deathnote.utils.AnnotationUtils;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -32,7 +35,7 @@ public class MethodAnnotationScanner extends ClasspathScanner {
                     for (Class clazz : classes) {
                         Method[] methods = clazz.getDeclaredMethods();
                         for (Method method : methods) {
-                            if (method.isAnnotationPresent(annotation)) {
+                            if (AnnotationUtils.findAnnotation((AnnotatedElement) method, annotation) != null) {
                                 result.add(method);
                             }
                         }

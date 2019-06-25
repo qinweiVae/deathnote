@@ -6,6 +6,7 @@ import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.registry.SimpleAliasRegistry;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
+import com.qinwei.deathnote.context.event.PayLoadListener1;
 import com.qinwei.deathnote.context.support.ResolveType;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
@@ -206,6 +207,9 @@ public class SupportTest {
         Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class, Collection.class);
         //只能拿到第一个参数的泛型
         System.out.println(ResolveType.forType(method).resolveGenericType(0));
+
+        ResolveType resolveType = ResolveType.forType(PayLoadListener1.class);
+        resolveType.resolveGeneric(0);
 
     }
 }

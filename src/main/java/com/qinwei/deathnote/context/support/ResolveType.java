@@ -58,6 +58,30 @@ public class ResolveType {
         return resolveType;
     }
 
+    /**
+     * 获取 Class 上的泛型,只能用于普通类的 嵌套泛型
+     * <p>
+     * 对于collection、map之类的集合不要使用
+     */
+    public Class resolveGenericNested(int index) {
+        Type[] genericType = resolveType();
+        if (genericType == null) {
+            return null;
+        }
+        if (index >= genericType.length) {
+            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
+        }
+        Type type = genericType[index];
+        // 对于 嵌套情况下需要特殊处理下
+        if (type instanceof ParameterizedType) {
+            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+            type = actualTypeArguments[index];
+        }
+        if (type instanceof Class) {
+            return (Class) type;
+        }
+        return null;
+    }
 
     /**
      * 获取 Class 上的泛型,只能用于普通类的 泛型
@@ -65,19 +89,7 @@ public class ResolveType {
      * 对于collection、map之类的集合不要使用
      */
     public Class resolveGeneric(int index) {
-        Type[] genericType = TYPE_CACHE.get(type);
-        if (genericType == null) {
-            synchronized (TYPE_CACHE) {
-                if (TYPE_CACHE.containsKey(type)) {
-                    genericType = TYPE_CACHE.get(type);
-                } else {
-                    genericType = resolveGeneric();
-                    if (genericType != null) {
-                        TYPE_CACHE.put(type, genericType);
-                    }
-                }
-            }
-        }
+        Type[] genericType = resolveType();
         if (genericType == null) {
             return null;
         }
@@ -93,6 +105,23 @@ public class ResolveType {
             return (Class) type;
         }
         return null;
+    }
+
+    private Type[] resolveType() {
+        Type[] genericType = TYPE_CACHE.get(type);
+        if (genericType == null) {
+            synchronized (TYPE_CACHE) {
+                if (TYPE_CACHE.containsKey(type)) {
+                    genericType = TYPE_CACHE.get(type);
+                } else {
+                    genericType = resolveGeneric();
+                    if (genericType != null) {
+                        TYPE_CACHE.put(type, genericType);
+                    }
+                }
+            }
+        }
+        return genericType;
     }
 
     /**

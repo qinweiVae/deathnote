@@ -272,25 +272,24 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             return multipleBeans;
         }
         //解析普通类型（非集合类型）的依赖
-        Map<String, Object> matchingBeans = findAutowireCandidates(beanName, resolveType.getType());
-        if (CollectionUtils.isEmpty(matchingBeans)) {
+        Set<String> matchingBeanNames = findAutowireCandidates(beanName, resolveType.getType());
+        if (CollectionUtils.isEmpty(matchingBeanNames)) {
             return null;
         }
         String autowiredBeanName;
         Object instance;
         //刚好只找到一个bean
-        if (matchingBeans.size() == 1) {
-            Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
-            autowiredBeanName = entry.getKey();
-            instance = entry.getValue();
+        if (matchingBeanNames.size() == 1) {
+            autowiredBeanName = matchingBeanNames.iterator().next();
+            instance = getBean(autowiredBeanName);
         }
         //如果找到多个bean
         else {
-            autowiredBeanName = determineAutowireCandidate(matchingBeans, resolveType);
+            autowiredBeanName = determineAutowireCandidate(matchingBeanNames, resolveType);
             if (autowiredBeanName == null) {
                 return null;
             }
-            instance = matchingBeans.get(autowiredBeanName);
+            instance = getBean(autowiredBeanName);
         }
         if (autowiredBeanNames != null) {
             autowiredBeanNames.add(autowiredBeanName);
@@ -301,16 +300,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     /**
      * 找到合适的beanName
      */
-    protected String determineAutowireCandidate(Map<String, Object> beans, ResolveType resolveType) {
+    protected String determineAutowireCandidate(Set<String> beanNames, ResolveType resolveType) {
         //选择 primary 的bean
-        String primaryBean = determinePrimaryBean(StringUtils.toArray(beans.keySet()), resolveType.getType());
+        String primaryBean = determinePrimaryBean(StringUtils.toArray(beanNames), resolveType.getType());
         if (primaryBean != null) {
             return primaryBean;
         }
         //如果没有找到 primary 的 beanName，则寻找和 属性名称匹配的 beanName
-        for (Map.Entry<String, Object> entry : beans.entrySet()) {
-            String candidateName = entry.getKey();
-            Object beanInstance = entry.getValue();
+        for (String name : beanNames) {
+            String candidateName = name;
+            Object beanInstance = getBean(name);
             if (beanInstance != null && matchesBeanName(candidateName, resolveType.getName())) {
                 return candidateName;
             }
@@ -336,14 +335,17 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             if (componentType == null) {
                 return null;
             }
-            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, componentType);
-            if (matchingBeans.isEmpty()) {
+            Set<String> matchingBeanNames = findAutowireCandidates(beanName, componentType);
+            if (matchingBeanNames.isEmpty()) {
                 return null;
             }
             if (autowiredBeanNames != null) {
-                autowiredBeanNames.addAll(matchingBeans.keySet());
+                autowiredBeanNames.addAll(matchingBeanNames);
             }
-            Collection<Object> values = matchingBeans.values();
+            Collection<Object> values = new ArrayList<>();
+            for (String name : matchingBeanNames) {
+                values.add(getBean(name));
+            }
             //如果集合内的元素无法转换直接抛异常
             if (!getConversion().canConvert(values.iterator().next().getClass(), componentType)) {
                 throw new IllegalStateException("Unable to convert " + values.iterator().next().getClass().getName() + " to " + componentType.getName() + " , beanName : " + beanName);
@@ -355,14 +357,17 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             if (elementType == null) {
                 return null;
             }
-            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, elementType);
-            if (matchingBeans.isEmpty()) {
+            Set<String> matchingBeanNames = findAutowireCandidates(beanName, elementType);
+            if (matchingBeanNames.isEmpty()) {
                 return null;
             }
             if (autowiredBeanNames != null) {
-                autowiredBeanNames.addAll(matchingBeans.keySet());
+                autowiredBeanNames.addAll(matchingBeanNames);
             }
-            Collection<Object> values = matchingBeans.values();
+            Collection<Object> values = new ArrayList<>();
+            for (String name : matchingBeanNames) {
+                values.add(getBean(name));
+            }
             //如果集合内的元素无法转换直接抛异常
             if (!getConversion().canConvert(values.iterator().next().getClass(), elementType)) {
                 throw new IllegalStateException("Unable to convert " + values.iterator().next().getClass().getName() + " to " + elementType.getName() + " , beanName : " + beanName);
@@ -374,36 +379,39 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             //map 中 value 的类型，不支持嵌套
             Class valueType = resolveType.resolveGenericType(1);
             //key必须是string 类型
-            if (keyType == null || String.class == keyType) {
+            if (keyType == null || String.class != keyType) {
                 return null;
             }
             if (valueType == null) {
                 return null;
             }
-            Map<String, Object> matchingBeans = findAutowireCandidates(beanName, valueType);
-            if (matchingBeans.isEmpty()) {
+            Set<String> matchingBeanNames = findAutowireCandidates(beanName, valueType);
+            if (matchingBeanNames.isEmpty()) {
                 return null;
             }
             if (autowiredBeanNames != null) {
-                autowiredBeanNames.addAll(matchingBeans.keySet());
+                autowiredBeanNames.addAll(matchingBeanNames);
             }
-            return matchingBeans;
+            Map result = new HashMap();
+            for (String name : matchingBeanNames) {
+                result.put(name, getBean(name));
+            }
+            return result;
         }
         return null;
     }
 
     /**
-     * 找到符合条件的bean
+     * 找到符合条件的bean name
      */
-    private Map<String, Object> findAutowireCandidates(String beanName, Class<?> type) {
+    private Set<String> findAutowireCandidates(String beanName, Class<?> type) {
         //获取所有指定类型的bean的beanName,包括非单例bean
         String[] candidateNames = getBeanNamesForType(type);
-        Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
+        Set<String> result = new HashSet<>(candidateNames.length);
         for (String name : candidateNames) {
             // beanName 不能与 name 相同,不然就是循环引用了
             if (!name.equals(beanName)) {
-                Object bean = getBean(name);
-                result.put(name, bean);
+                result.add(name);
             }
         }
         return result;

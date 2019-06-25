@@ -111,14 +111,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         if (autowireMode == AUTOWIRE_BY_TYPE) {
             autowireByType(beanName, bw, result);
         }
-        if (CollectionUtils.isNotEmpty(result)) {
-            propertyValue = result;
-            // 执行 InstantiationAwareBeanPostProcessor 的 postProcessProperties 方法
-            for (BeanPostProcessor postProcessor : getBeanPostProcessors()) {
-                if (postProcessor instanceof InstantiationAwareBeanPostProcessor) {
-                    InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) postProcessor;
-                    propertyValue = ibp.postProcessProperties(propertyValue, bw.getWrappedInstance(), beanName);
-                }
+        // 执行 InstantiationAwareBeanPostProcessor 的 postProcessProperties 方法
+        for (BeanPostProcessor postProcessor : getBeanPostProcessors()) {
+            if (postProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) postProcessor;
+                propertyValue = ibp.postProcessProperties(result, bw.getWrappedInstance(), beanName);
             }
         }
         if (CollectionUtils.isNotEmpty(propertyValue)) {
@@ -188,7 +185,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         invokeAwareMethods(beanName, bean);
 
         Object wrappedBean = bean;
-        if (bd == null) {
+        if (bd != null) {
             // 执行 BeanPostProcessor 的 postProcessBeforeInitialization
             wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
         }
@@ -198,7 +195,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke init method , beanName : " + beanName, e);
         }
-        if (bd == null) {
+        if (bd != null) {
             // 执行 BeanPostProcessor 的 postProcessAfterInitialization
             wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         }

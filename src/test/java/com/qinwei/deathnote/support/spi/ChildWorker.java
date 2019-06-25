@@ -1,9 +1,12 @@
 package com.qinwei.deathnote.support.spi;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author qinwei
  * @date 2019-05-21
  */
+@Slf4j
 public class ChildWorker implements Worker {
 
     private String name;
@@ -19,10 +22,10 @@ public class ChildWorker implements Worker {
 
     @Override
     public void work() {
-        System.out.println("child worker ..." + name);
+        log.info("child worker ..." + name);
     }
 
     public void stop() {
-        System.out.println("child worker close ..." + name);
+        log.info("child worker close ..." + name);
     }
 }

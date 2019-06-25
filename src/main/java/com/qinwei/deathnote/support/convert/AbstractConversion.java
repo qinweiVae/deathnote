@@ -32,7 +32,7 @@ public class AbstractConversion implements Conversion {
 
     @Override
     public boolean canConvert(Class<?> sourceType, Class<?> targetType) {
-        return convertCache.stream().anyMatch(typeDescriptor -> typeDescriptor.getSourceType() == sourceType && typeDescriptor.getTargetType() == targetType);
+        return ClassUtils.isAssignable(targetType, sourceType) || convertCache.stream().anyMatch(typeDescriptor -> typeDescriptor.getSourceType() == sourceType && typeDescriptor.getTargetType() == targetType);
     }
 
     @Override
