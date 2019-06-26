@@ -2,6 +2,7 @@ package com.qinwei.deathnote.context.bean;
 
 import com.qinwei.deathnote.beans.bean.DisposableBean;
 import com.qinwei.deathnote.beans.bean.InitializingBean;
+import com.qinwei.deathnote.beans.bean.SmartInitializingSingleton;
 import com.qinwei.deathnote.context.annotation.Order;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 //@Component("lifeCycle")
 @Order(value = 2)
 @Slf4j
-public class LifeCycleBeanTest implements InitializingBean, DisposableBean {
+public class LifeCycleBeanTest implements InitializingBean, DisposableBean, SmartInitializingSingleton {
 
     @Override
     public void afterPropertiesSet() {
@@ -23,6 +24,11 @@ public class LifeCycleBeanTest implements InitializingBean, DisposableBean {
     @Override
     public void destroy() {
         log.info("{} : destroy()", this.getClass().getName());
+    }
+
+    @Override
+    public void afterSingletonsInstantiated() {
+        log.info("{} : afterSingletonsInstantiated()", this.getClass().getName());
     }
 
     public void init() {

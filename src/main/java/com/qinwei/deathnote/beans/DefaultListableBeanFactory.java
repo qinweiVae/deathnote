@@ -3,6 +3,7 @@ package com.qinwei.deathnote.beans;
 import com.qinwei.deathnote.beans.bean.AbstractBeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
+import com.qinwei.deathnote.beans.bean.SmartInitializingSingleton;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.support.ResolveType;
@@ -29,7 +30,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
     private volatile List<String> beanDefinitionNames = new ArrayList<>(256);
 
     /**
-     * 初始化所有非lazy的单例bean
+     * 初始化所有非lazy的单例bean,并执行SmartInitializingSingleton 的扩展
      */
     @Override
     public void preInstantiateSingletons() {
@@ -38,6 +39,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
             BeanDefinition bd = this.beanDefinitionMap.get(beanName);
             if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
                 getBean(beanName);
+            }
+        }
+        for (String beanName : beanNames) {
+            Object singleton = getSingleton(beanName);
+            if (singleton instanceof SmartInitializingSingleton) {
+                SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singleton;
+                smartSingleton.afterSingletonsInstantiated();
             }
         }
     }
