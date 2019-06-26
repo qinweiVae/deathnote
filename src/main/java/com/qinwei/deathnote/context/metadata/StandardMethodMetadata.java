@@ -1,7 +1,6 @@
 package com.qinwei.deathnote.context.metadata;
 
 import com.qinwei.deathnote.utils.AnnotationUtils;
-import com.sun.istack.internal.Nullable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -74,7 +73,6 @@ public class StandardMethodMetadata implements MethodMetadata {
     }
 
     @Override
-    @Nullable
     public Map<String, Object> getAnnotationAttributes(String annotationName) {
         return AnnotationUtils.getAnnotationAttributes(this.introspectedMethod, annotationName, this.nestedAnnotationsAsMap);
     }
