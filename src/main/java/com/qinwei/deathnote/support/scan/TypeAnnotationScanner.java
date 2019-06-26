@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -22,24 +23,26 @@ public class TypeAnnotationScanner extends ClasspathScanner {
     }
 
     public Set<Class> scan(Class<? extends Annotation> annotation, String basePackage) {
-        Set<Class> result = annotationCache.get(annotation);
+        String key = annotation.getName() + "-" + basePackage;
+        Set<Class> result = annotationCache.get(key);
         if (result == null) {
             synchronized (annotationCache) {
-                if (annotationCache.containsKey(annotation)) {
-                    result = annotationCache.get(annotation);
+                if (annotationCache.get(key) == null) {
+                    result = scanType(annotation, basePackage);
+                    annotationCache.put(key, result);
                 } else {
-                    Set<Class> classes = super.scan(basePackage);
-                    result = new LinkedHashSet<>();
-                    for (Class clazz : classes) {
-                        if (AnnotationUtils.findAnnotation(clazz, annotation) != null) {
-                            result.add(clazz);
-                        }
-                    }
-                    annotationCache.put(annotation.getSimpleName() + "-" + basePackage, result);
+                    result = annotationCache.get(key);
                 }
             }
         }
         return result;
+    }
+
+    private Set<Class> scanType(Class<? extends Annotation> annotation, String basePackage) {
+        return super.scan(basePackage)
+                .stream()
+                .filter(clazz -> AnnotationUtils.findAnnotation(clazz, annotation) != null)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
 }

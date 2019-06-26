@@ -1,10 +1,10 @@
 package com.qinwei.deathnote.support.scan;
 
-import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -19,25 +19,27 @@ public class SubTypeScanner extends ClasspathScanner {
         return scan(clazz, "");
     }
 
-    public Set<Class> scan(Class<? extends Annotation> cls, String basePackage) {
-        Set<Class> result = subtypeCache.get(cls);
+    public Set<Class> scan(Class<?> clazz, String basePackage) {
+        String key = clazz.getName() + "-" + basePackage;
+        Set<Class> result = subtypeCache.get(key);
         if (result == null) {
             synchronized (subtypeCache) {
-                if (subtypeCache.containsKey(cls)) {
-                    result = subtypeCache.get(cls);
+                if (subtypeCache.get(key) == null) {
+                    result = scanSubType(clazz, basePackage);
+                    subtypeCache.put(key, result);
                 } else {
-                    Set<Class> classes = super.scan(basePackage);
-                    result = new LinkedHashSet<>();
-                    for (Class clazz : classes) {
-                        if (cls.isAssignableFrom(clazz) && cls != clazz) {
-                            result.add(clazz);
-                        }
-                    }
-                    subtypeCache.put(cls + "-" + basePackage, result);
+                    result = subtypeCache.get(key);
                 }
             }
         }
         return result;
+    }
+
+    private Set<Class> scanSubType(Class<?> cls, String basePackage) {
+        return super.scan(basePackage)
+                .stream()
+                .filter(clazz -> cls.isAssignableFrom(clazz) && cls != clazz)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
 }

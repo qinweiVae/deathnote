@@ -23,6 +23,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Import(AnnotatedBeanDefinitionReader.class)
+@AnnotationA
 public class Domain extends BaseDomain {
 
     @AnnotationA

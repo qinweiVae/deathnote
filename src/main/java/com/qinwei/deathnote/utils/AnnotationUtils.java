@@ -98,7 +98,7 @@ public class AnnotationUtils {
             Class<? extends Annotation> type = anno.annotationType();
             // 如果是 元注解 则返回，不然就是死循环了
             if (isPrimitiveAnnotation(type)) {
-                return null;
+                continue;
             }
             annotation = findAnnotation((AnnotatedElement) type, annotationType);
             if (annotation != null) {

@@ -43,12 +43,12 @@ public class ClasspathScanner implements Scanner {
         Set<Class> result = packageCache.get(basePackage);
         if (result == null) {
             synchronized (packageCache) {
-                if (packageCache.containsKey(basePackage)) {
-                    result = packageCache.get(basePackage);
-                } else {
+                if (packageCache.get(basePackage) == null) {
                     result = new LinkedHashSet<>();
                     doScan(basePackage, result);
                     packageCache.put(basePackage, result);
+                } else {
+                    result = packageCache.get(basePackage);
                 }
             }
         }

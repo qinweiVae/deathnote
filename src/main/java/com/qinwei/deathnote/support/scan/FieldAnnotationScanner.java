@@ -5,10 +5,12 @@ import com.qinwei.deathnote.utils.AnnotationUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -24,26 +26,27 @@ public class FieldAnnotationScanner extends ClasspathScanner {
     }
 
     public Set<Field> scan(Class<? extends Annotation> annotation, String basePackage) {
-        Set<Field> result = annotationCache.get(annotation);
+        String key = annotation.getName() + "-" + basePackage;
+        Set<Field> result = annotationCache.get(key);
         if (result == null) {
             synchronized (annotationCache) {
-                if (annotationCache.containsKey(annotation)) {
-                    result = annotationCache.get(annotation);
+                if (annotationCache.get(key) == null) {
+                    result = scanField(annotation, basePackage);
+                    annotationCache.put(key, result);
                 } else {
-                    Set<Class> classes = super.scan(basePackage);
-                    result = new LinkedHashSet<>();
-                    for (Class clazz : classes) {
-                        Field[] fields = clazz.getDeclaredFields();
-                        for (Field field : fields) {
-                            if (AnnotationUtils.findAnnotation((AnnotatedElement) field, annotation) != null) {
-                                result.add(field);
-                            }
-                        }
-                    }
-                    annotationCache.put(annotation.getSimpleName() + "-" + basePackage, result);
+                    result = annotationCache.get(key);
                 }
             }
         }
         return result;
+    }
+
+    private Set<Field> scanField(Class<? extends Annotation> annotation, String basePackage) {
+        return super.scan(basePackage)
+                .stream()
+                .map(Class::getDeclaredFields)
+                .flatMap(Arrays::stream)
+                .filter(field -> AnnotationUtils.findAnnotation((AnnotatedElement) field, annotation) != null)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

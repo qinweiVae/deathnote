@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.context;
 
 import com.qinwei.deathnote.beans.bean.Domain1;
+import com.qinwei.deathnote.beans.bean.Domain2;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.context.annotation.AutowiredService;
@@ -19,7 +20,7 @@ import org.junit.Test;
 public class ContextTest extends BaseTest {
 
     @Test
-    public void testApplicationContext() {
+    public void testBeanLifeCycle() {
         log.warn(context.toString());
     }
 
@@ -41,9 +42,13 @@ public class ContextTest extends BaseTest {
 
     @Test
     public void testPublisherEvent() {
-        Domain1 event = new Domain1();
-        event.setBrand("vae");
-        context.publishEvent(event);
+        Domain1 domain1 = new Domain1();
+        domain1.setBrand("vae");
+        context.publishEvent(domain1);
+
+        Domain2 domain2 = new Domain2();
+        domain2.setBrand("qinwei");
+        context.publishEvent(domain2);
     }
 
     @Test

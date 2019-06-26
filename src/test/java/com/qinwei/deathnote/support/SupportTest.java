@@ -179,37 +179,54 @@ public class SupportTest {
     @Test
     public void testFindGenericType() throws Exception {
 
+        System.out.println("------------Converter<String, Long>-------------");
         Converter<String, Long> converter = new StringToLongConverter();
         System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(0));
         System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(1));
-        System.out.println("-------------------------");
 
+        System.out.println();
+
+        System.out.println("--------------StringToLongConverter-------------");
         System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(0));
         System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(1));
         //System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(2));
-        System.out.println("-------------------------");
 
+        System.out.println();
+
+        System.out.println("------------List<Map<String, List<Domain>>>-------------");
         PropertyDescriptor someList = BeanUtils.getPropertyDescriptor(Domain.class, "someList");
-        System.out.println(ResolveType.forType(someList).resolveGenericType(0));
-        //System.out.println(ResolveType.forType(someList).resolveGenericType(1));
-        System.out.println("-------------------------");
+        System.out.println(ResolveType.forType(someList).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(someList).resolveSpecialTypeNested(0, 0));
+        System.out.println(ResolveType.forType(someList).resolveSpecialTypeNested(0, 1));
+        //System.out.println(ResolveType.forType(someList).resolveSpecialType(1));
 
+        System.out.println();
+
+        System.out.println("------------Map<String, List<Domain>>-------------");
         PropertyDescriptor someMap = BeanUtils.getPropertyDescriptor(Domain.class, "someMap");
-        System.out.println(ResolveType.forType(someMap).resolveGenericType(0));
-        System.out.println(ResolveType.forType(someMap).resolveGenericType(1));
-        System.out.println("-------------------------");
+        System.out.println(ResolveType.forType(someMap).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(someMap).resolveSpecialType(1));
 
+        System.out.println();
+
+        System.out.println("-----------Set<Domain>--------------");
         Field filed = Domain.class.getDeclaredField("someSet");
-        System.out.println(ResolveType.forType(filed).resolveGenericType(0));
-        //System.out.println(ResolveType.forType(filed).resolveGenericType(1));
-        System.out.println("-------------------------");
+        System.out.println(ResolveType.forType(filed).resolveSpecialType(0));
+        //System.out.println(ResolveType.forType(filed).resolveSpecialType(1));
 
+        System.out.println();
+
+        System.out.println("-----------Set<Domain> someSet, Collection<String> friends--------------");
         Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class, Collection.class);
         //只能拿到第一个参数的泛型
-        System.out.println(ResolveType.forType(method).resolveGenericType(0));
+        System.out.println(ResolveType.forType(method).resolveSpecialType(0));
 
+        System.out.println();
+
+        System.out.println("-----------<PayloadApplicationEvent<Domain1>>--------------");
         ResolveType resolveType = ResolveType.forType(PayLoadListener1.class);
-        resolveType.resolveGeneric(0);
+        System.out.println(resolveType.resolveGeneric(0));
+        System.out.println(resolveType.resolveGenericNested(0, 0));
 
     }
 }

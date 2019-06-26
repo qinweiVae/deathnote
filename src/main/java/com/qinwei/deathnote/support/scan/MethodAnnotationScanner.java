@@ -5,10 +5,12 @@ import com.qinwei.deathnote.utils.AnnotationUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -24,26 +26,27 @@ public class MethodAnnotationScanner extends ClasspathScanner {
     }
 
     public Set<Method> scan(Class<? extends Annotation> annotation, String basePackage) {
-        Set<Method> result = annotationCache.get(annotation);
+        String key = annotation.getName() + "-" + basePackage;
+        Set<Method> result = annotationCache.get(key);
         if (result == null) {
             synchronized (annotationCache) {
-                if (annotationCache.containsKey(annotation)) {
-                    result = annotationCache.get(annotation);
+                if (annotationCache.get(key) == null) {
+                    result = scanMethod(annotation, basePackage);
+                    annotationCache.put(key, result);
                 } else {
-                    Set<Class> classes = super.scan(basePackage);
-                    result = new LinkedHashSet<>();
-                    for (Class clazz : classes) {
-                        Method[] methods = clazz.getDeclaredMethods();
-                        for (Method method : methods) {
-                            if (AnnotationUtils.findAnnotation((AnnotatedElement) method, annotation) != null) {
-                                result.add(method);
-                            }
-                        }
-                    }
-                    annotationCache.put(annotation.getSimpleName() + "-" + basePackage, result);
+                    result = annotationCache.get(key);
                 }
             }
         }
         return result;
+    }
+
+    private Set<Method> scanMethod(Class<? extends Annotation> annotation, String basePackage) {
+        return super.scan(basePackage)
+                .stream()
+                .map(Class::getDeclaredMethods)
+                .flatMap(Arrays::stream)
+                .filter(method -> AnnotationUtils.findAnnotation((AnnotatedElement) method, annotation) != null)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
