@@ -1,8 +1,6 @@
 package com.qinwei.deathnote.beans.bean;
 
 import com.alibaba.fastjson.JSON;
-import com.qinwei.deathnote.context.annotation.AnnotatedBeanDefinitionReader;
-import com.qinwei.deathnote.context.annotation.Import;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +20,6 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@Import(AnnotatedBeanDefinitionReader.class)
 @AnnotationA
 public class Domain extends BaseDomain {
 

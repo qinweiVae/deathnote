@@ -15,6 +15,7 @@ public class BaseTest {
     @Before
     public void start() {
         //context = new AnnotationConfigApplicationContext("com.qinwei.deathnote");
+        //context = new AnnotationConfigApplicationContext(ImportTest.class);
         context = new AnnotationConfigApplicationContext(Application.class);
         context.start();
     }

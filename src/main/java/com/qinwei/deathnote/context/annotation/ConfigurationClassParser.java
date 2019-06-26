@@ -11,7 +11,6 @@ import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.metadata.AnnotationMetadata;
 import com.qinwei.deathnote.context.metadata.MethodMetadata;
-import com.qinwei.deathnote.context.metadata.StandardAnnotationMetadata;
 import com.qinwei.deathnote.context.support.ConfigurationUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
@@ -179,7 +178,9 @@ public class ConfigurationClassParser {
                 //todo 如果 bean 需要 代理
             }
             //注册 BeanDefinition
-            this.registry.registerBeanDefinition(beanName, bdToRegister);
+            if (!registry.containsBeanDefinition(beanName)) {
+                this.registry.registerBeanDefinition(beanName, bdToRegister);
+            }
         }
     }
 
@@ -208,7 +209,7 @@ public class ConfigurationClassParser {
                 for (String importClassName : importClassNames) {
                     Class<?> importClass = ClassUtils.forName(importClassName);
                     // 递归处理
-                    processImports(new StandardAnnotationMetadata(importClass, true));
+                    processConfigurationClass(new ConfigurationClass(importClass));
                 }
             }
             // 如果是 ImportBeanDefinitionRegistrar
