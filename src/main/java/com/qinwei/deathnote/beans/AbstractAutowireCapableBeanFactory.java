@@ -185,20 +185,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         invokeAwareMethods(beanName, bean);
 
         Object wrappedBean = bean;
-        if (bd != null) {
-            // 执行 BeanPostProcessor 的 postProcessBeforeInitialization
-            wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
-        }
+        // 执行 BeanPostProcessor 的 postProcessBeforeInitialization
+        wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
         try {
             //执行 init 方法
             invokeInitMethods(beanName, wrappedBean, bd);
         } catch (Exception e) {
             throw new RuntimeException("Unable to invoke init method , beanName : " + beanName, e);
         }
-        if (bd != null) {
-            // 执行 BeanPostProcessor 的 postProcessAfterInitialization
-            wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
-        }
+        // 执行 BeanPostProcessor 的 postProcessAfterInitialization
+        wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
     }
 
@@ -230,7 +226,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             if (StringUtils.isNotEmpty(initMethodName) &&
                     !(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
                     !bd.isExternallyInitMethod(initMethodName)) {
-                Method method = ClassUtils.findMethod(bd.getBeanClass(), initMethodName);
+                Method method = ClassUtils.findMethod(bean.getClass(), initMethodName);
                 if (method != null) {
                     try {
                         ClassUtils.makeAccessible(method);

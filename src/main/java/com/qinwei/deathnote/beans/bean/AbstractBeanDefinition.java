@@ -18,7 +18,7 @@ import static com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory.SCOPE_S
  * @author qinwei
  * @date 2019-05-24
  */
-public abstract class AbstractBeanDefinition implements BeanDefinition, Cloneable {
+public abstract class AbstractBeanDefinition extends AttributeAccessorSupport implements BeanDefinition, Cloneable {
 
     private volatile Object beanClass;
 

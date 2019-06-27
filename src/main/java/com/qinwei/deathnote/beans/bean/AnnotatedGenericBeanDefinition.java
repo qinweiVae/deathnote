@@ -27,6 +27,8 @@ public class AnnotatedGenericBeanDefinition extends AbstractBeanDefinition imple
 
     public AnnotatedGenericBeanDefinition(AbstractBeanDefinition beanDefinition) {
         setBeanClassName(beanDefinition.getBeanClassName());
+        setFactoryBeanName(beanDefinition.getFactoryBeanName());
+        setFactoryMethod(beanDefinition.getFactoryMethod());
         setScope(beanDefinition.getScope());
         setAbstract(beanDefinition.isAbstract());
         if (beanDefinition.hasBeanClass()) {

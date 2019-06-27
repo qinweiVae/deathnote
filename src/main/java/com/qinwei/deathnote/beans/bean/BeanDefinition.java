@@ -7,7 +7,7 @@ import java.util.Map;
  * @author qinwei
  * @date 2019-05-24
  */
-public interface BeanDefinition {
+public interface BeanDefinition extends AttributeAccessor {
 
     Map<String, Object> getPropertyValues();
 

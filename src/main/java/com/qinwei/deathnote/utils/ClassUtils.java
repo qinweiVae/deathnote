@@ -8,14 +8,7 @@ import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author qinwei
@@ -305,13 +298,70 @@ public class ClassUtils {
      * 如果 class 是 CGLib 代理类 ，返回其父类
      */
     public static Class<?> getUserClass(Class<?> clazz) {
-        if (clazz.getName().contains(CGLIB_CLASS_SEPARATOR)) {
+        if (isCglibProxyClass(clazz)) {
             Class<?> superclass = clazz.getSuperclass();
             if (superclass != null && superclass != Object.class) {
                 return superclass;
             }
         }
         return clazz;
+    }
+
+    /**
+     * 判断是否是 CGLib 代理类
+     */
+    public static boolean isCglibProxyClass(Class<?> clazz) {
+        return clazz != null && clazz.getName().contains(CGLIB_CLASS_SEPARATOR);
+    }
+
+    /**
+     * 查找当前类及其父类（以及父类的父类等等）所实现的接口
+     */
+    public static Set<Class<?>> getAllInterfacesAsSet(Class<?> clazz) {
+        if (clazz.isInterface()) {
+            return Collections.singleton(clazz);
+        }
+        Set<Class<?>> interfaces = new LinkedHashSet<>();
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            Class<?>[] ifs = current.getInterfaces();
+            for (Class<?> inf : ifs) {
+                interfaces.add(inf);
+            }
+            current = current.getSuperclass();
+        }
+        return interfaces;
+    }
+
+    /**
+     * 查找所有父类及接口的方法
+     */
+    public static List<Method> getAllDeclaredMethods(Class<?> clazz) {
+        List<Method> methods = new ArrayList<>();
+        doGetAllDeclaredMethods(clazz, methods);
+        return methods;
+    }
+
+    public static void doGetAllDeclaredMethods(Class<?> clazz, List<Method> result) {
+        Method[] methods = clazz.getDeclaredMethods();
+        for (Method method : methods) {
+            result.add(method);
+        }
+        //拿到所有接口上的非抽象方法
+        if (clazz.isInterface()) {
+            for (Class<?> ifs : clazz.getInterfaces()) {
+                for (Method method : methods) {
+                    if (!Modifier.isAbstract(method.getModifiers())) {
+                        result.add(method);
+                    }
+                }
+            }
+        }
+        //递归获取父类的所有方法
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
+            doGetAllDeclaredMethods(superclass, result);
+        }
     }
 
 }
