@@ -15,13 +15,13 @@ import java.util.List;
 public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyCreator {
 
     @Override
-    protected Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName) {
+    protected Advisor[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName) {
         //查找合适的通知器
         List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
         if (advisors.isEmpty()) {
             return null;
         }
-        return advisors.toArray();
+        return advisors.toArray(new Advisor[0]);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.qinwei.deathnote.aop.autoproxy;
+package com.qinwei.deathnote.aop;
 
 /**
  * @author qinwei

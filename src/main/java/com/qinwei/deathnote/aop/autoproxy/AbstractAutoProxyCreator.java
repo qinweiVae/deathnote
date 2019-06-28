@@ -1,8 +1,10 @@
 package com.qinwei.deathnote.aop.autoproxy;
 
+import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.support.AopUtils;
-import com.qinwei.deathnote.aop.support.SingletonTargetSource;
-import com.qinwei.deathnote.aop.support.TargetSource;
+import com.qinwei.deathnote.aop.support.ProxyProcessorSupport;
+import com.qinwei.deathnote.aop.target.SingletonTargetSource;
+import com.qinwei.deathnote.aop.target.TargetSource;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
@@ -46,6 +48,16 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
+        if (StringUtils.isEmpty(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+            if (this.advisedBeans.containsKey(beanClass)) {
+                return null;
+            }
+            if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
+                this.advisedBeans.put(beanClass, Boolean.FALSE);
+                return null;
+            }
+        }
+
         return null;
     }
 
@@ -77,17 +89,18 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
         if (Boolean.FALSE.equals(advisedBeans.get(cacheKey))) {
             return bean;
         }
+        //如果是基础设施类（Pointcut、Advice、Advisor 等接口的实现类），或是应该跳过的类，则不应该生成代理，此时直接返回 bean
         if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
             this.advisedBeans.put(cacheKey, Boolean.FALSE);
             return bean;
         }
         // 为目标 bean 查找合适的通知器
-        Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName);
-        //若 specificInterceptors != null 则为 bean 生成代理对象，否则直接返回 bean
-        if (specificInterceptors != null) {
+        Advisor[] advisors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName);
+        //若 advisors != null 则为 bean 生成代理对象，否则直接返回 bean
+        if (advisors != null) {
             this.advisedBeans.put(cacheKey, Boolean.TRUE);
             // 创建代理
-            Object proxy = createProxy(bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
+            Object proxy = createProxy(bean.getClass(), beanName, advisors, new SingletonTargetSource(bean));
             this.proxyTypes.put(cacheKey, proxy.getClass());
             //返回代理对象，此时 IOC 容器输入 bean，得到 proxy。此时 beanName 对应的 bean 是代理对象，而非原始的 bean
             return proxy;
@@ -99,10 +112,33 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
     /**
      * 筛选合适的通知器
      */
-    protected Object createProxy(Class<?> beanClass, String beanName, Object[] specificInterceptors, TargetSource targetSource) {
+    protected Object createProxy(Class<?> beanClass, String beanName, Advisor[] advisors, TargetSource targetSource) {
         //将 实际的 bean class 设置到 beanDefinition 里面
         AopUtils.exposeTargetClass(beanFactory, beanName, beanClass);
-        return null;
+        //创建 ProxyFactory
+        ProxyFactory proxyFactory = new ProxyFactory();
+        proxyFactory.copyFrom(this);
+        // 默认配置下 或者 显式配置 proxy-target-class = "false" 时， 这里的 proxyFactory.isProxyTargetClass() 为 false
+        if (!proxyFactory.isProxyTargetClass()) {
+            //判断是否需要进行cglib代理
+            if (AopUtils.shouldProxyTargetClass(beanFactory, beanName)) {
+                proxyFactory.setProxyTargetClass(true);
+            } else {
+                //检测 beanClass 是否实现了接口，若未实现，则将 proxyFactory 的 proxyTargetClass 设为 true
+                evaluateProxyInterfaces(beanClass, proxyFactory);
+            }
+        }
+        proxyFactory.addAdvisors(advisors);
+        proxyFactory.setTargetSource(targetSource);
+        if (advisorsPreFiltered()) {
+            proxyFactory.setPreFiltered(true);
+        }
+        // 创建代理
+        return proxyFactory.getProxy(getProxyClassLoader());
+    }
+
+    protected boolean advisorsPreFiltered() {
+        return false;
     }
 
     /**
@@ -112,5 +148,5 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
         return false;
     }
 
-    protected abstract Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName);
+    protected abstract Advisor[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName);
 }

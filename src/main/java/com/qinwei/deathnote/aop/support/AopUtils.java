@@ -3,6 +3,7 @@ package com.qinwei.deathnote.aop.support;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.aspectj.Pointcut;
 import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
+import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
@@ -20,7 +21,9 @@ import java.util.Set;
  */
 public class AopUtils {
 
-    public static final String ORIGINAL_TARGET_CLASS = "originalTargetClass";
+    private static final String ORIGINAL_TARGET_CLASS = "originalTargetClass";
+
+    private static final String PRESERVE_TARGET_CLASS_ATTRIBUTE = "preserveTargetClass";
 
     /**
      * 判断是否是代理类
@@ -36,6 +39,17 @@ public class AopUtils {
         if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
             beanFactory.getBeanDefinition(beanName).setAttribute(ORIGINAL_TARGET_CLASS, targetClass);
         }
+    }
+
+    /**
+     * 判断是否需要进行cglib代理
+     */
+    public static boolean shouldProxyTargetClass(ConfigurableListableBeanFactory beanFactory, String beanName) {
+        if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
+            BeanDefinition bd = beanFactory.getBeanDefinition(beanName);
+            return Boolean.TRUE.equals(bd.getAttribute(PRESERVE_TARGET_CLASS_ATTRIBUTE));
+        }
+        return false;
     }
 
 
