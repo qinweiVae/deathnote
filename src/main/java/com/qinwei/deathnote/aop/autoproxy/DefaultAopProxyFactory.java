@@ -1,6 +1,5 @@
 package com.qinwei.deathnote.aop.autoproxy;
 
-import com.qinwei.deathnote.aop.SpringProxy;
 import com.qinwei.deathnote.aop.support.AdvisedSupport;
 
 import java.lang.reflect.Proxy;
@@ -30,10 +29,10 @@ public class DefaultAopProxyFactory implements AopProxyFactory {
     }
 
     /**
-     * 判断AdvisedSupport 是否没有 可以代理的接口 或者 代理接口中只有 SpringProxy
+     * 判断AdvisedSupport 是否没有 可以代理的接口
      */
     private boolean hasNoUserSuppliedProxyInterfaces(AdvisedSupport config) {
         Class<?>[] ifcs = config.getProxiedInterfaces();
-        return (ifcs.length == 0 || (ifcs.length == 1 && SpringProxy.class.isAssignableFrom(ifcs[0])));
+        return ifcs.length == 0;
     }
 }

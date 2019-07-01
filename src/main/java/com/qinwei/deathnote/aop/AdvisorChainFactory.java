@@ -9,5 +9,8 @@ import java.util.List;
  */
 public interface AdvisorChainFactory {
 
+    /**
+     * 获取 MethodInterceptor 的 调用链
+     */
     List<Object> getInterceptorsAndDynamicInterceptionAdvice(Advised config, Method method, Class<?> targetClass);
 }
