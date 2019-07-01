@@ -9,12 +9,9 @@ import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
-import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,13 +23,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
 
     private ConfigurableListableBeanFactory beanFactory;
 
-    private final Map<Class, Object> earlyProxyReferences = new ConcurrentHashMap<>(16);
-
-    private final Set<String> targetSourcedBeans = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
-
     private final Map<Class, Boolean> advisedBeans = new ConcurrentHashMap<>(256);
-
-    private final Map<Class, Class<?>> proxyTypes = new ConcurrentHashMap<>(16);
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
@@ -48,16 +39,10 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
-        if (StringUtils.isEmpty(beanName) || !this.targetSourcedBeans.contains(beanName)) {
-            if (this.advisedBeans.containsKey(beanClass)) {
-                return null;
-            }
-            if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
-                this.advisedBeans.put(beanClass, Boolean.FALSE);
-                return null;
-            }
+        if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
+            this.advisedBeans.put(beanClass, Boolean.FALSE);
+            return null;
         }
-
         return null;
     }
 
@@ -65,11 +50,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
     public Object postProcessAfterInitialization(Object bean, String beanName) {
         if (bean != null) {
             Class<?> cacheKey = bean.getClass();
-            //如果缓存中不存在的话
-            if (earlyProxyReferences.remove(cacheKey) != bean) {
-                // 如果需要，为 bean 生成代理对象
-                return wrapIfNecessary(bean, beanName, cacheKey);
-            }
+            // 如果需要，为 bean 生成代理对象
+            return wrapIfNecessary(bean, beanName, cacheKey);
         }
         return bean;
     }
@@ -81,10 +63,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
      * 4.若数组为空，则返回原始 bean
      */
     protected Object wrapIfNecessary(Object bean, String beanName, Class cacheKey) {
-        //如果缓存中存在，直接返回
-        if (StringUtils.isNotEmpty(beanName) && targetSourcedBeans.contains(beanName)) {
-            return bean;
-        }
         //如果 bean class 不是 advise，直接返回
         if (Boolean.FALSE.equals(advisedBeans.get(cacheKey))) {
             return bean;
@@ -101,7 +79,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
             this.advisedBeans.put(cacheKey, Boolean.TRUE);
             // 创建代理
             Object proxy = createProxy(bean.getClass(), beanName, advisors, new SingletonTargetSource(bean));
-            this.proxyTypes.put(cacheKey, proxy.getClass());
             //返回代理对象，此时 IOC 容器输入 bean，得到 proxy。此时 beanName 对应的 bean 是代理对象，而非原始的 bean
             return proxy;
         }

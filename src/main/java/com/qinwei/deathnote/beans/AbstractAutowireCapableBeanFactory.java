@@ -61,7 +61,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             bdToUse.setBeanClass(resolvedClass);
         }
         // 给 BeanPostProcessors 一个机会用来返回一个代理类而不是真正的类实例
-        // AOP 的功能就是基于这个地方
+        // AOP 的功能可以基于这个地方
         Object bean = resolveBeforeInstantiation(beanName, bdToUse);
         if (bean != null) {
             return bean;
@@ -194,6 +194,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             throw new RuntimeException("Unable to invoke init method , beanName : " + beanName, e);
         }
         // 执行 BeanPostProcessor 的 postProcessAfterInitialization
+        // aop 的功能就是基于这个地方
         wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
         return wrappedBean;
     }
@@ -401,7 +402,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     /**
      * 给 BeanPostProcessors 一个机会用来返回一个代理类而不是真正的类实例
-     * AOP 的功能就是基于这个地方
+     * AOP 的功能可以基于这个地方
      */
     protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition bd) {
         Object bean = null;

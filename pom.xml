@@ -16,6 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <slf4j.version>1.7.21</slf4j.version>
+        <aspectj.version>1.9.4</aspectj.version>
         <netty.version>4.1.25.Final</netty.version>
         <log4j2.version>2.6.2</log4j2.version>
         <lombok_version>1.16.18</lombok_version>
@@ -25,6 +26,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

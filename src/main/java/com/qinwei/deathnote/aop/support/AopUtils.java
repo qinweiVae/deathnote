@@ -10,6 +10,7 @@ import com.qinwei.deathnote.utils.CollectionUtils;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -100,5 +101,18 @@ public class AopUtils {
                 .map(ClassUtils::getAllDeclaredMethods)
                 .flatMap(Collection::stream)
                 .anyMatch(method -> methodMatcher.matches(method, targetClass));
+    }
+
+    public static boolean equalsInProxy(AdvisedSupport a, AdvisedSupport b) {
+        return a == b ||
+                (equalsProxiedInterfaces(a, b) && equalsAdvisors(a, b) && a.getTargetSource().equals(b.getTargetSource()));
+    }
+
+    public static boolean equalsProxiedInterfaces(AdvisedSupport a, AdvisedSupport b) {
+        return Arrays.equals(a.getProxiedInterfaces(), b.getProxiedInterfaces());
+    }
+
+    public static boolean equalsAdvisors(AdvisedSupport a, AdvisedSupport b) {
+        return Arrays.equals(a.getAdvisors(), b.getAdvisors());
     }
 }
