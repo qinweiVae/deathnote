@@ -2,8 +2,8 @@ package com.qinwei.deathnote.aop;
 
 import com.qinwei.deathnote.aop.aspectj.Advice;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
-import com.qinwei.deathnote.aop.target.TargetClassAware;
-import com.qinwei.deathnote.aop.target.TargetSource;
+import com.qinwei.deathnote.aop.targetSource.TargetClassAware;
+import com.qinwei.deathnote.aop.targetSource.TargetSource;
 
 /**
  * @author qinwei

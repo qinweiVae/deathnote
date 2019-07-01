@@ -27,7 +27,7 @@ public class BeanUtils {
      */
     public static void copyProperties(Object source, Object target, String... ignoreProperties) {
         assert source != null : "source can not be null";
-        assert target != null : "target can not be null";
+        assert target != null : "targetSource can not be null";
         //需要忽略的属性
         List<String> ignoreList = Optional.ofNullable(ignoreProperties).map(Arrays::asList).orElse(null);
 
@@ -55,7 +55,7 @@ public class BeanUtils {
                             //调用target 的 setter方法
                             setter.invoke(target, conversion.convertIfNecessary(value, parameterType));
                         } catch (Exception e) {
-                            throw new IllegalStateException("Could not copy property '" + targetPd.getName() + "' from source to target", e);
+                            throw new IllegalStateException("Could not copy property '" + targetPd.getName() + "' from source to targetSource", e);
                         }
                     }
                 }

@@ -3,8 +3,8 @@ package com.qinwei.deathnote.aop.autoproxy;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.support.AopUtils;
 import com.qinwei.deathnote.aop.support.ProxyProcessorSupport;
-import com.qinwei.deathnote.aop.target.SingletonTargetSource;
-import com.qinwei.deathnote.aop.target.TargetSource;
+import com.qinwei.deathnote.aop.targetSource.SingletonTargetSource;
+import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.InstantiationAwareBeanPostProcessor;
@@ -118,7 +118,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
         //创建 ProxyFactory
         ProxyFactory proxyFactory = new ProxyFactory();
         proxyFactory.copyFrom(this);
-        // 默认配置下 或者 显式配置 proxy-target-class = "false" 时， 这里的 proxyFactory.isProxyTargetClass() 为 false
+        // 默认配置下 或者 显式配置 proxy-targetSource-class = "false" 时， 这里的 proxyFactory.isProxyTargetClass() 为 false
         if (!proxyFactory.isProxyTargetClass()) {
             //判断是否需要进行cglib代理
             if (AopUtils.shouldProxyTargetClass(beanFactory, beanName)) {

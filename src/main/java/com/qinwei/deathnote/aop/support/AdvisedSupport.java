@@ -7,9 +7,9 @@ import com.qinwei.deathnote.aop.ProxyConfig;
 import com.qinwei.deathnote.aop.aspectj.Advice;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.aspectj.DefaultPointcutAdvisor;
-import com.qinwei.deathnote.aop.target.EmptyTargetSource;
-import com.qinwei.deathnote.aop.target.SingletonTargetSource;
-import com.qinwei.deathnote.aop.target.TargetSource;
+import com.qinwei.deathnote.aop.targetSource.EmptyTargetSource;
+import com.qinwei.deathnote.aop.targetSource.SingletonTargetSource;
+import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 
