@@ -12,7 +12,6 @@ import com.qinwei.deathnote.aop.targetSource.SingletonTargetSource;
 import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
-import com.sun.istack.internal.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -47,7 +46,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
     /**
      * 获取 MethodInterceptor 的 调用链
      */
-    public List<Object> getInterceptorsAndDynamicInterceptionAdvice(Method method, @Nullable Class<?> targetClass) {
+    public List<Object> getInterceptorsAndDynamicInterceptionAdvice(Method method, Class<?> targetClass) {
         List<Object> cached = this.methodCache.get(method);
         if (cached == null) {
             //获取 MethodInterceptor 的 调用链

@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.context;
 
+import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.Domain1;
 import com.qinwei.deathnote.beans.bean.Domain2;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
@@ -29,7 +30,8 @@ public class ContextTest extends BaseTest {
         String[] beanDefinitionNames = context.getBeanDefinitionNames();
         for (String beanName : beanDefinitionNames) {
             Object bean = context.getBean(beanName);
-            log.info("{} : {} , is singleton : {}", beanName, bean.getClass().getName(), context.isSingleton(beanName));
+            BeanDefinition beanDefinition = context.getBeanDefinition(beanName);
+            log.info("{} : {} , is singleton : {}", beanName, beanDefinition.getBeanClass(), context.isSingleton(beanName));
         }
     }
 

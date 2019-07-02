@@ -280,4 +280,21 @@ public class AnnotationUtils {
         }
         return null;
     }
+
+    /**
+     * 获取注解上 指定 属性的值
+     */
+    public static Object getValue(Annotation annotation, String attributeName) {
+        if (annotation == null || StringUtils.isEmpty(attributeName)) {
+            return null;
+        }
+        try {
+            Method method = annotation.annotationType().getDeclaredMethod(attributeName);
+            ClassUtils.makeAccessible(method);
+            return method.invoke(annotation);
+        } catch (Throwable ex) {
+        }
+        return null;
+    }
+
 }

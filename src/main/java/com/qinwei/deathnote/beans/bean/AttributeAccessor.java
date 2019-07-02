@@ -1,6 +1,5 @@
 package com.qinwei.deathnote.beans.bean;
 
-import com.sun.istack.internal.Nullable;
 
 /**
  * @author qinwei
@@ -8,7 +7,7 @@ import com.sun.istack.internal.Nullable;
  */
 public interface AttributeAccessor {
 
-    void setAttribute(String name, @Nullable Object value);
+    void setAttribute(String name, Object value);
 
     Object getAttribute(String name);
 

@@ -218,6 +218,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     }
 
+    @Override
+    public void updateBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        this.beanDefinitionMap.put(beanName, beanDefinition);
+    }
+
     /**
      * 根据 beanName 移除 BeanDefinition
      */

@@ -359,7 +359,7 @@ public class ClassUtils {
         }
         //递归获取父类的所有方法
         Class<?> superclass = clazz.getSuperclass();
-        if (superclass != null && superclass != Object.class) {
+        while (superclass != null && superclass != Object.class) {
             doGetAllDeclaredMethods(superclass, result);
         }
     }

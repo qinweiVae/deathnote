@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.beans;
 
+import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.BeanWrapper;
 import com.qinwei.deathnote.beans.bean.BeanWrapperImpl;
 import com.qinwei.deathnote.beans.bean.DisposableBeanAdapter;
@@ -329,6 +330,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         try {
             ClassUtils.makeAccessible(factoryMethod);
             bean = factoryMethod.invoke(factoryBean, argsToUse);
+            //因为使用 @Bean 注解，解析时可能拿到的是 实际bean的接口，而不是bean本身的class
+            bd.setBeanClass(bean.getClass());
+            updateBeanDefinition(beanName, bd);
         } catch (Exception e) {
             throw new IllegalStateException("Unable to invoke the method , method  '" + factoryMethod + "'");
         }
@@ -494,4 +498,5 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return result;
     }
 
+    protected abstract void updateBeanDefinition(String beanName, BeanDefinition bd);
 }
