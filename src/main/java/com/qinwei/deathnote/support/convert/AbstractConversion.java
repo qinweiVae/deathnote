@@ -26,7 +26,7 @@ public class AbstractConversion implements Conversion {
     protected void initCache() {
         for (Converter converter : converters) {
             ResolveType resolveType = ResolveType.forType(converter.getClass());
-            convertCache.add(new TypeDescriptor(resolveType.resolveGeneric(0), resolveType.resolveGeneric(1), converter));
+            convertCache.add(new TypeDescriptor(resolveType.resolveClass(0), resolveType.resolveClass(1), converter));
         }
     }
 

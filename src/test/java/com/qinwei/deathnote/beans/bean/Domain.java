@@ -66,7 +66,7 @@ public class Domain extends BaseDomain {
     public Domain() {
     }
 
-    public void writeMethod(Set<Domain> someSet, Collection<String> friends) {
+    public void writeMethod(Set<Domain> someSet, Domain domain, Collection<String> friends) {
         this.someSet = someSet;
         this.friends = friends;
     }

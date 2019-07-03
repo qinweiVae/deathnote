@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,12 +30,20 @@ public class ResolveType {
 
     private Method method;
 
+    private Integer parameterIndex;
+
     private ResolveType(Class type) {
         this.type = type;
     }
 
     public static ResolveType forType(Class clazz) {
         return new ResolveType(clazz);
+    }
+
+    public static ResolveType forType(Class clazz, String name) {
+        ResolveType resolveType = new ResolveType(clazz);
+        resolveType.setName(name);
+        return resolveType;
     }
 
     public static ResolveType forType(PropertyDescriptor pd) {
@@ -52,38 +61,15 @@ public class ResolveType {
     }
 
     public static ResolveType forType(Method method) {
+        return forType(method, null);
+    }
+
+    public static ResolveType forType(Method method, Integer parameterIndex) {
         ResolveType resolveType = new ResolveType(method.getReturnType());
         resolveType.setName(method.getName());
         resolveType.setMethod(method);
+        resolveType.setParameterIndex(parameterIndex);
         return resolveType;
-    }
-
-    /**
-     * 获取 Class 上的泛型,用于普通类的 嵌套 泛型
-     * <p>
-     * 对于collection、map之类的集合不要使用
-     */
-    public Class resolveGenericNested(int index, int nestedIndex) {
-        Type[] genericType = resolveType();
-        if (genericType == null) {
-            return null;
-        }
-        if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
-        }
-        Type type = genericType[index];
-        // 对于 嵌套情况下需要特殊处理下
-        if (type instanceof ParameterizedType) {
-            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
-            type = actualTypeArguments[nestedIndex];
-            if (type instanceof ParameterizedType) {
-                type = ((ParameterizedType) type).getRawType();
-            }
-        }
-        if (type instanceof Class) {
-            return (Class) type;
-        }
-        return null;
     }
 
     /**
@@ -91,36 +77,31 @@ public class ResolveType {
      * <p>
      * 对于collection、map之类的集合不要使用
      */
-    public Class resolveGeneric(int index) {
-        Type[] genericType = resolveType();
-        if (genericType == null) {
-            return null;
-        }
-        if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
-        }
-        Type type = genericType[index];
-        // 对于 嵌套情况下需要特殊处理下
-        if (type instanceof ParameterizedType) {
-            type = ((ParameterizedType) type).getRawType();
-        }
-        if (type instanceof Class) {
-            return (Class) type;
-        }
-        return null;
+    public Class resolveClass(int index) {
+        return resolveClass(index, -1);
     }
 
-    private Type[] resolveType() {
+    /**
+     * 获取 Class 上的泛型,用于普通类的 嵌套 泛型
+     * <p>
+     * 对于collection、map之类的集合不要使用
+     */
+    public Class resolveClass(int index, int nestedIndex) {
+        Type[] genericType = resolveTypeFromCache();
+        return resolveType(genericType, index, nestedIndex);
+    }
+
+    private Type[] resolveTypeFromCache() {
         Type[] genericType = TYPE_CACHE.get(type);
         if (genericType == null) {
             synchronized (TYPE_CACHE) {
-                if (TYPE_CACHE.containsKey(type)) {
-                    genericType = TYPE_CACHE.get(type);
-                } else {
+                if (TYPE_CACHE.get(type) == null) {
                     genericType = resolveGeneric();
                     if (genericType != null) {
                         TYPE_CACHE.put(type, genericType);
                     }
+                } else {
+                    genericType = TYPE_CACHE.get(type);
                 }
             }
         }
@@ -161,29 +142,18 @@ public class ResolveType {
      * 用于获取collection、map等集合的泛型（对于这些集合只能通过Method、Field 的方式才能得到正确的泛型)）
      */
     public Class resolveSpecialType(int index) {
-        Type[] genericType = resolveSpecialType();
-        if (genericType == null) {
-            return null;
-        }
-        if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
-        }
-        Type type = genericType[index];
-        // 对于 Map<String, List<Domain>> 这种嵌套情况下获取value的泛型时得到是ParameterizedType java.util.List<com.qinwei.deathnote.beans.bean.Domain> 需要特殊处理下
-        if (type instanceof ParameterizedType) {
-            type = ((ParameterizedType) type).getRawType();
-        }
-        if (type instanceof Class) {
-            return (Class) type;
-        }
-        return null;
+        return resolveSpecialTypeNested(index, -1);
     }
 
     /**
      * 用于获取collection、map等集合的 嵌套 泛型（对于这些集合只能通过Method、Field 的方式才能得到正确的泛型)）
      */
     public Class resolveSpecialTypeNested(int index, int nestedIndex) {
-        Type[] genericType = resolveSpecialType();
+        Type[] genericType = resolveSpecialType().get(this.parameterIndex != null ? this.parameterIndex : 0);
+        return resolveType(genericType, index, nestedIndex);
+    }
+
+    private Class resolveType(Type[] genericType, int index, int nestedIndex) {
         if (genericType == null) {
             return null;
         }
@@ -193,10 +163,14 @@ public class ResolveType {
         Type type = genericType[index];
         // 对于 Map<String, List<Domain>> 这种嵌套情况下获取value的泛型时得到是ParameterizedType java.util.List<com.qinwei.deathnote.beans.bean.Domain> 需要特殊处理下
         if (type instanceof ParameterizedType) {
-            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
-            type = actualTypeArguments[nestedIndex];
-            if (type instanceof ParameterizedType) {
+            if (nestedIndex == -1) {
                 type = ((ParameterizedType) type).getRawType();
+            } else {
+                Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+                type = actualTypeArguments[nestedIndex];
+                if (type instanceof ParameterizedType) {
+                    type = ((ParameterizedType) type).getRawType();
+                }
             }
         }
         if (type instanceof Class) {
@@ -208,31 +182,37 @@ public class ResolveType {
     /**
      * 获取Field的泛型
      * <p>
-     * 获取Method 中第一个传入参数的泛型
+     * 获取Method 中传入参数的泛型
      */
-    public Type[] resolveSpecialType() {
+    public Map<Integer, Type[]> resolveSpecialType() {
+
+        Map<Integer, Type[]> result = new HashMap<>(8);
 
         if (getField() != null) {
             Type filedType = getField().getGenericType();
             if (filedType instanceof ParameterizedType) {
                 Type[] arguments = ((ParameterizedType) filedType).getActualTypeArguments();
                 if (arguments != null) {
-                    return arguments;
+                    result.put(0, arguments);
+                    return result;
                 }
             }
         }
+
         if (getMethod() != null) {
             Type[] parameterTypes = getMethod().getGenericParameterTypes();
-            for (Type parameterType : parameterTypes) {
+            for (int i = 0; i < parameterTypes.length; i++) {
+                Type parameterType = parameterTypes[i];
+                Type[] actualTypeArguments = null;
                 if (parameterType instanceof ParameterizedType) {
-                    Type[] actualTypeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
-                    if (actualTypeArguments != null) {
-                        return actualTypeArguments;
-                    }
+                    actualTypeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
+                } else {
+                    actualTypeArguments = new Type[]{parameterType};
                 }
+                result.put(i, actualTypeArguments);
             }
         }
-        return null;
+        return result;
     }
 
 }

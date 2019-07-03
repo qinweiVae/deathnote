@@ -95,7 +95,7 @@ public abstract class AbstractApplicationEventMulticaster implements Application
     }
 
     private boolean supportEvent(ApplicationListener<?> listener, ApplicationEvent event) {
-        Class genericType = ResolveType.forType(listener.getClass()).resolveGenericNested(0, 0);
+        Class genericType = ResolveType.forType(listener.getClass()).resolveClass(0, 0);
         if (genericType == null) {
             return false;
         }

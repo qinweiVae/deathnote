@@ -181,15 +181,15 @@ public class SupportTest {
 
         System.out.println("------------Converter<String, Long>-------------");
         Converter<String, Long> converter = new StringToLongConverter();
-        System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(0));
-        System.out.println(ResolveType.forType(converter.getClass()).resolveGeneric(1));
+        System.out.println(ResolveType.forType(converter.getClass()).resolveClass(0));
+        System.out.println(ResolveType.forType(converter.getClass()).resolveClass(1));
 
         System.out.println();
 
         System.out.println("--------------StringToLongConverter-------------");
-        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(0));
-        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(1));
-        //System.out.println(ResolveType.forType(StringToLongConverter.class).resolveGeneric(2));
+        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(0));
+        System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(1));
+        //System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(2));
 
         System.out.println();
 
@@ -216,17 +216,18 @@ public class SupportTest {
 
         System.out.println();
 
-        System.out.println("-----------Set<Domain> someSet, Collection<String> friends--------------");
-        Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class, Collection.class);
-        //只能拿到第一个参数的泛型
-        System.out.println(ResolveType.forType(method).resolveSpecialType(0));
+        System.out.println("-----------Set<Domain> someSet,Domain domain, Collection<String> friends--------------");
+        Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class,Domain.class, Collection.class);
+        System.out.println(ResolveType.forType(method,0).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(method,1).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(method,2).resolveSpecialType(0));
 
         System.out.println();
 
         System.out.println("-----------<PayloadApplicationEvent<Domain1>>--------------");
         ResolveType resolveType = ResolveType.forType(PayLoadListener1.class);
-        System.out.println(resolveType.resolveGeneric(0));
-        System.out.println(resolveType.resolveGenericNested(0, 0));
+        System.out.println(resolveType.resolveClass(0));
+        System.out.println(resolveType.resolveClass(0, 0));
 
     }
 }
