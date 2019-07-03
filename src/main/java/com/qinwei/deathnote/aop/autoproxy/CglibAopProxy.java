@@ -2,6 +2,7 @@ package com.qinwei.deathnote.aop.autoproxy;
 
 import com.qinwei.deathnote.aop.support.AdvisedSupport;
 import com.qinwei.deathnote.aop.targetSource.EmptyTargetSource;
+import com.qinwei.deathnote.utils.ClassUtils;
 
 import java.io.Serializable;
 
@@ -25,7 +26,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 
     @Override
     public Object getProxy() {
-        return null;
+        return getProxy(ClassUtils.getDefaultClassLoader());
     }
 
     @Override

@@ -31,7 +31,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 
     private TargetSource targetSource = EmptyTargetSource.INSTANCE;
 
-    AdvisorChainFactory advisorChainFactory = new DefaultAdvisorChainFactory();
+    private AdvisorChainFactory advisorChainFactory = new DefaultAdvisorChainFactory();
 
     private transient Map<Method, List<Object>> methodCache;
 

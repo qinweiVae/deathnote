@@ -175,6 +175,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
         }
         advice.setAspectName(aspectName);
         advice.setDeclarationOrder(declarationOrder);
+        advice.calculateArgumentBindings();
         return advice;
     }
 }

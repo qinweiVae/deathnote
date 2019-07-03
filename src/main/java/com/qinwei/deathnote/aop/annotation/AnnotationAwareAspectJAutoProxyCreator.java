@@ -66,6 +66,7 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoP
 
     @Override
     protected List<Advisor> findCandidateAdvisors() {
+        //从 beanFactory 里面查找所有 Advisor 的bean
         List<Advisor> advisors = super.findCandidateAdvisors();
         // 解析 @Aspect 注解，并构建通知器
         advisors.addAll(buildAspectJAdvisors());
@@ -78,7 +79,7 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoP
      * 1.获取容器中所有 bean 的名称（beanName）
      * 2.遍历上一步获取到的 bean 名称数组，并获取当前 beanName 对应的 bean 类型（beanType）
      * 3.根据 beanType 判断当前 bean 是否是一个的 Aspect 注解类，若不是则不做任何处理
-     * 4.调用 advisorFactory.getAdvisors 获取通知器
+     * 4.调用 advisorFactory.getAdvisors() 获取通知器
      */
     public List<Advisor> buildAspectJAdvisors() {
         List<String> aspectNames = this.aspectBeanNames;
@@ -105,13 +106,15 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoP
                         if (this.advisorFactory.isAspect(beanType)) {
                             aspectNames.add(beanName);
                             AspectMetadata metadata = new AspectMetadata(beanType, beanName);
-                            AspectInstanceFactory factory =new BeanFactoryAspectInstanceFactory(getBeanFactory(), beanName,metadata);
+                            // 创建AspectInstanceFactory， 调用getAspectInstance()方法即可以通过 beanFactory.getBean()得到对应的bean
+                            AspectInstanceFactory factory = new BeanFactoryAspectInstanceFactory(getBeanFactory(), beanName, metadata);
+                            // 解析标记了 AspectJ 注解中的增强方法
                             List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
                             //如果是单例，直接缓存 对应的所有 advisors
                             if (getBeanFactory().isSingleton(beanName)) {
                                 this.advisorsCache.put(beanName, classAdvisors);
                             }
-                            // 否则缓存 对应的  AspectMetadata
+                            // 否则缓存 对应的  AspectInstanceFactory
                             else {
                                 this.aspectCache.put(beanName, factory);
                             }
@@ -141,19 +144,6 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoP
             }
         }
         return advisors;
-    }
-
-
-    @Override
-    protected boolean shouldSkip(Class<?> beanClass, String beanName) {
-        List<Advisor> candidateAdvisors = findCandidateAdvisors();
-        for (Advisor advisor : candidateAdvisors) {
-            /*if (advisor instanceof AspectJPointcutAdvisor &&
-                    ((AspectJPointcutAdvisor) advisor).getAspectName().equals(beanName)) {
-                return true;
-            }*/
-        }
-        return super.shouldSkip(beanClass, beanName);
     }
 
     @Override

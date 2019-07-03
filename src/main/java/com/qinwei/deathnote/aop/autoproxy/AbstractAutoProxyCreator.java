@@ -39,9 +39,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
-        if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
+        if (isInfrastructureClass(beanClass)) {
             this.advisedBeans.put(beanClass, Boolean.FALSE);
-            return null;
         }
         return null;
     }
@@ -68,7 +67,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
             return bean;
         }
         //如果是基础设施类（Pointcut、Advice、Advisor 等接口的实现类），或是应该跳过的类，则不应该生成代理，此时直接返回 bean
-        if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
+        if (isInfrastructureClass(bean.getClass())) {
             this.advisedBeans.put(cacheKey, Boolean.FALSE);
             return bean;
         }
@@ -115,13 +114,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport imp
     }
 
     protected boolean advisorsPreFiltered() {
-        return false;
-    }
-
-    /**
-     * 用于子类覆盖
-     */
-    protected boolean shouldSkip(Class<?> beanClass, String beanName) {
         return false;
     }
 

@@ -31,7 +31,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
         //查找所有的通知器
         List<Advisor> candidateAdvisors = findCandidateAdvisors();
         //筛选可应用在 beanClass 上的 Advisor，通过 ClassFilter 和 MethodMatcher对目标类和方法进行匹配
-        List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
+        List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass);
         if (CollectionUtils.isEmpty(eligibleAdvisors)) {
             AnnotationOrderComparator.sort(eligibleAdvisors);
         }
@@ -41,12 +41,12 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
     /**
      * 筛选可应用在 beanClass 上的 Advisor，通过 ClassFilter 和 MethodMatcher对目标类和方法进行匹配
      */
-    protected List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> beanClass, String beanName) {
+    protected List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> beanClass) {
         return AopUtils.findAdvisorsThatCanApply(candidateAdvisors, beanClass);
     }
 
     /**
-     * 查找所有的通知器
+     * 从 beanFactory 里面查找所有 Advisor 的bean
      */
     protected List<Advisor> findCandidateAdvisors() {
         String[] advisorNames = getBeanFactory().getBeanNamesForType(Advisor.class);
@@ -58,5 +58,10 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
             advisors.add(getBeanFactory().getBean(name, Advisor.class));
         }
         return advisors;
+    }
+
+    @Override
+    protected boolean advisorsPreFiltered() {
+        return true;
     }
 }
