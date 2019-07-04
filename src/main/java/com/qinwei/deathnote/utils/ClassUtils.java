@@ -1,5 +1,9 @@
 package com.qinwei.deathnote.utils;
 
+import java.io.Closeable;
+import java.io.Externalizable;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -16,6 +20,12 @@ import java.util.*;
  */
 public class ClassUtils {
 
+    public static final String ARRAY_SUFFIX = "[]";
+
+    private static final String INTERNAL_ARRAY_PREFIX = "[";
+
+    private static final String NON_PRIMITIVE_ARRAY_PREFIX = "[L";
+
     private static final char PACKAGE_SEPARATOR = '.';
 
     private static final char PATH_SEPARATOR = '/';
@@ -31,6 +41,10 @@ public class ClassUtils {
     private static final Map<Class<?>, Class<?>> primitiveTypeToWrapperMap = new IdentityHashMap<>(8);
 
     public static final Map<Class<?>, Object> DEFAULT_TYPE_VALUES;
+
+    private static final Map<String, Class<?>> primitiveTypeNameMap = new HashMap<>(32);
+
+    private static final Map<String, Class<?>> commonClassCache = new HashMap<>(64);
 
     /**
      * 优先按public 排序，其次按照 构造器参数个数降序排
@@ -60,6 +74,34 @@ public class ClassUtils {
         values.put(long.class, (long) 0);
         values.put(double.class, (double) 0);
         DEFAULT_TYPE_VALUES = Collections.unmodifiableMap(values);
+
+        Set<Class<?>> primitiveTypes = new HashSet<>(32);
+        primitiveTypes.addAll(primitiveWrapperTypeMap.values());
+        Collections.addAll(primitiveTypes, boolean[].class, byte[].class, char[].class,
+                double[].class, float[].class, int[].class, long[].class, short[].class);
+        primitiveTypes.add(void.class);
+        for (Class<?> primitiveType : primitiveTypes) {
+            primitiveTypeNameMap.put(primitiveType.getName(), primitiveType);
+        }
+
+        registerCommonClasses(Boolean[].class, Byte[].class, Character[].class, Double[].class,
+                Float[].class, Integer[].class, Long[].class, Short[].class);
+        registerCommonClasses(Number.class, Number[].class, String.class, String[].class,
+                Class.class, Class[].class, Object.class, Object[].class);
+        registerCommonClasses(Throwable.class, Exception.class, RuntimeException.class,
+                Error.class, StackTraceElement.class, StackTraceElement[].class);
+        registerCommonClasses(Enum.class, Iterable.class, Iterator.class, Enumeration.class,
+                Collection.class, List.class, Set.class, Map.class, Map.Entry.class, Optional.class);
+
+        Class<?>[] javaLanguageInterfaceArray = {Serializable.class, Externalizable.class,
+                Closeable.class, AutoCloseable.class, Cloneable.class, Comparable.class};
+        registerCommonClasses(javaLanguageInterfaceArray);
+    }
+
+    private static void registerCommonClasses(Class<?>... commonClasses) {
+        for (Class<?> clazz : commonClasses) {
+            commonClassCache.put(clazz.getName(), clazz);
+        }
     }
 
     /**
@@ -206,14 +248,54 @@ public class ClassUtils {
      * 加载class
      */
     public static Class<?> forName(String className, ClassLoader classLoader) {
+        Class<?> clazz = resolvePrimitiveClassName(className);
+        if (clazz == null) {
+            clazz = commonClassCache.get(className);
+        }
+        if (clazz != null) {
+            return clazz;
+        }
+
         if (classLoader == null) {
             classLoader = getDefaultClassLoader();
         }
+
+        // 对数组进行特殊处理
+
+        // "java.lang.String[]" style arrays
+        if (className.endsWith(ARRAY_SUFFIX)) {
+            String elementClassName = className.substring(0, className.length() - ARRAY_SUFFIX.length());
+            Class<?> elementClass = forName(elementClassName, classLoader);
+            return Array.newInstance(elementClass, 0).getClass();
+        }
+
+        // "[Ljava.lang.String;" style arrays
+        if (className.startsWith(NON_PRIMITIVE_ARRAY_PREFIX) && className.endsWith(";")) {
+            String elementName = className.substring(NON_PRIMITIVE_ARRAY_PREFIX.length(), className.length() - 1);
+            Class<?> elementClass = forName(elementName, classLoader);
+            return Array.newInstance(elementClass, 0).getClass();
+        }
+
+        // "[[I" or "[[Ljava.lang.String;" style arrays
+        if (className.startsWith(INTERNAL_ARRAY_PREFIX)) {
+            String elementName = className.substring(INTERNAL_ARRAY_PREFIX.length());
+            Class<?> elementClass = forName(elementName, classLoader);
+            return Array.newInstance(elementClass, 0).getClass();
+        }
+
         try {
             return Class.forName(className, false, classLoader);
         } catch (Exception e) {
             throw new IllegalStateException("Unable to load class , className = {" + className + "}", e);
         }
+    }
+
+    public static Class<?> resolvePrimitiveClassName(String name) {
+        Class<?> result = null;
+        if (name != null && name.length() <= 8) {
+            result = primitiveTypeNameMap.get(name);
+        }
+        return result;
     }
 
     public static void makeAccessible(Constructor<?> ctor) {
@@ -362,6 +444,12 @@ public class ClassUtils {
         while (superclass != null && superclass != Object.class) {
             doGetAllDeclaredMethods(superclass, result);
         }
+    }
+
+    public static String getClassFileName(Class<?> clazz) {
+        String className = clazz.getName();
+        int lastDotIndex = className.lastIndexOf(PACKAGE_SEPARATOR);
+        return className.substring(lastDotIndex + 1) + CLASS_FILE_SUFFIX;
     }
 
 }

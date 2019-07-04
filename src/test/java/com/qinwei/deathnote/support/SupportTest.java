@@ -8,6 +8,7 @@ import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.config.StandardConfig;
 import com.qinwei.deathnote.context.event.PayLoadListener1;
 import com.qinwei.deathnote.context.support.ResolveType;
+import com.qinwei.deathnote.context.support.parameterdiscover.DefaultParameterNameDiscoverer;
 import com.qinwei.deathnote.log.MDCRunnable;
 import com.qinwei.deathnote.support.annotation.AnnotationA;
 import com.qinwei.deathnote.support.annotation.AnnotationB;
@@ -217,10 +218,10 @@ public class SupportTest {
         System.out.println();
 
         System.out.println("-----------Set<Domain> someSet,Domain domain, Collection<String> friends--------------");
-        Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class,Domain.class, Collection.class);
-        System.out.println(ResolveType.forType(method,0).resolveSpecialType(0));
-        System.out.println(ResolveType.forType(method,1).resolveSpecialType(0));
-        System.out.println(ResolveType.forType(method,2).resolveSpecialType(0));
+        Method method = Domain.class.getDeclaredMethod("writeMethod", Set.class, Domain.class, Collection.class);
+        System.out.println(ResolveType.forType(method, 0).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(method, 1).resolveSpecialType(0));
+        System.out.println(ResolveType.forType(method, 2).resolveSpecialType(0));
 
         System.out.println();
 
@@ -229,5 +230,26 @@ public class SupportTest {
         System.out.println(resolveType.resolveClass(0));
         System.out.println(resolveType.resolveClass(0, 0));
 
+    }
+
+    @Test
+    public void testParameterNameDiscoverer() throws NoSuchMethodException {
+        DefaultParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+
+        Method writeMethod = Domain.class.getDeclaredMethod("writeMethod", Set.class, Domain.class, Collection.class);
+        System.out.println(Arrays.toString(discoverer.getParameterNames(writeMethod)));
+        System.out.println(Arrays.toString(writeMethod.getParameters()));
+
+        System.out.println("-----------------------------------------------");
+
+        Method someSet = Domain.class.getDeclaredMethod("setSomeSet", Set.class);
+        System.out.println(Arrays.toString(discoverer.getParameterNames(someSet)));
+        System.out.println(Arrays.toString(someSet.getParameters()));
+
+        System.out.println("-----------------------------------------------");
+
+        Constructor<Domain> constructor = Domain.class.getConstructor(Domain.class, Number.class);
+        System.out.println(Arrays.toString(discoverer.getParameterNames(constructor)));
+        System.out.println(Arrays.toString(constructor.getParameters()));
     }
 }
