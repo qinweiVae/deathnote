@@ -14,6 +14,8 @@ import com.qinwei.deathnote.context.aware.Aware;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.aware.BeanNameAware;
 import com.qinwei.deathnote.context.support.ResolveType;
+import com.qinwei.deathnote.context.support.parameterdiscover.DefaultParameterNameDiscoverer;
+import com.qinwei.deathnote.context.support.parameterdiscover.ParameterNameDiscoverer;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 import com.qinwei.deathnote.utils.ObjectUtils;
@@ -39,6 +41,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
+
+    private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
     /**
      * 根据类型创建bean
@@ -317,9 +321,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
         // 否则从所有的bean中寻找，赋给方法参数
         else {
-            for (int i = 0; i < parameterTypes.length; i++) {
+            // 拿到method 的 参数名
+            String[] parameterNames = parameterNameDiscoverer.getParameterNames(factoryMethod);
+            for (int i = 0; i < parameterNames.length; i++) {
                 // 根据类型解析bean的依赖,从所有的bean中找到合适的bean注入到 方法参数
-                argsToUse[i] = resolveDependency(beanName, ResolveType.forType(parameterTypes[i]), autowiredBeanNames);
+                argsToUse[i] = resolveDependency(beanName, ResolveType.forType(parameterTypes[i], parameterNames[i]), autowiredBeanNames);
+                if (argsToUse[i] == null) {
+                    throw new IllegalStateException("Unable to resolve the bean ,bean name : [" + beanName + "],method : " + factoryMethod + ", parameter name : " + Arrays.toString(parameterNames));
+                }
             }
         }
         // 注册bean的依赖关系

@@ -190,7 +190,6 @@ public class SupportTest {
         System.out.println("--------------StringToLongConverter-------------");
         System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(0));
         System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(1));
-        //System.out.println(ResolveType.forType(StringToLongConverter.class).resolveClass(2));
 
         System.out.println();
 
@@ -199,7 +198,6 @@ public class SupportTest {
         System.out.println(ResolveType.forType(someList).resolveSpecialType(0));
         System.out.println(ResolveType.forType(someList).resolveSpecialTypeNested(0, 0));
         System.out.println(ResolveType.forType(someList).resolveSpecialTypeNested(0, 1));
-        //System.out.println(ResolveType.forType(someList).resolveSpecialType(1));
 
         System.out.println();
 
@@ -213,7 +211,6 @@ public class SupportTest {
         System.out.println("-----------Set<Domain>--------------");
         Field filed = Domain.class.getDeclaredField("someSet");
         System.out.println(ResolveType.forType(filed).resolveSpecialType(0));
-        //System.out.println(ResolveType.forType(filed).resolveSpecialType(1));
 
         System.out.println();
 

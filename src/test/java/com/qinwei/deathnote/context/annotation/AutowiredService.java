@@ -63,8 +63,8 @@ public class AutowiredService {
     }
 
     @Autowired
-    public void populateField(Worker worker, Domain1 domain1, Domain2 domain2, @Value("${author}") String author) {
-        this.male = worker;
+    public void populateField(Worker male, Domain1 domain1, Domain2 domain2, @Value("${author}") String author) {
+        this.male = male;
         this.domain1 = domain1;
         this.domain2 = domain2;
         domain2.setBrand(author);

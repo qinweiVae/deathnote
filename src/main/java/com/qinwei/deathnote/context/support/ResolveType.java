@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -158,7 +159,7 @@ public class ResolveType {
             return null;
         }
         if (index >= genericType.length) {
-            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index);
+            throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index + " , type : " + Arrays.toString(genericType));
         }
         Type type = genericType[index];
         // 对于 Map<String, List<Domain>> 这种嵌套情况下获取value的泛型时得到是ParameterizedType java.util.List<com.qinwei.deathnote.beans.bean.Domain> 需要特殊处理下
@@ -167,6 +168,9 @@ public class ResolveType {
                 type = ((ParameterizedType) type).getRawType();
             } else {
                 Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+                if (nestedIndex >= actualTypeArguments.length) {
+                    throw new ArrayIndexOutOfBoundsException("Array index out of range: " + index + " , type : " + Arrays.toString(actualTypeArguments));
+                }
                 type = actualTypeArguments[nestedIndex];
                 if (type instanceof ParameterizedType) {
                     type = ((ParameterizedType) type).getRawType();
@@ -182,7 +186,7 @@ public class ResolveType {
     /**
      * 获取Field的泛型
      * <p>
-     * 获取Method 中传入参数的泛型
+     * 获取Method 中传入参数的泛型,如果不是泛型则返回原始类型
      */
     public Map<Integer, Type[]> resolveSpecialType() {
 
@@ -203,7 +207,7 @@ public class ResolveType {
             Type[] parameterTypes = getMethod().getGenericParameterTypes();
             for (int i = 0; i < parameterTypes.length; i++) {
                 Type parameterType = parameterTypes[i];
-                Type[] actualTypeArguments = null;
+                Type[] actualTypeArguments;
                 if (parameterType instanceof ParameterizedType) {
                     actualTypeArguments = ((ParameterizedType) parameterType).getActualTypeArguments();
                 } else {

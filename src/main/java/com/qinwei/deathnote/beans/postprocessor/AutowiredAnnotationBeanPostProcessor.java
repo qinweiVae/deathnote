@@ -10,6 +10,8 @@ import com.qinwei.deathnote.context.annotation.Value;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.aware.ConfigAware;
 import com.qinwei.deathnote.context.support.ResolveType;
+import com.qinwei.deathnote.context.support.parameterdiscover.DefaultParameterNameDiscoverer;
+import com.qinwei.deathnote.context.support.parameterdiscover.ParameterNameDiscoverer;
 import com.qinwei.deathnote.support.resolve.DefaultPropertyResolver;
 import com.qinwei.deathnote.support.resolve.PropertyResolver;
 import com.qinwei.deathnote.utils.AnnotationUtils;
@@ -34,6 +36,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
     private Config config;
 
     private PropertyResolver propertyResolver = new DefaultPropertyResolver();
+
+    private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
@@ -98,6 +102,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
             //获取 所有方法参数的所有注解
             Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+            // 拿到method 的 参数名
+            String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
             for (int i = 0; i < arguments.length; i++) {
                 Class<?> parameterType = parameterTypes[i];
                 Object arg = null;
@@ -121,7 +127,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
                     }
                 } else {
                     // 根据类型解析bean的依赖,从所有的bean中找到合适的bean注入到 方法参数
-                    arg = this.beanFactory.resolveDependency(beanName, ResolveType.forType(parameterType), autowiredBeanNames);
+                    arg = this.beanFactory.resolveDependency(beanName, ResolveType.forType(parameterType, parameterNames[i]), autowiredBeanNames);
                 }
                 if (arg == null && required) {
                     throw new IllegalStateException("Unable to find a appropriate bean for the Method [" + method.getName() + "]  ParameterType [" + parameterType.getName() + "] in " + bean.getClass().getName());

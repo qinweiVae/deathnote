@@ -322,8 +322,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         //如果没有找到 primary 的 beanName，则寻找和 属性名称匹配的 beanName
         for (String name : beanNames) {
             String candidateName = name;
-            Object beanInstance = getBean(name);
-            if (beanInstance != null && matchesBeanName(candidateName, resolveType.getName())) {
+            if (matchesBeanName(candidateName, resolveType.getName())) {
                 return candidateName;
             }
         }

@@ -24,17 +24,17 @@ public class Application {
 
     @Bean(value = "female"/*, initMethod = "work", destroyMethod = "stop"*/)
     @DependsOn("child")
-    public Worker femaleWorker(Worker maleWorker) {
+    public Worker femaleWorker(Worker male) {
         FemaleWorker femaleWorker = new FemaleWorker();
-        femaleWorker.setName(maleWorker.getName());
+        femaleWorker.setName(male.getName());
         return femaleWorker;
     }
 
     @Bean(value = "child"/*, initMethod = "work", destroyMethod = "stop"*/)
     @DependsOn("male")
-    public Worker childWorker(Worker maleWorker) {
+    public Worker childWorker(Worker male) {
         ChildWorker childWorker = new ChildWorker();
-        childWorker.setName(maleWorker.getName());
+        childWorker.setName(male.getName());
         return childWorker;
     }
 
