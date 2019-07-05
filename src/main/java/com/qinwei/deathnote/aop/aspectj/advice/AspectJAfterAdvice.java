@@ -20,6 +20,20 @@ public class AspectJAfterAdvice extends AbstractAspectJAdvice implements MethodI
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        return null;
+        try {
+            return invocation.proceed();
+        } finally {
+            invokeAdviceMethod(getJoinPointMatch(), null, null);
+        }
+    }
+
+    @Override
+    public boolean isBeforeAdvice() {
+        return false;
+    }
+
+    @Override
+    public boolean isAfterAdvice() {
+        return true;
     }
 }

@@ -2,8 +2,11 @@ package com.qinwei.deathnote.aop.aspectj.advice;
 
 import com.qinwei.deathnote.aop.AspectInstanceFactory;
 import com.qinwei.deathnote.aop.aspectj.AspectJExpressionPointcut;
+import com.qinwei.deathnote.aop.aspectj.MethodInvocationProceedingJoinPoint;
 import com.qinwei.deathnote.aop.intercept.MethodInterceptor;
 import com.qinwei.deathnote.aop.intercept.MethodInvocation;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.weaver.tools.JoinPointMatch;
 
 import java.lang.reflect.Method;
 
@@ -20,6 +23,23 @@ public class AspectJAroundAdvice extends AbstractAspectJAdvice implements Method
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        return null;
+        ProceedingJoinPoint joinPoint = new MethodInvocationProceedingJoinPoint(invocation);
+        JoinPointMatch joinPointMatch = getJoinPointMatch(invocation);
+        return invokeAdviceMethod(joinPoint, joinPointMatch, null, null);
+    }
+
+    @Override
+    protected boolean supportsProceedingJoinPoint() {
+        return true;
+    }
+
+    @Override
+    public boolean isBeforeAdvice() {
+        return false;
+    }
+
+    @Override
+    public boolean isAfterAdvice() {
+        return false;
     }
 }

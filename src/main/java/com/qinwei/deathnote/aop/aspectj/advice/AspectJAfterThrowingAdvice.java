@@ -20,6 +20,32 @@ public class AspectJAfterThrowingAdvice extends AbstractAspectJAdvice implements
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        return null;
+        try {
+            return invocation.proceed();
+        } catch (Throwable ex) {
+            if (shouldInvokeOnThrowing(ex)) {
+                invokeAdviceMethod(getJoinPointMatch(), null, ex);
+            }
+            throw ex;
+        }
+    }
+
+    private boolean shouldInvokeOnThrowing(Throwable ex) {
+        return getThrowingType().isAssignableFrom(ex.getClass());
+    }
+
+    @Override
+    public void setThrowingName(String name) {
+        setThrowingNameNoCheck(name);
+    }
+
+    @Override
+    public boolean isBeforeAdvice() {
+        return false;
+    }
+
+    @Override
+    public boolean isAfterAdvice() {
+        return true;
     }
 }

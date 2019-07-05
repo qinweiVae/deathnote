@@ -33,28 +33,23 @@ public class LocalVariableTableParameterNameDiscoverer implements ParameterNameD
     @Override
     public String[] getParameterNames(Method method) {
         Method originalMethod = BridgeMethodResolver.findBridgedMethod(method);
-        Class<?> declaringClass = originalMethod.getDeclaringClass();
-        Map<Member, String[]> map = this.parameterNamesCache.get(declaringClass);
-        if (map == null) {
-            map = inspectClass(declaringClass);
-            this.parameterNamesCache.put(declaringClass, map);
-        }
-        if (map != NO_DEBUG_INFO_MAP) {
-            return map.get(originalMethod);
-        }
-        return null;
+        return getParameterNames((Member) originalMethod);
     }
 
     @Override
     public String[] getParameterNames(Constructor<?> ctor) {
-        Class<?> declaringClass = ctor.getDeclaringClass();
+        return getParameterNames((Member) ctor);
+    }
+
+    private String[] getParameterNames(Member member) {
+        Class<?> declaringClass = member.getDeclaringClass();
         Map<Member, String[]> map = this.parameterNamesCache.get(declaringClass);
         if (map == null) {
             map = inspectClass(declaringClass);
             this.parameterNamesCache.put(declaringClass, map);
         }
         if (map != NO_DEBUG_INFO_MAP) {
-            return map.get(ctor);
+            return map.get(member);
         }
         return null;
     }

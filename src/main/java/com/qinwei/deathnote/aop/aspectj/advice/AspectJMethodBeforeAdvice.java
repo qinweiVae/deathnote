@@ -19,6 +19,16 @@ public class AspectJMethodBeforeAdvice extends AbstractAspectJAdvice implements 
 
     @Override
     public void before(Method method, Object[] args, Object target) throws Throwable {
+        invokeAdviceMethod(getJoinPointMatch(), null, null);
+    }
 
+    @Override
+    public boolean isBeforeAdvice() {
+        return true;
+    }
+
+    @Override
+    public boolean isAfterAdvice() {
+        return false;
     }
 }

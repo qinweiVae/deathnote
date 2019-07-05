@@ -108,6 +108,12 @@ public class BridgeMethodResolver {
         }
         for (int i = 0; i < candidateParameters.length; i++) {
             Class<?> candidateParameter = candidateParameters[i];
+            // 如果是数组的话
+            if (candidateParameter.isArray()) {
+                if (!candidateParameter.getComponentType().equals(declaringClass.getComponentType())) {
+                    return false;
+                }
+            }
             ResolveType resolveType = ResolveType.forType(genericMethod, i);
             if (!candidateParameter.equals(resolveType.resolveSpecialType(0))) {
                 return false;

@@ -16,6 +16,7 @@ import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
 import com.qinwei.deathnote.support.convert.Converter;
 import com.qinwei.deathnote.utils.AnnotationUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
+import com.qinwei.deathnote.utils.StringUtils;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -166,9 +167,17 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
                 break;
             case AtAfterReturning:
                 advice = new AspectJAfterReturningAdvice(adviceMethod, expressionPointcut, aspectInstanceFactory);
+                AfterReturning afterReturningAnnotation = (AfterReturning) aspectJAnnotation.getAnnotation();
+                if (StringUtils.isNotEmpty(afterReturningAnnotation.returning())) {
+                    advice.setReturningName(afterReturningAnnotation.returning());
+                }
                 break;
             case AtAfterThrowing:
                 advice = new AspectJAfterThrowingAdvice(adviceMethod, expressionPointcut, aspectInstanceFactory);
+                AfterThrowing afterThrowingAnnotation = (AfterThrowing) aspectJAnnotation.getAnnotation();
+                if (StringUtils.isNotEmpty(afterThrowingAnnotation.throwing())) {
+                    advice.setThrowingName(afterThrowingAnnotation.throwing());
+                }
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported advice type on method: " + adviceMethod);
