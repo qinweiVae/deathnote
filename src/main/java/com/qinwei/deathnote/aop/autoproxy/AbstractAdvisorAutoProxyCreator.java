@@ -1,6 +1,11 @@
 package com.qinwei.deathnote.aop.autoproxy;
 
+import com.qinwei.deathnote.aop.annotation.PointcutAdvisorImpl;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
+import com.qinwei.deathnote.aop.aspectj.AspectJExpressionPointcut;
+import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
+import com.qinwei.deathnote.aop.aspectj.advice.AbstractAspectJAdvice;
+import com.qinwei.deathnote.aop.intercept.ExposeInvocationInterceptor;
 import com.qinwei.deathnote.aop.support.AopUtils;
 import com.qinwei.deathnote.context.annotation.AnnotationOrderComparator;
 import com.qinwei.deathnote.utils.CollectionUtils;
@@ -32,10 +37,43 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
         List<Advisor> candidateAdvisors = findCandidateAdvisors();
         //筛选可应用在 beanClass 上的 Advisor，通过 ClassFilter 和 MethodMatcher对目标类和方法进行匹配
         List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass);
-        if (CollectionUtils.isEmpty(eligibleAdvisors)) {
-            AnnotationOrderComparator.sort(eligibleAdvisors);
+
+        makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
+
+        if (CollectionUtils.isNotEmpty(eligibleAdvisors)) {
+            sortAdvisors(eligibleAdvisors);
         }
         return eligibleAdvisors;
+    }
+
+    private void makeAdvisorChainAspectJCapableIfNecessary(List<Advisor> advisors) {
+        // 如果通知器列表是一个空列表，则啥都不做
+        if (!advisors.isEmpty()) {
+            boolean foundAspectJAdvice = false;
+            //循环用于检测 advisors 列表中是否存在 AspectJ 类型的 Advisor 或 Advice
+            for (Advisor advisor : advisors) {
+                if (isAspectJAdvice(advisor)) {
+                    foundAspectJAdvice = true;
+                    break;
+                }
+            }
+            //向 advisors 列表的首部添加 DefaultPointcutAdvisor，即 ExposeInvocationInterceptor
+            if (foundAspectJAdvice && !advisors.contains(ExposeInvocationInterceptor.ADVISOR)) {
+                advisors.add(0, ExposeInvocationInterceptor.ADVISOR);
+            }
+        }
+    }
+
+    private boolean isAspectJAdvice(Advisor advisor) {
+        return (advisor instanceof PointcutAdvisorImpl ||
+                advisor.getAdvice() instanceof AbstractAspectJAdvice ||
+                (advisor instanceof PointcutAdvisor &&
+                        ((PointcutAdvisor) advisor).getPointcut() instanceof AspectJExpressionPointcut));
+    }
+
+    protected List<Advisor> sortAdvisors(List<Advisor> advisors) {
+        AnnotationOrderComparator.sort(advisors);
+        return advisors;
     }
 
     /**

@@ -2,12 +2,18 @@ package com.qinwei.deathnote.aop.annotation;
 
 import com.qinwei.deathnote.aop.AspectInstanceFactory;
 import com.qinwei.deathnote.aop.BeanFactoryAspectInstanceFactory;
+import com.qinwei.deathnote.aop.aspectj.Advice;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
+import com.qinwei.deathnote.aop.aspectj.advice.AbstractAspectJAdvice;
 import com.qinwei.deathnote.aop.autoproxy.AbstractAdvisorAutoProxyCreator;
+import com.qinwei.deathnote.aop.support.AspectJPrecedenceComparator;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
+import com.qinwei.deathnote.utils.ClassUtils;
+import org.aspectj.util.PartialOrder;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +24,8 @@ import java.util.regex.Pattern;
  * @date 2019-07-01
  */
 public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
+
+    private static final Comparator<Advisor> DEFAULT_PRECEDENCE_COMPARATOR = new AspectJPrecedenceComparator();
 
     private List<Pattern> includePatterns;
 
@@ -147,8 +155,68 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AbstractAdvisorAutoP
     }
 
     @Override
+    protected List<Advisor> sortAdvisors(List<Advisor> advisors) {
+        List<PartiallyComparableAdvisorHolder> partiallyComparableAdvisors = new ArrayList<>(advisors.size());
+        for (Advisor element : advisors) {
+            partiallyComparableAdvisors.add(new PartiallyComparableAdvisorHolder(element, DEFAULT_PRECEDENCE_COMPARATOR));
+        }
+        List<PartiallyComparableAdvisorHolder> sorted = PartialOrder.sort(partiallyComparableAdvisors);
+        if (sorted != null) {
+            List<Advisor> result = new ArrayList<>(advisors.size());
+            for (PartiallyComparableAdvisorHolder pcAdvisor : sorted) {
+                result.add(pcAdvisor.getAdvisor());
+            }
+            return result;
+        } else {
+            return super.sortAdvisors(advisors);
+        }
+    }
+
+    @Override
     protected boolean isInfrastructureClass(Class<?> beanClass) {
         return super.isInfrastructureClass(beanClass) || (this.advisorFactory != null && this.advisorFactory.isAspect(beanClass));
+    }
+
+    private static class PartiallyComparableAdvisorHolder implements PartialOrder.PartialComparable {
+
+        private final Advisor advisor;
+
+        private final Comparator<Advisor> comparator;
+
+        public PartiallyComparableAdvisorHolder(Advisor advisor, Comparator<Advisor> comparator) {
+            this.advisor = advisor;
+            this.comparator = comparator;
+        }
+
+        @Override
+        public int compareTo(Object obj) {
+            Advisor otherAdvisor = ((PartiallyComparableAdvisorHolder) obj).advisor;
+            return this.comparator.compare(this.advisor, otherAdvisor);
+        }
+
+        @Override
+        public int fallbackCompareTo(Object obj) {
+            return 0;
+        }
+
+        public Advisor getAdvisor() {
+            return this.advisor;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            Advice advice = this.advisor.getAdvice();
+            sb.append(ClassUtils.getShortName(advice.getClass().getName()));
+            sb.append(": ");
+            if (advice instanceof AbstractAspectJAdvice) {
+                AbstractAspectJAdvice ajAdvice = (AbstractAspectJAdvice) advice;
+                sb.append(ajAdvice.getAspectName());
+                sb.append(", declaration order ");
+                sb.append(ajAdvice.getDeclarationOrder());
+            }
+            return sb.toString();
+        }
     }
 
 }
