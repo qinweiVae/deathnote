@@ -31,6 +31,9 @@ public class AspectJAopUtils {
         return (anAdvisor.getAdvice() instanceof BeforeAdvice);
     }
 
+    /**
+     *  @After，@AfterReturning，@AfterThrowing这三个注解是afterAdvice
+     */
     public static boolean isAfterAdvice(Advisor anAdvisor) {
         AspectJPrecedenceInformation precedenceInfo = getAspectJPrecedenceInformationFor(anAdvisor);
         if (precedenceInfo != null) {

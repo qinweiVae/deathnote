@@ -26,7 +26,9 @@ public class AspectJPrecedenceComparator implements Comparator<Advisor> {
 
     @Override
     public int compare(Advisor o1, Advisor o2) {
+        //先根据@Order 的序号比较
         int advisorPrecedence = this.advisorComparator.compare(o1, o2);
+        //如果返回的优先级相同，则按另一种规则比较
         if (advisorPrecedence == SAME_PRECEDENCE && declaredInSameAspect(o1, o2)) {
             advisorPrecedence = comparePrecedenceWithinAspect(o1, o2);
         }
@@ -34,10 +36,11 @@ public class AspectJPrecedenceComparator implements Comparator<Advisor> {
     }
 
     private int comparePrecedenceWithinAspect(Advisor advisor1, Advisor advisor2) {
+        //@After，@AfterReturning，@AfterThrowing这三个注解是afterAdvice
         boolean isAfterAdvice = AspectJAopUtils.isAfterAdvice(advisor1) || AspectJAopUtils.isAfterAdvice(advisor2);
 
         int adviceDeclarationOrderDelta = getAspectDeclarationOrder(advisor1) - getAspectDeclarationOrder(advisor2);
-
+        // after类型的advice order越大优先级越高，其他的是order越小，优先级越高
         if (isAfterAdvice) {
             if (adviceDeclarationOrderDelta < 0) {
                 return LOWER_PRECEDENCE;
@@ -57,6 +60,9 @@ public class AspectJPrecedenceComparator implements Comparator<Advisor> {
         }
     }
 
+    /**
+     * 比较 bean name 是否 相同
+     */
     private boolean declaredInSameAspect(Advisor advisor1, Advisor advisor2) {
         return (hasAspectName(advisor1) && hasAspectName(advisor2) &&
                 getAspectName(advisor1).equals(getAspectName(advisor2)));

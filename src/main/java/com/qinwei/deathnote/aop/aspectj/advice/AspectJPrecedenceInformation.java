@@ -6,8 +6,14 @@ package com.qinwei.deathnote.aop.aspectj.advice;
  */
 public interface AspectJPrecedenceInformation {
 
+    /**
+     * 就是配置了@Aspect 注解 的 bean name
+     */
     String getAspectName();
 
+    /**
+     * 用于 排序
+     */
     int getDeclarationOrder();
 
     boolean isBeforeAdvice();
