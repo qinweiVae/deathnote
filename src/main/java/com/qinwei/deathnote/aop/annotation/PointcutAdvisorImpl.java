@@ -52,7 +52,7 @@ public class PointcutAdvisorImpl implements PointcutAdvisor {
     }
 
     private Advice instantiateAdvice(AspectJExpressionPointcut pointcut) {
-        Advice advice = this.advisorFactory.getAdvice(this.adviceMethod, this.pointcut, this.aspectInstanceFactory, declarationOrder, aspectName);
+        Advice advice = this.advisorFactory.getAdvice(this.adviceMethod, pointcut, this.aspectInstanceFactory, declarationOrder, aspectName);
         return (advice != null ? advice : EMPTY_ADVICE);
     }
 }

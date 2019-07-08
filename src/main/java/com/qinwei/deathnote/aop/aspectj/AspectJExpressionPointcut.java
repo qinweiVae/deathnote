@@ -1,10 +1,12 @@
 package com.qinwei.deathnote.aop.aspectj;
 
+import com.qinwei.deathnote.aop.support.AopUtils;
 import com.qinwei.deathnote.aop.support.ClassFilter;
 import com.qinwei.deathnote.aop.support.MethodMatcher;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.reflect.ShadowMatchImpl;
 import org.aspectj.weaver.tools.PointcutExpression;
 import org.aspectj.weaver.tools.PointcutParameter;
 import org.aspectj.weaver.tools.PointcutParser;
@@ -12,6 +14,7 @@ import org.aspectj.weaver.tools.PointcutPrimitive;
 import org.aspectj.weaver.tools.ShadowMatch;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,21 +46,12 @@ public class AspectJExpressionPointcut implements ClassFilter, MethodMatcher, Po
 
     private Class<?> pointcutDeclarationScope;
 
-    private String[] pointcutParameterNames = new String[0];
-
-    private Class<?>[] pointcutParameterTypes = new Class<?>[0];
-
     private transient PointcutExpression pointcutExpression;
 
     private transient Map<Method, ShadowMatch> shadowMatchCache = new ConcurrentHashMap<>(32);
 
-    public AspectJExpressionPointcut(Class<?> declarationScope, String[] paramNames, Class<?>[] paramTypes) {
+    public AspectJExpressionPointcut(Class<?> declarationScope) {
         this.pointcutDeclarationScope = declarationScope;
-        if (paramNames.length != paramTypes.length) {
-            throw new IllegalStateException("Number of pointcut parameter names must match number of pointcut parameter types");
-        }
-        this.pointcutParameterNames = paramNames;
-        this.pointcutParameterTypes = paramTypes;
     }
 
     @Override
@@ -85,13 +79,12 @@ public class AspectJExpressionPointcut implements ClassFilter, MethodMatcher, Po
     private PointcutExpression buildPointcutExpression() {
         PointcutParser parser = PointcutParser.
                 getPointcutParserSupportingSpecifiedPrimitivesAndUsingSpecifiedClassLoaderForResolution(SUPPORTED_PRIMITIVES, ClassUtils.getDefaultClassLoader());
-        PointcutParameter[] pointcutParameters = new PointcutParameter[this.pointcutParameterNames.length];
-        for (int i = 0; i < pointcutParameters.length; i++) {
-            pointcutParameters[i] = parser.createPointcutParameter(this.pointcutParameterNames[i], this.pointcutParameterTypes[i]);
-        }
-        return parser.parsePointcutExpression(replaceBooleanOperators(getExpression()), this.pointcutDeclarationScope, pointcutParameters);
+        return parser.parsePointcutExpression(replaceBooleanOperators(getExpression()), this.pointcutDeclarationScope, new PointcutParameter[0]);
     }
 
+    /**
+     * 可以支持 and , or , not
+     */
     private String replaceBooleanOperators(String pcExpr) {
         if (pcExpr == null) {
             throw new IllegalArgumentException("No expression set");
@@ -115,7 +108,52 @@ public class AspectJExpressionPointcut implements ClassFilter, MethodMatcher, Po
 
     @Override
     public boolean matches(Method method, Class<?> targetClass) {
+        obtainPointcutExpression();
+
+        ShadowMatch shadowMatch = getTargetShadowMatch(method, targetClass);
+        //todo
         return false;
+    }
+
+    private ShadowMatch getTargetShadowMatch(Method method, Class<?> targetClass) {
+        // 拿到实际的 method，比如如果method是接口方法，那么就找到该接口方法的实现类的方法
+        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
+        if (targetMethod.getDeclaringClass().isInterface()) {
+            Set<Class<?>> interfaces = ClassUtils.getAllInterfacesAsSet(targetClass);
+            if (interfaces.size() > 1) {
+                //创建jdk 代理
+                Class<?> proxy = ClassUtils.createJdkProxy(interfaces.toArray(new Class[0]), targetClass.getClassLoader());
+                targetMethod = ClassUtils.getMostSpecificMethod(targetMethod, proxy);
+            }
+        }
+        return getShadowMatch(targetMethod, method);
+    }
+
+    /**
+     * double check 设置缓存
+     */
+    private ShadowMatch getShadowMatch(Method targetMethod, Method originalMethod) {
+        ShadowMatch shadowMatch = this.shadowMatchCache.get(targetMethod);
+        if (shadowMatch == null) {
+            synchronized (this.shadowMatchCache) {
+                shadowMatch = this.shadowMatchCache.get(targetMethod);
+                if (shadowMatch == null) {
+                    shadowMatch = obtainPointcutExpression().matchesMethodExecution(targetMethod);
+                    // targetMethod 没有匹配到，则使用 originalMethod
+                    if (targetMethod != originalMethod && (shadowMatch == null ||
+                            (shadowMatch.neverMatches() && Proxy.isProxyClass(targetMethod.getDeclaringClass())))) {
+                        shadowMatch = obtainPointcutExpression().matchesMethodExecution(originalMethod);
+
+                    }
+                    // 这里如果目标方法和原始方法都无法与切点表达式匹配，就直接封装一个不匹配的结果
+                    if (shadowMatch == null) {
+                        shadowMatch = new ShadowMatchImpl(org.aspectj.util.FuzzyBoolean.NO, null, null, null);
+                    }
+                    this.shadowMatchCache.put(targetMethod, shadowMatch);
+                }
+            }
+        }
+        return shadowMatch;
     }
 
     @Override

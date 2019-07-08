@@ -9,10 +9,12 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.time.temporal.Temporal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author qinwei
@@ -326,25 +328,52 @@ public class ClassUtils {
     }
 
     /**
-     * 根据方法名和方法参数查找class对应的method,如果当前class没有找到,则找寻其父类
+     * 根据方法名和方法参数查找class对应的method,如果当前class没有找到,则找寻其父类,接口
      */
     public static Method findMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
-        try {
-            return clazz.getMethod(methodName, paramTypes);
-        } catch (NoSuchMethodException e) {
-            return findDeclaredMethod(clazz, methodName, paramTypes);
-        }
-    }
-
-    public static Method findDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
-        try {
-            return clazz.getDeclaredMethod(methodName, paramTypes);
-        } catch (NoSuchMethodException e) {
-            if (clazz.getSuperclass() != null) {
-                return findDeclaredMethod(clazz.getSuperclass(), methodName, paramTypes);
+        Class<?> searchType = clazz;
+        while (searchType != null) {
+            Method[] methods = (searchType.isInterface() ? searchType.getMethods() : findDeclaredMethods(searchType));
+            for (Method method : methods) {
+                // 如果 方法名 和 方法参数 完全一样
+                if (methodName.equals(method.getName()) &&
+                        (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
+                    return method;
+                }
             }
+            searchType = searchType.getSuperclass();
         }
         return null;
+    }
+
+    /**
+     * 拿到所有方法，包括 clazz 接口 上的 default 方法
+     */
+    public static Method[] findDeclaredMethods(Class<?> clazz) {
+        Method[] declaredMethods = clazz.getDeclaredMethods();
+        List<Method> defaultMethods = findConcreteMethodsOnInterfaces(clazz);
+        // 如果没有 default 方法，直接返回
+        if (CollectionUtils.isEmpty(defaultMethods)) {
+            return declaredMethods;
+        }
+        Method[] result = new Method[declaredMethods.length + defaultMethods.size()];
+        System.arraycopy(declaredMethods, 0, result, 0, declaredMethods.length);
+        int index = declaredMethods.length;
+        for (Method defaultMethod : defaultMethods) {
+            result[index] = defaultMethod;
+            index++;
+        }
+        return result;
+    }
+
+    /**
+     * 拿到所有 接口 上的 default 方法
+     */
+    private static List<Method> findConcreteMethodsOnInterfaces(Class<?> clazz) {
+        return Arrays.stream(clazz.getInterfaces())
+                .flatMap(ifc -> Arrays.stream(ifc.getMethods()))
+                .filter(ifcMethod -> !Modifier.isAbstract(ifcMethod.getModifiers()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -446,10 +475,59 @@ public class ClassUtils {
         }
     }
 
+    /**
+     * 拿到 class 的 name (带.class的)
+     */
     public static String getClassFileName(Class<?> clazz) {
         String className = clazz.getName();
         int lastDotIndex = className.lastIndexOf(PACKAGE_SEPARATOR);
         return className.substring(lastDotIndex + 1) + CLASS_FILE_SUFFIX;
     }
 
+    /**
+     * 拿到最明确的 method
+     */
+    public static Method getMostSpecificMethod(Method method, Class<?> targetClass) {
+        if (targetClass != null && targetClass != method.getDeclaringClass() && isOverridable(method, targetClass)) {
+            //如果是 Public 方法
+            if (Modifier.isPublic(method.getModifiers())) {
+                try {
+                    return targetClass.getMethod(method.getName(), method.getParameterTypes());
+                } catch (NoSuchMethodException ex) {
+                    return method;
+                }
+            }
+            // 从父类 和 接口 中找
+            else {
+                Method specificMethod = findMethod(targetClass, method.getName(), method.getParameterTypes());
+                return specificMethod != null ? specificMethod : method;
+            }
+        }
+        return method;
+    }
+
+    /**
+     * 判断 method 是否可用被 覆盖（如果method 是 public 或者 protected ，method 所在的定义类和 targetClass在 同一个包下面 ）
+     */
+    private static boolean isOverridable(Method method, Class<?> targetClass) {
+        if (Modifier.isPrivate(method.getModifiers())) {
+            return false;
+        }
+        if (Modifier.isPublic(method.getModifiers()) || Modifier.isProtected(method.getModifiers())) {
+            return true;
+        }
+        return (targetClass == null ||
+                getPackageName(method.getDeclaringClass()).equals(getPackageName(targetClass)));
+    }
+
+
+    /**
+     * 创建jdk 代理
+     */
+    public static Class<?> createJdkProxy(Class<?>[] interfaces, ClassLoader classLoader) {
+        if (interfaces == null) {
+            throw new IllegalArgumentException("Interface array must not be empty");
+        }
+        return Proxy.getProxyClass(classLoader, interfaces);
+    }
 }

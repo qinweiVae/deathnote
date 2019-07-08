@@ -132,7 +132,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
             return null;
         }
         // 创建一个 AspectJExpressionPointcut 对象
-        AspectJExpressionPointcut ajexp = new AspectJExpressionPointcut(aspectClass, new String[0], new Class<?>[0]);
+        AspectJExpressionPointcut ajexp = new AspectJExpressionPointcut(aspectClass);
         // 设置切点表达式
         ajexp.setExpression(aspectJAnnotation.getPointcutExpression());
         return ajexp;

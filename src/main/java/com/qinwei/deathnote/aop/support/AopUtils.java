@@ -5,9 +5,11 @@ import com.qinwei.deathnote.aop.aspectj.Pointcut;
 import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
+import com.qinwei.deathnote.context.support.BridgeMethodResolver;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,6 +103,19 @@ public class AopUtils {
                 .map(ClassUtils::getAllDeclaredMethods)
                 .flatMap(Collection::stream)
                 .anyMatch(method -> methodMatcher.matches(method, targetClass));
+    }
+
+    /**
+     * 给定一个方法(可能来自接口)或者当前AOP调用中使用的目标类，如果存在相应的目标方法，则查找相应的目标方法。
+     * 例如，方法可能是IFoo.bar()，目标类可能是DefaultFoo。这种情况下，方法可能是DefaultFoo.bar()
+     */
+    public static Method getMostSpecificMethod(Method method, Class<?> targetClass) {
+        // 如果是 CGLib 代理类
+        Class<?> specificTargetClass = (targetClass != null ? ClassUtils.getUserClass(targetClass) : null);
+        //拿到最明确的 method
+        Method resolvedMethod = ClassUtils.getMostSpecificMethod(method, specificTargetClass);
+        // 如果是桥接方法
+        return BridgeMethodResolver.findBridgedMethod(resolvedMethod);
     }
 
     public static boolean equalsInProxy(AdvisedSupport a, AdvisedSupport b) {
