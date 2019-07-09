@@ -112,7 +112,7 @@ public class AopUtils {
     public static Method getMostSpecificMethod(Method method, Class<?> targetClass) {
         // 如果是 CGLib 代理类
         Class<?> specificTargetClass = (targetClass != null ? ClassUtils.getUserClass(targetClass) : null);
-        //拿到最明确的 method
+        // 解析Method  得到子类覆盖的方法
         Method resolvedMethod = ClassUtils.getMostSpecificMethod(method, specificTargetClass);
         // 如果是桥接方法
         return BridgeMethodResolver.findBridgedMethod(resolvedMethod);

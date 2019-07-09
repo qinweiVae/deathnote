@@ -485,7 +485,7 @@ public class ClassUtils {
     }
 
     /**
-     * 拿到最明确的 method
+     * 解析Method  得到子类覆盖的方法
      */
     public static Method getMostSpecificMethod(Method method, Class<?> targetClass) {
         if (targetClass != null && targetClass != method.getDeclaringClass() && isOverridable(method, targetClass)) {

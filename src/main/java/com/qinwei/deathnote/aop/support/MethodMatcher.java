@@ -8,6 +8,9 @@ import java.lang.reflect.Method;
  */
 public interface MethodMatcher {
 
+    /**
+     * 对方法进行过滤匹配，MethodMatcher主要指的是@Before，@After等注解中使用的切点表达式
+     */
     boolean matches(Method method, Class<?> targetClass);
 
     boolean isRuntime();
