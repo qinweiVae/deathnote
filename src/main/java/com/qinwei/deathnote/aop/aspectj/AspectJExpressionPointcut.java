@@ -10,6 +10,7 @@ import com.qinwei.deathnote.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FuzzyBoolean;
 import org.aspectj.weaver.reflect.ShadowMatchImpl;
+import org.aspectj.weaver.tools.JoinPointMatch;
 import org.aspectj.weaver.tools.PointcutExpression;
 import org.aspectj.weaver.tools.PointcutParameter;
 import org.aspectj.weaver.tools.PointcutParser;
@@ -52,7 +53,7 @@ public class AspectJExpressionPointcut implements ClassFilter, MethodMatcher, Po
     //用来判断方法或者类是否匹配表达式
     private transient PointcutExpression pointcutExpression;
 
-    private transient Map<Method, ShadowMatch> shadowMatchCache = new ConcurrentHashMap<>(32);
+    private final transient Map<Method, ShadowMatch> shadowMatchCache = new ConcurrentHashMap<>(32);
 
     public AspectJExpressionPointcut(Class<?> declarationScope) {
         this.pointcutDeclarationScope = declarationScope;
@@ -194,7 +195,9 @@ public class AspectJExpressionPointcut implements ClassFilter, MethodMatcher, Po
         MethodInvocation mi = ExposeInvocationInterceptor.currentInvocation();
         Object targetObject = mi.getThis();
         Object thisObject = mi.getProxy();
-        //todo
+
+        JoinPointMatch joinPointMatch = shadowMatch.matchesJoinPoint(thisObject, targetObject, args);
+        return joinPointMatch.matches();
     }
 
     public String getExpression() {

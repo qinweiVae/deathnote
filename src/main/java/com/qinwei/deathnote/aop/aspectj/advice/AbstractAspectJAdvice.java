@@ -117,19 +117,17 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
         if (this.returningName != null) {
             if (!this.argumentBindings.containsKey(this.returningName)) {
                 throw new IllegalStateException("Returning argument name '" + this.returningName + "' was not bound in advice arguments");
-            } else {
-                Integer index = this.argumentBindings.get(this.returningName);
-                this.returningType = this.aspectJAdviceMethod.getParameterTypes()[index];
             }
+            Integer index = this.argumentBindings.get(this.returningName);
+            this.returningType = this.aspectJAdviceMethod.getParameterTypes()[index];
         }
         // 如果是 @AfterThrowing
         if (this.throwingName != null) {
             if (!this.argumentBindings.containsKey(this.throwingName)) {
                 throw new IllegalStateException("Throwing argument name '" + this.throwingName + "' was not bound in advice arguments");
-            } else {
-                Integer index = this.argumentBindings.get(this.throwingName);
-                this.throwingType = this.aspectJAdviceMethod.getParameterTypes()[index];
             }
+            Integer index = this.argumentBindings.get(this.throwingName);
+            this.throwingType = this.aspectJAdviceMethod.getParameterTypes()[index];
         }
     }
 
