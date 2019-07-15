@@ -42,7 +42,7 @@ public class ProxyProcessorSupport extends ProxyConfig implements AopInfrastruct
                 .anyMatch(inf -> !isConfigurationCallbackInterface(inf) &&
                         !isInternalLanguageInterface(inf) &&
                         inf.getMethods().length > 0);
-
+        // 如果实现了接口，添加到 AdvisedSupport 中
         if (hasProxyInterface) {
             for (Class<?> inf : interfaces) {
                 proxyFactory.addInterface(inf);

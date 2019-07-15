@@ -530,4 +530,16 @@ public class ClassUtils {
         }
         return Proxy.getProxyClass(classLoader, interfaces);
     }
+
+    public static boolean isEqualsMethod(Method method) {
+        if (method == null || !method.getName().equals("equals")) {
+            return false;
+        }
+        Class<?>[] paramTypes = method.getParameterTypes();
+        return (paramTypes.length == 1 && paramTypes[0] == Object.class);
+    }
+
+    public static boolean isHashCodeMethod(Method method) {
+        return (method != null && method.getName().equals("hashCode") && method.getParameterCount() == 0);
+    }
 }
