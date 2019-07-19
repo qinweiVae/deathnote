@@ -1,11 +1,14 @@
 package com.qinwei.deathnote.aop.support;
 
 import com.qinwei.deathnote.aop.Advised;
+import com.qinwei.deathnote.aop.annotation.AnnotationAwareAspectJAutoProxyCreator;
 import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.aspectj.Pointcut;
 import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
+import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
+import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.support.BridgeMethodResolver;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
@@ -30,6 +33,45 @@ public class AopUtils {
     private static final String ORIGINAL_TARGET_CLASS = "originalTargetClass";
 
     private static final String PRESERVE_TARGET_CLASS_ATTRIBUTE = "preserveTargetClass";
+
+    public static final String AUTO_PROXY_CREATOR_BEAN_NAME = "internalAutoProxyCreator";
+
+
+    public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry) {
+        return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry);
+    }
+
+    /**
+     * 注册 BeanDefinition
+     */
+    private static BeanDefinition registerOrEscalateApcAsRequired(Class<?> cls, BeanDefinitionRegistry registry) {
+        if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+            return null;
+        }
+        RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
+        registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
+        return beanDefinition;
+    }
+
+    /**
+     * 设置 proxyTargetClass 属性
+     */
+    public static void forceAutoProxyCreatorToUseClassProxying(BeanDefinitionRegistry registry) {
+        if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+            BeanDefinition definition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+            definition.getPropertyValues().put("proxyTargetClass", Boolean.TRUE);
+        }
+    }
+
+    /**
+     * 设置 exposeProxy 属性
+     */
+    public static void forceAutoProxyCreatorToExposeProxy(BeanDefinitionRegistry registry) {
+        if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+            BeanDefinition definition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+            definition.getPropertyValues().put("exposeProxy", Boolean.TRUE);
+        }
+    }
 
     /**
      * 判断是否是代理类
