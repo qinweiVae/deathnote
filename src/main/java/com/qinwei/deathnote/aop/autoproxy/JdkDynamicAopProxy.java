@@ -84,9 +84,9 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
                 setProxyContext = true;
             }
 
-            // 得到目标对象
+            // 得到目标对象 (就是 bean)
             target = targetSource.getTarget();
-            Class<?> targetClass = (target != null ? target.getClass() : null);
+            Class<?> targetClass = target != null ? target.getClass() : null;
 
             Object retVal;
 
@@ -94,6 +94,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
             List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
             // 如果没有任何拦截器,则通过反射调用对应方法。
             if (CollectionUtils.isEmpty(chain)) {
+                //解析method 的可变参数
                 Object[] argsToUse = AopUtils.adaptArgumentsIfNecessary(method, args);
                 ClassUtils.makeAccessible(method);
                 retVal = method.invoke(target, argsToUse);

@@ -10,6 +10,9 @@ public class SingletonTargetSource implements TargetSource, Serializable {
 
     private static final long serialVersionUID = -4121497267591374747L;
 
+    /**
+     * 就是 bean
+     */
     private final Object target;
 
 
@@ -23,6 +26,9 @@ public class SingletonTargetSource implements TargetSource, Serializable {
         return true;
     }
 
+    /**
+     * 拿到 bean
+     */
     @Override
     public Object getTarget() throws Exception {
         return this.target;
@@ -33,6 +39,9 @@ public class SingletonTargetSource implements TargetSource, Serializable {
 
     }
 
+    /**
+     * bean 的 class
+     */
     @Override
     public Class<?> getTargetClass() {
         return this.target.getClass();
