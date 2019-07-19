@@ -531,6 +531,38 @@ public class ClassUtils {
         return Proxy.getProxyClass(classLoader, interfaces);
     }
 
+    public static boolean hasMethod(Class<?> clazz, String methodName, Class<?>[] paramTypes) {
+        return getMethodIfAvailable(clazz, methodName, paramTypes) != null;
+    }
+
+    public static Method getMethodIfAvailable(Class<?> clazz, String methodName, Class<?>... paramTypes) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class must not be null");
+        }
+        if (StringUtils.isEmpty(methodName)) {
+            throw new IllegalArgumentException("Method name must not be null");
+        }
+        if (paramTypes != null) {
+            try {
+                return clazz.getMethod(methodName, paramTypes);
+            } catch (NoSuchMethodException ex) {
+                return null;
+            }
+        } else {
+            Set<Method> candidates = new HashSet<>(1);
+            Method[] methods = clazz.getMethods();
+            for (Method method : methods) {
+                if (methodName.equals(method.getName())) {
+                    candidates.add(method);
+                }
+            }
+            if (candidates.size() == 1) {
+                return candidates.iterator().next();
+            }
+            return null;
+        }
+    }
+
     public static boolean isEqualsMethod(Method method) {
         if (method == null || !method.getName().equals("equals")) {
             return false;
@@ -541,5 +573,13 @@ public class ClassUtils {
 
     public static boolean isHashCodeMethod(Method method) {
         return (method != null && method.getName().equals("hashCode") && method.getParameterCount() == 0);
+    }
+
+    public static boolean isToStringMethod(Method method) {
+        return (method != null && method.getName().equals("toString") && method.getParameterCount() == 0);
+    }
+
+    public static boolean isFinalizeMethod(Method method) {
+        return (method != null && method.getName().equals("finalize") && method.getParameterCount() == 0);
     }
 }

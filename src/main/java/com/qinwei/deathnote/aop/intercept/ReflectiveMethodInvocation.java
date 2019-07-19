@@ -22,7 +22,7 @@ public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
 
     protected final Method method;
 
-    protected Object[] arguments = new Object[0];
+    protected Object[] arguments;
 
     private final Class<?> targetClass;
 
@@ -47,8 +47,7 @@ public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
         //如果拦截器链为空，或者已经执行完了拦截器
         if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
             //直接反射调用目标对象的方法
-            ClassUtils.makeAccessible(this.method);
-            return this.method.invoke(this.target, this.arguments);
+            return invokeJoinpoint();
         }
         // 获取下一个要执行的拦截器
         Object interceptorOrInterceptionAdvice = this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
@@ -64,6 +63,14 @@ public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
         } else {
             return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
         }
+    }
+
+    /**
+     * 反射调用目标对象的方法
+     */
+    protected Object invokeJoinpoint() throws Throwable {
+        ClassUtils.makeAccessible(this.method);
+        return this.method.invoke(this.target, this.arguments);
     }
 
     @Override

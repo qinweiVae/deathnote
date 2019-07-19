@@ -21,11 +21,16 @@
         <log4j2.version>2.6.2</log4j2.version>
         <lombok_version>1.16.18</lombok_version>
         <fastjson.version>1.2.54</fastjson.version>
-        <asm.version>3.3.1</asm.version>
         <junit.version>4.11</junit.version>
+        <cglib.version>3.2.12</cglib.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
@@ -66,12 +71,6 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>${asm.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
