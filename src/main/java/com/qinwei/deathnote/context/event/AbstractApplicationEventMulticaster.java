@@ -1,5 +1,6 @@
 package com.qinwei.deathnote.context.event;
 
+import com.qinwei.deathnote.aop.support.AopUtils;
 import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.context.annotation.AnnotationOrderComparator;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
@@ -31,7 +32,11 @@ public abstract class AbstractApplicationEventMulticaster implements Application
     @Override
     public void addApplicationListener(ApplicationListener<?> listener) {
         synchronized (mutex) {
-            //todo 如果是代理类的话需要先移除掉，不然会调用2次
+            // 如果是代理类的话需要先移除掉，不然会调用2次
+            Object singletonTarget = AopUtils.getSingletonTarget(listener);
+            if (singletonTarget instanceof ApplicationListener) {
+                applicationListeners.remove(singletonTarget);
+            }
             applicationListeners.add(listener);
         }
     }

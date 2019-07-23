@@ -28,5 +28,6 @@ public interface ApplicationContext extends ListableBeanFactory, ConfigFactory, 
 
     void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor);
 
+    @Override
     void close();
 }

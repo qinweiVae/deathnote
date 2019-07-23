@@ -43,7 +43,6 @@ public class AnnotationOrderComparator implements Comparator {
             order = AnnotationUtils.findAnnotation((AnnotatedElement) obj, Order.class);
         } else {
             order = AnnotationUtils.findAnnotation(obj.getClass(), Order.class);
-            //todo 如果是代理类需要特殊处理
         }
         if (order != null) {
             return order.value();

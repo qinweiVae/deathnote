@@ -30,12 +30,12 @@ public class SingletonTargetSource implements TargetSource, Serializable {
      * 拿到 bean
      */
     @Override
-    public Object getTarget() throws Exception {
+    public Object getTarget() {
         return this.target;
     }
 
     @Override
-    public void releaseTarget(Object target) throws Exception {
+    public void releaseTarget(Object target) {
 
     }
 

@@ -26,4 +26,6 @@ public interface ConfigurableBeanFactory extends BeanFactory {
     String[] getDependenciesForBean(String beanName);
 
     Conversion getConversion();
+
+    ClassLoader getBeanClassLoader();
 }

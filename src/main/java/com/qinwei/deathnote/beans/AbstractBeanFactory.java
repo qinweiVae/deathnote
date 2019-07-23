@@ -198,7 +198,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     /**
      * 获取默认的ClassLoader
      */
-    protected ClassLoader getBeanClassLoader() {
+    @Override
+    public ClassLoader getBeanClassLoader() {
         return ClassUtils.getDefaultClassLoader();
     }
 

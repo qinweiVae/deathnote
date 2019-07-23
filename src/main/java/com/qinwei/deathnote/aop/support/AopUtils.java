@@ -5,6 +5,8 @@ import com.qinwei.deathnote.aop.annotation.AnnotationAwareAspectJAutoProxyCreato
 import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.aspectj.Pointcut;
 import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
+import com.qinwei.deathnote.aop.targetSource.SingletonTargetSource;
+import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableListableBeanFactory;
@@ -32,7 +34,7 @@ public class AopUtils {
 
     private static final String ORIGINAL_TARGET_CLASS = "originalTargetClass";
 
-    private static final String PRESERVE_TARGET_CLASS_ATTRIBUTE = "preserveTargetClass";
+    public static final String PRESERVE_TARGET_CLASS_ATTRIBUTE = "preserveTargetClass";
 
     public static final String AUTO_PROXY_CREATOR_BEAN_NAME = "internalAutoProxyCreator";
 
@@ -87,6 +89,16 @@ public class AopUtils {
         if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
             beanFactory.getBeanDefinition(beanName).setAttribute(ORIGINAL_TARGET_CLASS, targetClass);
         }
+    }
+
+    public static Object getSingletonTarget(Object candidate) {
+        if (candidate instanceof Advised) {
+            TargetSource targetSource = ((Advised) candidate).getTargetSource();
+            if (targetSource instanceof SingletonTargetSource) {
+                return ((SingletonTargetSource) targetSource).getTarget();
+            }
+        }
+        return null;
     }
 
     /**

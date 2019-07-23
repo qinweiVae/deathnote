@@ -26,6 +26,10 @@ public class AnnotatedGenericBeanDefinition extends AbstractBeanDefinition imple
     }
 
     public AnnotatedGenericBeanDefinition(AbstractBeanDefinition beanDefinition) {
+        copyFrom(beanDefinition);
+    }
+
+    public void copyFrom(AbstractBeanDefinition beanDefinition) {
         setBeanClassName(beanDefinition.getBeanClassName());
         setFactoryBeanName(beanDefinition.getFactoryBeanName());
         setFactoryMethod(beanDefinition.getFactoryMethod());
