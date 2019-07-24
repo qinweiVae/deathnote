@@ -6,6 +6,8 @@ package com.qinwei.deathnote.beans.factory;
  */
 public interface BeanFactory {
 
+    String FACTORY_BEAN_NAME = "&";
+
     Object getBean(String name);
 
     <T> T getBean(String name, Class<T> requiredType);

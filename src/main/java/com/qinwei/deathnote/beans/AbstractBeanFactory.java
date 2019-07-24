@@ -1,6 +1,7 @@
 package com.qinwei.deathnote.beans;
 
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
+import com.qinwei.deathnote.beans.bean.FactoryBean;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
 import com.qinwei.deathnote.beans.factory.ConfigurableBeanFactory;
 import com.qinwei.deathnote.beans.postprocessor.BeanPostProcessor;
@@ -77,7 +78,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         String beanName = transformedBeanName(name);
         Object sharedInstance = getSingleton(beanName);
         if (sharedInstance != null) {
-            bean = sharedInstance;
+            // 如果是 FactoryBean 的话，调用其 getObject()方法得到真实的bean
+            bean = getObjectForBeanInstance(sharedInstance, name, beanName);
         } else {
             BeanDefinition bd = getBeanDefinition(beanName);
             if (bd.isAbstract()) {
@@ -108,7 +110,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
             //如果是单例
             if (bd.isSingleton()) {
                 sharedInstance = getSingleton(beanName, () -> createBean(beanName, rbd, args));
-                bean = sharedInstance;
+                bean = getObjectForBeanInstance(sharedInstance, name, beanName);
             }
             //如果是原型
             else if (bd.isPrototype()) {
@@ -120,7 +122,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                     afterPrototypeCreation(beanName);
                 }
                 if (prototypeInstance != null) {
-                    bean = prototypeInstance;
+                    bean = getObjectForBeanInstance(prototypeInstance, name, beanName);
                 }
             }
         }
@@ -129,6 +131,29 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
             return getConversion().convertIfNecessary(bean, requiredType);
         }
         return (T) bean;
+    }
+
+    /**
+     * 如果是 FactoryBean 的话，调用其 getObject()方法得到真实的bean
+     */
+    protected Object getObjectForBeanInstance(Object beanInstance, String name, String beanName) {
+        // 如果 name 是以 & 开头，说明是 FactoryBean
+        if (name.startsWith(FACTORY_BEAN_NAME)) {
+            if (!(beanInstance instanceof FactoryBean)) {
+                throw new IllegalStateException("非FactoryBean 名称不能使用 '&' 开头 --- beanName : " + beanName + " , class : " + beanInstance.getClass());
+            }
+        }
+        if (!(beanInstance instanceof FactoryBean) || name.startsWith(FACTORY_BEAN_NAME)) {
+            return beanInstance;
+        }
+        FactoryBean<?> factory = (FactoryBean<?>) beanInstance;
+        Object object;
+        try {
+            object = factory.getObject();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to get bean from FactoryBean , beanName : " + beanName + " , class : " + beanInstance.getClass());
+        }
+        return object;
     }
 
     /**
@@ -230,6 +255,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     public Class<?> getType(String name) {
         Object singleton = getSingleton(name);
         if (singleton != null) {
+            if (singleton instanceof FactoryBean) {
+                return ((FactoryBean<?>) singleton).getObjectType();
+            }
             return singleton.getClass();
         }
         BeanDefinition bd = getBeanDefinition(name);
@@ -245,6 +273,9 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         String beanName = transformedBeanName(name);
         Object singleton = getSingleton(beanName);
         if (singleton != null) {
+            if (singleton instanceof FactoryBean) {
+                return ((FactoryBean<?>) singleton).isSingleton();
+            }
             return true;
         }
         BeanDefinition bd = getBeanDefinition(beanName);
