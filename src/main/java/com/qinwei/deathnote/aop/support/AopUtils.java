@@ -121,7 +121,7 @@ public class AopUtils {
             return candidateAdvisors;
         }
         List<Advisor> eligibleAdvisors = new ArrayList<>();
-        for (Advisor advisor : eligibleAdvisors) {
+        for (Advisor advisor : candidateAdvisors) {
             if (canApply(advisor, beanClass)) {
                 eligibleAdvisors.add(advisor);
             }

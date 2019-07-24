@@ -38,7 +38,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
         //筛选可应用在 beanClass 上的 Advisor，通过 ClassFilter 和 MethodMatcher对目标类和方法进行匹配
         List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass);
 
-        makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
+        makeAdvisorChainAspectJCapableIfNecessary(eligibleAdvisors);
 
         if (CollectionUtils.isNotEmpty(eligibleAdvisors)) {
             sortAdvisors(eligibleAdvisors);
