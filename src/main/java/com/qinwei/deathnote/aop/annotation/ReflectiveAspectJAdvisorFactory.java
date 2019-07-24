@@ -104,7 +104,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
         for (Method method : methodList) {
             // 排除掉 包含 @Pointcut 注解 的方法
             if (AnnotationUtils.findAnnotation((AnnotatedElement) method, Pointcut.class) == null) {
-                methods.addAll(methodList);
+                methods.add(method);
             }
         }
         //对方法排序
