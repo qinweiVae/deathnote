@@ -7,6 +7,7 @@ import com.qinwei.deathnote.beans.factory.BeanFactory;
 import com.qinwei.deathnote.config.Config;
 import com.qinwei.deathnote.context.annotation.AutowiredService;
 import com.qinwei.deathnote.context.annotation.PropertyDescriptorService;
+import com.qinwei.deathnote.context.aop.People;
 import com.qinwei.deathnote.context.aware.AwareTest;
 import com.qinwei.deathnote.context.event.ApplicationEventPublisher;
 import com.qinwei.deathnote.support.spi.Worker;
@@ -81,4 +82,20 @@ public class ContextTest extends BaseTest {
         autowired.workCollection();
         autowired.workArray();
     }
+
+    @Test
+    public void testFactoryBean() {
+        Object bean = context.getBean("factoryBeanTest");
+        log.info("bean :  {}", bean);
+        Object factoryBean = context.getBean("&factoryBeanTest");
+        log.info("bean class:  {}", factoryBean.getClass());
+    }
+
+    @Test
+    public void testAop() {
+        People man = context.getBean("man", People.class);
+        log.info("bean class : {}", man.getClass());
+        man.work();
+    }
+
 }

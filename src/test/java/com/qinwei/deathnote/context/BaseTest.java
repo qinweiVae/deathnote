@@ -1,6 +1,6 @@
 package com.qinwei.deathnote.context;
 
-import com.qinwei.deathnote.context.annotation.Application;
+import net.sf.cglib.core.DebuggingClassWriter;
 import org.junit.After;
 import org.junit.Before;
 
@@ -14,9 +14,11 @@ public class BaseTest {
 
     @Before
     public void start() {
-        //context = new AnnotationConfigApplicationContext("com.qinwei.deathnote");
+        // 设置 CGLib 生成 class 的路径
+        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "D:\\data");
+        context = new AnnotationConfigApplicationContext("com.qinwei.deathnote.context.aop");
         //context = new AnnotationConfigApplicationContext(ImportTest.class);
-        context = new AnnotationConfigApplicationContext(Application.class);
+        //context = new AnnotationConfigApplicationContext(Application.class);
         context.start();
     }
 
