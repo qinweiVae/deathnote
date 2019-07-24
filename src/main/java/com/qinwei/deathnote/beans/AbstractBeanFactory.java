@@ -13,6 +13,7 @@ import com.qinwei.deathnote.support.convert.DefaultConversion;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.StringUtils;
 
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -126,7 +127,11 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                 }
             }
         }
-        //使用类型转换器进行转换
+        //如果 bean 是 jdk 代理类, requiredType 只能是 原始对象的 接口，否则会转换失败
+        if (Proxy.isProxyClass(bean.getClass())) {
+            return (T) bean;
+        }
+        //普通的bean 和 CGLib代理 的bean ， 可以 使用类型转换器进行转换
         if (requiredType != null) {
             return getConversion().convertIfNecessary(bean, requiredType);
         }
