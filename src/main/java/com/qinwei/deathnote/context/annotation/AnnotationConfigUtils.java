@@ -122,6 +122,6 @@ public class AnnotationConfigUtils {
         }
         boolean proxyTargetClass = scopedProxyMode.equals(ScopedProxyMode.TARGET_CLASS);
         //todo 如果是代理类，需要特殊处理
-        return null;
+        return ScopedProxyUtils.createScopedProxy(definitionHolder, registry, proxyTargetClass);
     }
 }

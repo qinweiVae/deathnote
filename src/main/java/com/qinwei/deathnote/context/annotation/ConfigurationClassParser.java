@@ -11,6 +11,7 @@ import com.qinwei.deathnote.beans.registry.BeanDefinitionRegistry;
 import com.qinwei.deathnote.context.aware.BeanFactoryAware;
 import com.qinwei.deathnote.context.metadata.AnnotationMetadata;
 import com.qinwei.deathnote.context.metadata.MethodMetadata;
+import com.qinwei.deathnote.context.support.BeanDefinitionReaderUtils;
 import com.qinwei.deathnote.context.support.ConfigurationUtils;
 import com.qinwei.deathnote.utils.ClassUtils;
 import com.qinwei.deathnote.utils.CollectionUtils;
@@ -173,13 +174,18 @@ public class ConfigurationClassParser {
                     proxyMode = ScopedProxyMode.NO;
                 }
             }
-            BeanDefinition bdToRegister = bd;
+            AnnotatedGenericBeanDefinition bdToRegister = bd;
             if (proxyMode != ScopedProxyMode.NO) {
                 //todo 如果 bean 需要 代理
+                BeanDefinitionHolder scopedProxy = ScopedProxyUtils.createScopedProxy(new BeanDefinitionHolder(bd, beanName),
+                        this.registry,
+                        proxyMode == ScopedProxyMode.TARGET_CLASS);
+                bdToRegister = new AnnotatedGenericBeanDefinition(bd.getMetadata());
+                bdToRegister.copyFrom((AbstractBeanDefinition) scopedProxy.getBeanDefinition());
             }
             //注册 BeanDefinition
             if (!registry.containsBeanDefinition(beanName)) {
-                this.registry.registerBeanDefinition(beanName, bdToRegister);
+                BeanDefinitionReaderUtils.registerBeanDefinition(new BeanDefinitionHolder(bdToRegister, beanName), this.registry);
             }
         }
     }
