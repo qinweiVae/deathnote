@@ -41,6 +41,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
         setPrimary(beanDefinition.isPrimary());
         setInitMethodName(beanDefinition.getInitMethodName());
         setDestroyMethodName(beanDefinition.getDestroyMethodName());
+        setPropertyValues(beanDefinition.getPropertyValues());
         if (beanDefinition instanceof AbstractBeanDefinition) {
             if (((AbstractBeanDefinition) beanDefinition).hasBeanClass()) {
                 setBeanClass(beanDefinition.getBeanClass());

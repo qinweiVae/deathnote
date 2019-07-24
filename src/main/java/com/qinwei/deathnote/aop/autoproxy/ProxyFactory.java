@@ -62,7 +62,6 @@ public class ProxyFactory extends AdvisedSupport {
                 listener.activated(this);
             }
         }
-        throw new IllegalStateException("Unable to activate proxy creator");
     }
 
     @Override

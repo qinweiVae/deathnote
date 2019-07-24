@@ -46,6 +46,7 @@ public class AnnotatedGenericBeanDefinition extends AbstractBeanDefinition imple
         setPrimary(beanDefinition.isPrimary());
         setInitMethodName(beanDefinition.getInitMethodName());
         setDestroyMethodName(beanDefinition.getDestroyMethodName());
+        setPropertyValues(beanDefinition.getPropertyValues());
     }
 
     @Override

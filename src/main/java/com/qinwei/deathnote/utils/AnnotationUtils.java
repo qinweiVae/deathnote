@@ -93,34 +93,34 @@ public class AnnotationUtils {
         if (annotation != null) {
             return annotation;
         }
+        return (A) findAnnotation(annotatedElement, annotationType.getName());
+    }
+
+    public static Annotation findAnnotation(AnnotatedElement annotatedElement, String annotationName) {
+        Annotation annotation = null;
         Annotation[] annotations = getDeclaredAnnotations(annotatedElement);
         for (Annotation anno : annotations) {
             Class<? extends Annotation> type = anno.annotationType();
+            if (type.getName().equals(annotationName)) {
+                return anno;
+            }
             // 如果是 元注解 则返回，不然就是死循环了
             if (isPrimitiveAnnotation(type)) {
                 continue;
             }
-            annotation = findAnnotation((AnnotatedElement) type, annotationType);
+            annotation = findAnnotation(type, annotationName);
             if (annotation != null) {
                 return annotation;
             }
         }
-        return null;
+        return annotation;
     }
 
     /**
      * 判断 AnnotatedElement上 是否含有 annotationName
      */
     public static boolean hasAnnotation(AnnotatedElement element, String annotationName) {
-        for (Annotation annotation : getDeclaredAnnotations(element)) {
-            Class<? extends Annotation> type = annotation.annotationType();
-            if (!isPrimitiveAnnotation(type)) {
-                if (type.getName().equals(annotationName)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return findAnnotation(element, annotationName) != null;
     }
 
     /**
@@ -143,14 +143,7 @@ public class AnnotationUtils {
      * 例如 @Order  (value,Integer.MAX_VALUE)
      */
     public static AnnotationAttributes getAnnotationAttributes(AnnotatedElement element, String annotationName, boolean nestedAnnotationsAsMap) {
-        Annotation annotation = null;
-        for (Annotation anno : getDeclaredAnnotations(element)) {
-            Class<? extends Annotation> type = anno.annotationType();
-            if (!isPrimitiveAnnotation(type) && type.getName().equals(annotationName)) {
-                annotation = anno;
-                break;
-            }
-        }
+        Annotation annotation = findAnnotation(element, annotationName);
         if (annotation == null) {
             return null;
         }
@@ -251,7 +244,7 @@ public class AnnotationUtils {
      * 先找到 AnnotatedElement 上 指定 注解名称 的 Annotation，再拿到这个 Annotation 上的所有 注解名称
      */
     public static Set<String> getMetaAnnotationTypes(AnnotatedElement element, String annotationName) {
-        return getMetaAnnotationTypes(getAnnotation(element, annotationName));
+        return getMetaAnnotationTypes(findAnnotation(element, annotationName));
     }
 
     private static Set<String> getMetaAnnotationTypes(Annotation annotation) {
@@ -265,20 +258,6 @@ public class AnnotationUtils {
             }
         }
         return result;
-    }
-
-    /**
-     * 获取 AnnotatedElement 上 指定 注解名称 的 Annotation
-     */
-    public static Annotation getAnnotation(AnnotatedElement element, String annotationName) {
-        for (Annotation annotation : getDeclaredAnnotations(element)) {
-            if (!isPrimitiveAnnotation(annotation.annotationType())) {
-                if (annotation.annotationType().getName().equals(annotationName)) {
-                    return annotation;
-                }
-            }
-        }
-        return null;
     }
 
     /**

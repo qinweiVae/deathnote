@@ -120,8 +120,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         for (BeanPostProcessor postProcessor : getBeanPostProcessors()) {
             if (postProcessor instanceof InstantiationAwareBeanPostProcessor) {
                 InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) postProcessor;
-                propertyValue = ibp.postProcessProperties(result, bw.getWrappedInstance(), beanName);
+                result = ibp.postProcessProperties(result, bw.getWrappedInstance(), beanName);
             }
+        }
+        if (CollectionUtils.isEmpty(propertyValue)) {
+            propertyValue = result;
+        } else {
+            propertyValue.putAll(result);
         }
         if (CollectionUtils.isNotEmpty(propertyValue)) {
             //进行属性设置
