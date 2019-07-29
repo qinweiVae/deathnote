@@ -112,6 +112,23 @@ public class AopUtils {
         return false;
     }
 
+    /**
+     * 拿到 bean 真实的类型
+     */
+    public static Class<?> determineTargetClass(ConfigurableListableBeanFactory beanFactory, String beanName) {
+        if (beanName == null) {
+            return null;
+        }
+        if (beanFactory.containsBeanDefinition(beanName)) {
+            BeanDefinition bd = beanFactory.getBeanDefinition(beanName);
+            Class<?> targetClass = (Class<?>) bd.getAttribute(ORIGINAL_TARGET_CLASS);
+            if (targetClass != null) {
+                return targetClass;
+            }
+        }
+        return beanFactory.getType(beanName);
+    }
+
 
     /**
      * 选可应用在 beanClass 上的 Advisor，通过 ClassFilter 和 MethodMatcher对目标类和方法进行匹配

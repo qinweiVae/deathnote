@@ -15,5 +15,5 @@ import java.lang.annotation.Target;
 @Documented
 public @interface EventListener {
 
-    Class<?>[] value() default {};
+    Class<?>[] classes() default {};
 }

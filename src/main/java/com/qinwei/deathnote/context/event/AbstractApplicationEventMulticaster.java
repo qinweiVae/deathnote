@@ -100,6 +100,11 @@ public abstract class AbstractApplicationEventMulticaster implements Application
     }
 
     private boolean supportEvent(ApplicationListener<?> listener, ApplicationEvent event) {
+        // 用于 @EventListener 注解的处理
+        if (listener instanceof ApplicationListenerMethodAdapter) {
+            return true;
+        }
+
         Class genericType = ResolveType.forType(listener.getClass()).resolveClass(0, 0);
         if (genericType == null) {
             return false;

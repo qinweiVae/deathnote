@@ -45,4 +45,8 @@ public class ScopedProxyUtils {
     public static String getTargetBeanName(String originalBeanName) {
         return TARGET_NAME_PREFIX + originalBeanName;
     }
+
+    public static boolean isScopedTarget(String beanName) {
+        return (beanName != null && beanName.startsWith(TARGET_NAME_PREFIX));
+    }
 }

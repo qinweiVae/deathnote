@@ -461,7 +461,7 @@ public class ClassUtils {
         //拿到所有接口上的非抽象方法
         if (clazz.isInterface()) {
             for (Class<?> ifs : clazz.getInterfaces()) {
-                for (Method method : methods) {
+                for (Method method : ifs.getMethods()) {
                     if (!Modifier.isAbstract(method.getModifiers())) {
                         result.add(method);
                     }
@@ -470,7 +470,7 @@ public class ClassUtils {
         }
         //递归获取父类的所有方法
         Class<?> superclass = clazz.getSuperclass();
-        while (superclass != null && superclass != Object.class) {
+        if (superclass != null && superclass != Object.class) {
             doGetAllDeclaredMethods(superclass, result);
         }
     }
