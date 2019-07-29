@@ -23,7 +23,6 @@ import java.util.Map;
 /**
  * @author qinwei
  * @date 2019-06-18
- * todo
  */
 public class EventListenerMethodProcessor implements SmartInitializingSingleton, ApplicationContextAware, BeanFactoryPostProcessor {
 

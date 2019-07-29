@@ -44,7 +44,7 @@ public class AnnotationConfigUtils {
             RootBeanDefinition bd = new RootBeanDefinition(AutowiredAnnotationBeanPostProcessor.class);
             beanHolders.add(registerPostProcessor(registry, bd, AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME));
         }
-        // todo 处理 @EventListener 的 postprocessor
+        // 处理 @EventListener 的 postprocessor
         if (!registry.containsBeanDefinition(EVENT_LISTENER_PROCESSOR_BEAN_NAME)) {
             RootBeanDefinition bd = new RootBeanDefinition(EventListenerMethodProcessor.class);
             beanHolders.add(registerPostProcessor(registry, bd, EVENT_LISTENER_PROCESSOR_BEAN_NAME));
