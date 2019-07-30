@@ -40,7 +40,7 @@ public class EventListenerTest {
 
     @EventListener
     public Domain2 eventTest(Domain1 domain1) {
-        log.info("@EventListener ...... ");
+        log.info("@EventListener ...... {}", domain1);
         Domain2 domain2 = new Domain2();
         domain2.setBrand("evenListener");
         return domain2;
