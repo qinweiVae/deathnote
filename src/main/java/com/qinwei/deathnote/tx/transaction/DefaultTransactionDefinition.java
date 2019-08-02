@@ -17,13 +17,6 @@ public class DefaultTransactionDefinition implements TransactionDefinition {
     public DefaultTransactionDefinition() {
     }
 
-    public DefaultTransactionDefinition(TransactionDefinition other) {
-        this.propagationBehavior = other.getPropagationBehavior();
-        this.isolationLevel = other.getIsolationLevel();
-        this.timeout = other.getTimeout();
-        this.readOnly = other.isReadOnly();
-    }
-
     @Override
     public int getPropagationBehavior() {
         return this.propagationBehavior;

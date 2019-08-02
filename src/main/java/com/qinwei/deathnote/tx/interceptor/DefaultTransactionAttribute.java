@@ -16,10 +16,6 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
         super();
     }
 
-    public DefaultTransactionAttribute(TransactionAttribute other) {
-        super(other);
-    }
-
     public void setQualifier(String qualifier) {
         this.qualifier = qualifier;
     }

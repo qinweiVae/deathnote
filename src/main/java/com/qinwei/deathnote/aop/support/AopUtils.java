@@ -6,6 +6,7 @@ import com.qinwei.deathnote.aop.aspectj.Advisor;
 import com.qinwei.deathnote.aop.aspectj.Pointcut;
 import com.qinwei.deathnote.aop.aspectj.PointcutAdvisor;
 import com.qinwei.deathnote.aop.targetSource.SingletonTargetSource;
+import com.qinwei.deathnote.aop.targetSource.TargetClassAware;
 import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.beans.bean.BeanDefinition;
 import com.qinwei.deathnote.beans.bean.RootBeanDefinition;
@@ -257,6 +258,18 @@ public class AopUtils {
             }
         }
         return arguments;
+    }
+
+    public static Class<?> getTargetClass(Object candidate) {
+        assert candidate != null : "Candidate object must not be null";
+        Class<?> result = null;
+        if (candidate instanceof TargetClassAware) {
+            result = ((TargetClassAware) candidate).getTargetClass();
+        }
+        if (result == null) {
+            result = (ClassUtils.isCglibProxyClass(candidate.getClass()) ? candidate.getClass().getSuperclass() : candidate.getClass());
+        }
+        return result;
     }
 
     public static boolean equalsInProxy(AdvisedSupport a, AdvisedSupport b) {

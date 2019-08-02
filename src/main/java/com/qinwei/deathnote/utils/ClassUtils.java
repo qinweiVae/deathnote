@@ -582,4 +582,8 @@ public class ClassUtils {
     public static boolean isFinalizeMethod(Method method) {
         return (method != null && method.getName().equals("finalize") && method.getParameterCount() == 0);
     }
+
+    public static String getQualifiedMethodName(Method method, Class<?> clazz) {
+        return (clazz != null ? clazz : method.getDeclaringClass()).getName() + '.' + method.getName();
+    }
 }
