@@ -3,6 +3,7 @@ package com.qinwei.deathnote.tx.interceptor;
 import com.qinwei.deathnote.aop.intercept.MethodInterceptor;
 import com.qinwei.deathnote.aop.intercept.MethodInvocation;
 import com.qinwei.deathnote.aop.support.AopUtils;
+import com.qinwei.deathnote.tx.support.TransactionAspectSupport;
 
 /**
  * @author qinwei
