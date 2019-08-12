@@ -8,7 +8,6 @@ import com.qinwei.deathnote.aop.support.AopUtils;
 import com.qinwei.deathnote.aop.targetSource.EmptyTargetSource;
 import com.qinwei.deathnote.aop.targetSource.TargetSource;
 import com.qinwei.deathnote.utils.ClassUtils;
-import com.sun.istack.internal.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.core.ClassGenerator;
 import net.sf.cglib.core.CodeGenerationException;
@@ -372,7 +371,6 @@ class CglibAopProxy implements AopProxy, Serializable {
      */
     private static class StaticDispatcher implements Dispatcher, Serializable {
 
-        @Nullable
         private Object target;
 
         public StaticDispatcher(Object target) {
