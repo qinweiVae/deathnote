@@ -3,6 +3,8 @@ package com.qinwei.deathnote.tx.transaction;
 import com.qinwei.deathnote.tx.support.DefaultTransactionStatus;
 import com.qinwei.deathnote.tx.support.TransactionSynchronization;
 import com.qinwei.deathnote.tx.support.TransactionSynchronizationManager;
+import com.qinwei.deathnote.tx.support.TransactionSynchronizationUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -10,6 +12,7 @@ import java.util.List;
  * @author qinwei
  * @date 2019-08-02
  */
+@Slf4j
 public abstract class AbstractPlatformTransactionManager implements PlatformTransactionManager {
 
     public static final int SYNCHRONIZATION_ALWAYS = 0;
@@ -48,7 +51,25 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
         else if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRED ||
                 definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW ||
                 definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
-
+            // 挂起事务
+            SuspendedResourcesHolder suspendedResources = suspend(null);
+            try {
+                boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
+                DefaultTransactionStatus status = newTransactionStatus(
+                        definition, transaction, true, newSynchronization, suspendedResources);
+                // 开始一个新的事务
+                doBegin(transaction, definition);
+                prepareSynchronization(status, definition);
+                return status;
+            } catch (RuntimeException | Error ex) {
+                //恢复 事务 和 事务同步
+                resume(null, suspendedResources);
+                throw ex;
+            }
+        } else {
+            //创建一个空的事务 ，并不是真正的事务
+            boolean newSynchronization = (getTransactionSynchronization() == SYNCHRONIZATION_ALWAYS);
+            return prepareTransactionStatus(definition, null, true, newSynchronization, null);
         }
     }
 
@@ -62,16 +83,80 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
         }
         //如果传播行为是 PROPAGATION_NOT_SUPPORTED, 挂起当前事务
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
+            //挂起当前事务
             Object suspendedResources = suspend(transaction);
+            //如果 transactionSynchronization 是 SYNCHRONIZATION_ALWAYS
             boolean newSynchronization = (getTransactionSynchronization() == SYNCHRONIZATION_ALWAYS);
-            //
+            //创建默认的 TransactionStatus , 初始化 transaction synchronization
             return prepareTransactionStatus(definition, null, false, newSynchronization, suspendedResources);
         }
-        //如果传播行为是 PROPAGATION_REQUIRES_NEW
+        //如果传播行为是 PROPAGATION_REQUIRES_NEW, 挂起当前事务
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
-
+            //挂起当前事务
+            SuspendedResourcesHolder suspendedResources = suspend(transaction);
+            try {
+                //如果 transactionSynchronization 不是 SYNCHRONIZATION_NEVER
+                boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
+                //创建默认的 TransactionStatus , 初始化 transaction synchronization
+                DefaultTransactionStatus status = newTransactionStatus(definition, transaction, true, newSynchronization, suspendedResources);
+                // 开始一个新的事务
+                doBegin(transaction, definition);
+                prepareSynchronization(status, definition);
+                return status;
+            } catch (RuntimeException | Error beginEx) {
+                // 如果异常了 恢复 事务 和 事务同步
+                resumeAfterBeginException(transaction, suspendedResources, beginEx);
+                throw beginEx;
+            }
         }
-        return null;
+        //如果传播行为是 PROPAGATION_NESTED
+        if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
+            //判断是否允许嵌套事务， nestedTransactionAllowed 默认 false
+            if (!isNestedTransactionAllowed()) {
+                throw new UnsupportedOperationException("Transaction manager does not allow nested transactions by default - " +
+                        "specify 'nestedTransactionAllowed' property with value 'true'");
+            }
+            DefaultTransactionStatus status = prepareTransactionStatus(definition, transaction, false, false, null);
+            status.createAndHoldSavepoint();
+            return status;
+        }
+        // 如果传播行为是 PROPAGATION_SUPPORTS or PROPAGATION_REQUIRED.
+        boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
+        return prepareTransactionStatus(definition, transaction, false, newSynchronization, null);
+    }
+
+    private void resumeAfterBeginException(Object transaction, SuspendedResourcesHolder suspendedResources, Throwable beginEx) {
+        try {
+            resume(transaction, suspendedResources);
+        } catch (RuntimeException | Error resumeEx) {
+            log.error("Inner transaction begin exception overridden by outer transaction resume exception", beginEx);
+            throw resumeEx;
+        }
+    }
+
+    /**
+     * 恢复 事务 和 事务同步
+     */
+    protected final void resume(Object transaction, SuspendedResourcesHolder resourcesHolder) {
+        if (resourcesHolder != null) {
+            Object suspendedResources = resourcesHolder.suspendedResources;
+            if (suspendedResources != null) {
+                // 恢复 事务
+                doResume(transaction, suspendedResources);
+            }
+            List<TransactionSynchronization> suspendedSynchronizations = resourcesHolder.suspendedSynchronizations;
+            if (suspendedSynchronizations != null) {
+                TransactionSynchronizationManager.setActualTransactionActive(resourcesHolder.wasActive);
+                TransactionSynchronizationManager.setCurrentTransactionIsolationLevel(resourcesHolder.isolationLevel);
+                TransactionSynchronizationManager.setCurrentTransactionReadOnly(resourcesHolder.readOnly);
+                //恢复当前线程中的所有事务同步
+                doResumeSynchronization(suspendedSynchronizations);
+            }
+        }
+    }
+
+    protected void doResume(Object transaction, Object suspendedResources) {
+        throw new UnsupportedOperationException("Transaction manager [" + getClass().getName() + "] does not support transaction suspension");
     }
 
     protected final DefaultTransactionStatus prepareTransactionStatus(
@@ -83,10 +168,29 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
         return status;
     }
 
+    /**
+     * 按需初始化 TransactionSynchronization 的 ThreadLocal
+     */
+    private void prepareSynchronization(DefaultTransactionStatus status, TransactionDefinition definition) {
+        if (status.isNewSynchronization()) {
+            TransactionSynchronizationManager.setActualTransactionActive(status.hasTransaction());
+            TransactionSynchronizationManager.setCurrentTransactionIsolationLevel(
+                    definition.getIsolationLevel() != TransactionDefinition.ISOLATION_DEFAULT ?
+                            definition.getIsolationLevel() : null);
+            TransactionSynchronizationManager.setCurrentTransactionReadOnly(definition.isReadOnly());
+            TransactionSynchronizationManager.initSynchronization();
+        }
+    }
+
+    /**
+     * 根据传入的参数构造 TransactionStatus
+     */
     private DefaultTransactionStatus newTransactionStatus(TransactionDefinition definition, Object transaction,
                                                           boolean newTransaction, boolean newSynchronization, Object suspendedResources) {
-
-        return null;
+        //判断是否调用过 TransactionSynchronizationManager.initSynchronization()
+        boolean actualNewSynchronization = newSynchronization && !TransactionSynchronizationManager.isSynchronizationActive();
+        // 构造 TransactionStatus
+        return new DefaultTransactionStatus(transaction, newTransaction, actualNewSynchronization, definition.isReadOnly(), suspendedResources);
     }
 
     /**
@@ -103,9 +207,6 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
                 if (transaction != null) {
                     suspendedResources = doSuspend(transaction);
                 }
-                // 将当前线程中的事务 name 设置为 null
-                String name = TransactionSynchronizationManager.getCurrentTransactionName();
-                TransactionSynchronizationManager.setCurrentTransactionName(null);
                 // 将当前线程中的事务 readonly 设置为 false
                 boolean readOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
                 TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
@@ -116,7 +217,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
                 boolean wasActive = TransactionSynchronizationManager.isActualTransactionActive();
                 TransactionSynchronizationManager.setActualTransactionActive(false);
                 // 创建 SuspendedResourcesHolder
-                return new SuspendedResourcesHolder(suspendedResources, suspendedSynchronizations, name, readOnly, isolationLevel, wasActive);
+                return new SuspendedResourcesHolder(suspendedResources, suspendedSynchronizations, readOnly, isolationLevel, wasActive);
 
             } catch (RuntimeException | Error ex) {
                 doResumeSynchronization(suspendedSynchronizations);
@@ -164,12 +265,207 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
     @Override
     public void commit(TransactionStatus status) {
-
+        //如果此时事务已完成 ，抛异常
+        if (status.isCompleted()) {
+            throw new IllegalStateException("Transaction is already completed - do not call commit or rollback more than once per transaction");
+        }
+        DefaultTransactionStatus defStatus = (DefaultTransactionStatus) status;
+        if (defStatus.isLocalRollbackOnly()) {
+            log.info("Transactional code has requested rollback");
+            // 回滚
+            processRollback(defStatus, false);
+            return;
+        }
+        if (defStatus.isGlobalRollbackOnly()) {
+            log.debug("Global transaction is marked as rollback-only but transactional code requested commit");
+            processRollback(defStatus, true);
+            return;
+        }
+        // 提交事务
+        processCommit(defStatus);
     }
 
     @Override
     public void rollback(TransactionStatus status) {
+        if (status.isCompleted()) {
+            throw new IllegalStateException("Transaction is already completed - do not call commit or rollback more than once per transaction");
+        }
 
+        DefaultTransactionStatus defStatus = (DefaultTransactionStatus) status;
+        processRollback(defStatus, false);
+    }
+
+    private void processCommit(DefaultTransactionStatus status) {
+        try {
+            boolean beforeCompletionInvoked = false;
+
+            try {
+                boolean unexpectedRollback = false;
+                triggerBeforeCommit(status);
+                triggerBeforeCompletion(status);
+                beforeCompletionInvoked = true;
+                // 如果有 save point
+                if (status.hasSavepoint()) {
+                    log.debug("Releasing transaction savepoint");
+                    unexpectedRollback = status.isGlobalRollbackOnly();
+                    status.releaseHeldSavepoint();
+                }
+                // 如果有 事务
+                else if (status.hasTransaction()) {
+                    log.debug("Initiating transaction commit");
+                    unexpectedRollback = status.isGlobalRollbackOnly();
+                    // 提交事务
+                    doCommit(status);
+                }
+                if (unexpectedRollback) {
+                    throw new UnsupportedOperationException("Transaction silently rolled back because it has been marked as rollback-only");
+                }
+
+            } catch (UnsupportedOperationException ex) {
+                triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
+                throw ex;
+            } catch (RuntimeException | Error ex) {
+                if (!beforeCompletionInvoked) {
+                    triggerBeforeCompletion(status);
+                }
+                doRollbackOnCommitException(status, ex);
+                throw ex;
+            }
+            try {
+                triggerAfterCommit(status);
+            } finally {
+                triggerAfterCompletion(status, TransactionSynchronization.STATUS_COMMITTED);
+            }
+        } finally {
+            cleanupAfterCompletion(status);
+        }
+    }
+
+    private void processRollback(DefaultTransactionStatus status, boolean unexpected) {
+        try {
+            boolean unexpectedRollback = unexpected;
+            try {
+                // 触发操作完之前
+                triggerBeforeCompletion(status);
+                //如果有 savepoint ,回滚 savepoint
+                if (status.hasSavepoint()) {
+                    log.debug("Rolling back transaction to savepoint");
+                    status.rollbackToHeldSavepoint();
+                }
+                //如果开启 新事务，回滚事务
+                else if (status.isNewTransaction()) {
+                    log.debug("Initiating transaction rollback");
+                    //回滚事务
+                    doRollback(status);
+                } else {
+                    // 如果在事务中
+                    if (status.hasTransaction()) {
+                        //设置事务为 rollback-only , 默认是抛异常
+                        doSetRollbackOnly(status);
+                    } else {
+                        log.debug("Should roll back transaction but cannot - no transaction available");
+                    }
+                    unexpectedRollback = false;
+                }
+
+            } catch (RuntimeException | Error ex) {
+                triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
+                throw ex;
+            }
+            triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
+            if (unexpectedRollback) {
+                throw new UnsupportedOperationException("Transaction rolled back because it has been marked as rollback-only");
+            }
+        } finally {
+            cleanupAfterCompletion(status);
+        }
+    }
+
+    private void doRollbackOnCommitException(DefaultTransactionStatus status, Throwable ex) {
+        try {
+            if (status.isNewTransaction()) {
+                log.debug("Initiating transaction rollback after commit exception", ex);
+                doRollback(status);
+            } else if (status.hasTransaction()) {
+                log.debug("Marking existing transaction as rollback-only after commit exception", ex);
+                doSetRollbackOnly(status);
+            }
+        } catch (RuntimeException | Error rbex) {
+            log.error("Commit exception overridden by rollback exception", ex);
+            triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
+            throw rbex;
+        }
+        triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
+    }
+
+    protected final void triggerBeforeCommit(DefaultTransactionStatus status) {
+        if (status.isNewSynchronization()) {
+            log.debug("Triggering beforeCommit synchronization");
+            TransactionSynchronizationUtils.triggerBeforeCommit(status.isReadOnly());
+        }
+    }
+
+    private void triggerAfterCommit(DefaultTransactionStatus status) {
+        if (status.isNewSynchronization()) {
+            log.debug("Triggering afterCommit synchronization");
+            TransactionSynchronizationUtils.triggerAfterCommit();
+        }
+    }
+
+    protected final void triggerBeforeCompletion(DefaultTransactionStatus status) {
+        if (status.isNewSynchronization()) {
+            log.debug("Triggering beforeCompletion synchronization");
+            TransactionSynchronizationUtils.triggerBeforeCompletion();
+        }
+    }
+
+    private void triggerAfterCompletion(DefaultTransactionStatus status, int completionStatus) {
+        if (status.isNewSynchronization()) {
+            List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
+            // 清除 ThreadLocal
+            TransactionSynchronizationManager.clearSynchronization();
+            //如果没有事务 或者 新开了一个事务
+            if (!status.hasTransaction() || status.isNewTransaction()) {
+                TransactionSynchronizationUtils.invokeAfterCompletion(synchronizations, completionStatus);
+            }
+            //如果 事务同步 不为空
+            else if (!synchronizations.isEmpty()) {
+                TransactionSynchronizationUtils.invokeAfterCompletion(synchronizations, TransactionSynchronization.STATUS_UNKNOWN);
+            }
+        }
+    }
+
+    private void cleanupAfterCompletion(DefaultTransactionStatus status) {
+        //设置事务结束标识
+        status.setCompleted();
+        //清除ThreadLocal 内容
+        if (status.isNewSynchronization()) {
+            TransactionSynchronizationManager.clear();
+        }
+        if (status.isNewTransaction()) {
+            doCleanupAfterCompletion(status.getTransaction());
+        }
+        if (status.getSuspendedResources() != null) {
+            log.debug("Resuming suspended transaction after completion of inner transaction");
+            Object transaction = status.hasTransaction() ? status.getTransaction() : null;
+            // 恢复 事务 和 事务同步
+            resume(transaction, (SuspendedResourcesHolder) status.getSuspendedResources());
+        }
+    }
+
+    protected void doCleanupAfterCompletion(Object transaction) {
+    }
+
+    protected void doSetRollbackOnly(DefaultTransactionStatus status) {
+        throw new IllegalStateException("Participating in existing transactions is not supported - when 'isExistingTransaction' " +
+                "returns true, appropriate 'doSetRollbackOnly' behavior must be provided");
+    }
+
+    protected int determineTimeout(TransactionDefinition definition) {
+        if (definition.getTimeout() != TransactionDefinition.TIMEOUT_DEFAULT) {
+            return definition.getTimeout();
+        }
+        return getDefaultTimeout();
     }
 
     protected boolean isExistingTransaction(Object transaction) {
@@ -202,14 +498,18 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
     protected abstract Object doGetTransaction();
 
+    protected abstract void doBegin(Object transaction, TransactionDefinition definition);
+
+    protected abstract void doCommit(DefaultTransactionStatus status);
+
+    protected abstract void doRollback(DefaultTransactionStatus status);
+
 
     protected static final class SuspendedResourcesHolder {
 
         private final Object suspendedResources;
 
         private List<TransactionSynchronization> suspendedSynchronizations;
-
-        private String name;
 
         private boolean readOnly;
 
@@ -223,11 +523,10 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
         private SuspendedResourcesHolder(
                 Object suspendedResources, List<TransactionSynchronization> suspendedSynchronizations,
-                String name, boolean readOnly, Integer isolationLevel, boolean wasActive) {
+                boolean readOnly, Integer isolationLevel, boolean wasActive) {
 
             this.suspendedResources = suspendedResources;
             this.suspendedSynchronizations = suspendedSynchronizations;
-            this.name = name;
             this.readOnly = readOnly;
             this.isolationLevel = isolationLevel;
             this.wasActive = wasActive;

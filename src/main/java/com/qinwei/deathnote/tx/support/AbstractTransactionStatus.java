@@ -92,4 +92,13 @@ public abstract class AbstractTransactionStatus implements TransactionStatus {
     protected SavepointManager getSavepointManager() {
         throw new UnsupportedOperationException("This transaction does not support savepoints");
     }
+
+    public void releaseHeldSavepoint() {
+        Object savepoint = getSavepoint();
+        if (savepoint == null) {
+            throw new UnsupportedOperationException("Cannot release savepoint - no savepoint associated with current transaction");
+        }
+        getSavepointManager().releaseSavepoint(savepoint);
+        setSavepoint(null);
+    }
 }

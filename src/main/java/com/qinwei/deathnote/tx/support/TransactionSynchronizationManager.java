@@ -16,8 +16,6 @@ public class TransactionSynchronizationManager {
 
     private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations = new ThreadLocal<>();
 
-    private static final ThreadLocal<String> currentTransactionName = new ThreadLocal<>();
-
     private static final ThreadLocal<Boolean> currentTransactionReadOnly = new ThreadLocal<>();
 
     private static final ThreadLocal<Integer> currentTransactionIsolationLevel = new ThreadLocal<>();
@@ -65,14 +63,6 @@ public class TransactionSynchronizationManager {
         synchronizations.remove();
     }
 
-    public static String getCurrentTransactionName() {
-        return currentTransactionName.get();
-    }
-
-    public static void setCurrentTransactionName(String name) {
-        currentTransactionName.set(name);
-    }
-
     public static boolean isCurrentTransactionReadOnly() {
         return (currentTransactionReadOnly.get() != null);
     }
@@ -97,4 +87,10 @@ public class TransactionSynchronizationManager {
         actualTransactionActive.set(active ? Boolean.TRUE : null);
     }
 
+    public static void clear() {
+        synchronizations.remove();
+        currentTransactionReadOnly.remove();
+        currentTransactionIsolationLevel.remove();
+        actualTransactionActive.remove();
+    }
 }
