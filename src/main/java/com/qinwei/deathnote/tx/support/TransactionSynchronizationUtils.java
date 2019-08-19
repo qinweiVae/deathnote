@@ -51,4 +51,10 @@ public class TransactionSynchronizationUtils {
             }
         }
     }
+
+    public static void triggerFlush() {
+        for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+            synchronization.flush();
+        }
+    }
 }

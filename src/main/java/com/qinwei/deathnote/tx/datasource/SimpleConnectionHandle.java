@@ -19,7 +19,7 @@ public class SimpleConnectionHandle implements ConnectionHandle {
 
     @Override
     public Connection getConnection() {
-        return null;
+        return this.connection;
     }
 
     @Override
