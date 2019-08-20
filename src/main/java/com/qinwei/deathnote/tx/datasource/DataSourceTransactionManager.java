@@ -3,7 +3,6 @@ package com.qinwei.deathnote.tx.datasource;
 import com.qinwei.deathnote.beans.bean.InitializingBean;
 import com.qinwei.deathnote.tx.support.DefaultTransactionStatus;
 import com.qinwei.deathnote.tx.support.TransactionSynchronizationManager;
-import com.qinwei.deathnote.tx.support.TransactionSynchronizationUtils;
 import com.qinwei.deathnote.tx.transaction.AbstractPlatformTransactionManager;
 import com.qinwei.deathnote.tx.transaction.PlatformTransactionManager;
 import com.qinwei.deathnote.tx.transaction.TransactionDefinition;
