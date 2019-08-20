@@ -35,15 +35,11 @@ public abstract class AbstractTransactionStatus implements TransactionStatus {
 
     @Override
     public boolean isRollbackOnly() {
-        return (isLocalRollbackOnly() || isGlobalRollbackOnly());
+        return isLocalRollbackOnly();
     }
 
     public boolean isLocalRollbackOnly() {
         return this.rollbackOnly;
-    }
-
-    public boolean isGlobalRollbackOnly() {
-        return false;
     }
 
     @Override

@@ -11,18 +11,13 @@ import java.sql.Savepoint;
  * @date 2019-08-14
  */
 @Slf4j
-public abstract class JdbcTransactionObjectSupport implements SavepointManager, SmartTransactionObject {
+public abstract class JdbcTransactionObjectSupport implements SavepointManager {
 
     private ConnectionHolder connectionHolder;
 
     private Integer previousIsolationLevel;
 
     private boolean savepointAllowed = false;
-
-    @Override
-    public void flush() {
-
-    }
 
     @Override
     public Object createSavepoint() {

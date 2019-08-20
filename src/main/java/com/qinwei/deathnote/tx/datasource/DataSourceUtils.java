@@ -10,9 +10,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * @Author qinwei
- * @Date 2019-08-19 11:13
- * @Description
+ * @author qinweia
+ * @date 2019-08-19
  */
 @Slf4j
 public abstract class DataSourceUtils {

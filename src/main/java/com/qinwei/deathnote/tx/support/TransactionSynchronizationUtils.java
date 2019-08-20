@@ -11,7 +11,6 @@ import java.util.List;
 @Slf4j
 public class TransactionSynchronizationUtils {
 
-
     public static void triggerBeforeCompletion() {
         for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
             try {

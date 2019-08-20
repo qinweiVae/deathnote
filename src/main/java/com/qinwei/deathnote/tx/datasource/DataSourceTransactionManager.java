@@ -88,7 +88,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
                 log.debug("Switching JDBC Connection [" + con + "] to manual commit");
                 con.setAutoCommit(false);
             }
-            //执行 sql , 设置 readonly
+            //通过执行 sql 来 设置 readonly
             prepareTransactionalConnection(con, definition);
             // 设置 事务开启 标识
             txObject.getConnectionHolder().setTransactionActive(true);
@@ -237,17 +237,6 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
             getConnectionHolder().setRollbackOnly();
         }
 
-        @Override
-        public boolean isRollbackOnly() {
-            return getConnectionHolder().isRollbackOnly();
-        }
-
-        @Override
-        public void flush() {
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationUtils.triggerFlush();
-            }
-        }
     }
 
 }

@@ -55,7 +55,6 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
                 return txAttr;
             }
         }
-
         return null;
     }
 

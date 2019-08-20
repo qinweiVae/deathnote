@@ -57,6 +57,7 @@ public class DefaultTransactionStatus extends AbstractTransactionStatus {
     @Override
     protected SavepointManager getSavepointManager() {
         Object transaction = this.transaction;
+        // DataSourceTransactionManager 里面的 transaction 就是 DataSourceTransactionObject ,实现了 SavepointManager 接口
         if (!(transaction instanceof SavepointManager)) {
             throw new UnsupportedOperationException("Transaction object [" + this.transaction + "] does not support savepoints");
         }

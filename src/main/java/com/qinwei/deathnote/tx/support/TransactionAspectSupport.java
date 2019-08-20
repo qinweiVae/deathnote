@@ -122,11 +122,15 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware {
         }
     }
 
+    /*---------------------------------------------------------------------------------------------------------------*/
+
     @FunctionalInterface
     protected interface InvocationCallback {
 
         Object proceedWithInvocation() throws Throwable;
     }
+
+    /*---------------------------------------------------------------------------------------------------------------*/
 
     protected final class TransactionInfo {
 
