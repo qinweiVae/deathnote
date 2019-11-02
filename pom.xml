@@ -17,7 +17,7 @@
 
         <slf4j.version>1.7.21</slf4j.version>
         <aspectj.version>1.9.4</aspectj.version>
-        <netty.version>4.1.25.Final</netty.version>
+        <netty.version>4.1.42.Final</netty.version>
         <log4j2.version>2.6.2</log4j2.version>
         <lombok_version>1.16.18</lombok_version>
         <fastjson.version>1.2.54</fastjson.version>
